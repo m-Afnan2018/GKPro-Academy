@@ -1,0 +1,116 @@
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #12121E;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 50;
+}
+
+/* Logo */
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.logoIcon { flex-shrink: 0; }
+
+.logoText { display: flex; flex-direction: column; }
+
+.logoName {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.logoSub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* Nav */
+.nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.navGroup {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.28);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 8px;
+  margin-bottom: 4px;
+  margin-top: 16px;
+}
+.nav > div:first-child .navGroup { margin-top: 4px; }
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  transition: all 0.18s;
+  text-decoration: none;
+}
+
+.navItem:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+}
+
+.active {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+.active .navIcon { opacity: 1; }
+
+/* Bottom */
+.bottom {
+  padding: 16px 12px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.18s;
+}
+.backBtn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }

@@ -1,0 +1,171 @@
+.section {
+  padding: 90px 0;
+  background: var(--bg-light);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+}
+
+/* ── Left image column ── */
+.imgCol {
+  position: relative;
+  padding-bottom: 30px;
+}
+
+.imgStack {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.imgLarge {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.imgSmall {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  margin-top: 50px;
+}
+
+.advisorBadge {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.advisorIcon { font-size: 28px; }
+
+.advisorNum {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.advisorLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.loveDecor {
+  position: absolute;
+  top: -28px;
+  right: 10px;
+  font-family: cursive;
+  font-size: 34px;
+  color: var(--primary);
+  opacity: 0.65;
+  transform: rotate(-8deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Right text column ── */
+.textCol { padding-left: 8px; }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 14px;
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+  margin-bottom: 20px;
+}
+
+.body {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-body);
+  margin-bottom: 14px;
+}
+
+/* Mission / Vision */
+.mvGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 28px 0 32px;
+}
+
+.mvCard {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.mvIcon {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-light);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mvTitle {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.mvDesc {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 80px;
+  }
+  .imgCol { max-width: 520px; }
+  .loveDecor { display: none; }
+  .textCol { padding-left: 0; }
+}
+
+@media (max-width: 520px) {
+  .mvGrid { grid-template-columns: 1fr; }
+  .imgStack { grid-template-columns: 1fr; }
+  .imgSmall { margin-top: 0; height: 200px; }
+  .advisorBadge { position: static; margin-top: 16px; }
+}

@@ -1,0 +1,58 @@
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1.5px solid #F0F0F5;
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.cardLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  transition: opacity 0.15s;
+}
+.cardLink:hover { opacity: 0.75; }
+
+/* Skeleton */
+.loadingRows { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.skeletonRow {
+  height: 44px;
+  background: linear-gradient(90deg, #F3F4F6 25%, #E9EAED 50%, #F3F4F6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* Quick links */
+.quickLinks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: opacity 0.15s, transform 0.15s;
+  text-align: center;
+}
+.quickLink:hover { opacity: 0.85; transform: translateY(-2px); }
+
+@media (max-width: 700px) {
+  .quickLinks { grid-template-columns: 1fr; }
+}

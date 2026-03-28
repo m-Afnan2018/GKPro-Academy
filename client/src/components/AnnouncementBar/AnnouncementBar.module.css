@@ -1,0 +1,21 @@
+.bar {
+  background: #FFD6DA;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9B1C2A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.arrow {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+}

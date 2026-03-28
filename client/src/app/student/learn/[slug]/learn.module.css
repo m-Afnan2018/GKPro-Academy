@@ -1,0 +1,297 @@
+.page {
+  height: calc(100vh - 64px);
+  background: #F4F5FA;
+  overflow: hidden;
+}
+
+.center {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #E5E7EB;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.backLink { color: var(--primary); font-size: 14px; font-weight: 600; text-decoration: none; }
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+  background: #fff;
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebarHead {
+  padding: 20px 18px 16px;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: color 0.15s;
+}
+.backBtn:hover { color: var(--primary); }
+
+.courseTitle {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.catTag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.countLine { font-size: 12px; color: #9CA3AF; }
+
+.materialList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.emptyMaterials {
+  padding: 32px 18px;
+  text-align: center;
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+.secGroup { margin-bottom: 4px; }
+.secLabel {
+  padding: 8px 18px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.materialItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  font-family: var(--font-body);
+}
+.materialItem:hover { background: var(--bg-light); }
+.materialActive { background: var(--primary-light) !important; }
+
+.materialIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+}
+
+.materialInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.materialTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.materialActive .materialTitle { color: var(--primary); font-weight: 600; }
+.materialDur { font-size: 11px; color: #9CA3AF; }
+
+.publicDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #16A34A; flex-shrink: 0; margin-top: 5px;
+}
+
+/* Viewer */
+.viewer {
+  background: #F4F5FA;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewerEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+}
+.viewerEmptyIcon { opacity: 0.5; }
+.viewerEmptyTitle {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.viewerEmptySub { font-size: 14px; color: #6B7280; }
+
+.viewerContent {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100%;
+}
+
+.viewerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.viewerType {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.viewerTitle {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+.viewerDesc { font-size: 14px; color: #6B7280; }
+.viewerDur {
+  font-size: 13px; color: #6B7280;
+  background: #F3F4F6; padding: 4px 10px;
+  border-radius: 50px; white-space: nowrap; flex-shrink: 0;
+}
+
+.accessLoading {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: #6B7280;
+}
+.accessError {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;
+  border-radius: 10px; font-size: 13px;
+}
+
+.viewerFrame { flex: 1; }
+
+.videoFrame {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: none;
+  border-radius: 12px;
+  background: #000;
+}
+
+.docView {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pdfFrame {
+  width: 100%;
+  height: 70vh;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.linkView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+}
+
+.bigLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.bigLink:hover { background: var(--primary-dark); }
+.linkUrl { font-size: 12px; color: #9CA3AF; word-break: break-all; max-width: 500px; text-align: center; }
+
+.openExternal {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  align-self: flex-end;
+}
+.openExternal:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .page { height: auto; overflow: auto; }
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .sidebar { height: auto; max-height: 50vh; overflow-y: auto; }
+  .viewer { min-height: 60vh; }
+  .viewerContent { padding: 20px; }
+}

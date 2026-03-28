@@ -1,0 +1,187 @@
+.section {
+  padding: 80px 0;
+  background: var(--bg-light);
+}
+
+.topRow {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.heading {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.underline {
+  position: relative;
+  display: inline-block;
+}
+.underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Video */
+.videoWrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  height: 460px;
+}
+
+.videoCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20,20,40,0.55);
+}
+
+.videoText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  pointer-events: none;
+  line-height: 1.1;
+}
+
+.playBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid rgba(255,255,255,0.3);
+  transition: transform 0.2s, background 0.2s;
+  z-index: 10;
+}
+.playBtn:hover { transform: translate(-50%, -50%) scale(1.08); background: var(--primary-dark); }
+
+/* Floating card */
+.floatCard {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  width: 240px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+
+.floatCardLive {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+
+.floatAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.floatName {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.floatTitle {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.floatRating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.floatRatingNum { font-size: 12px; color: var(--text-muted); }
+
+.floatStudents {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.avatarStack { display: flex; }
+.avatarCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -8px;
+}
+.avatarCircle:first-child { margin-left: 0; }
+
+.studentLabel { font-size: 11px; color: var(--text-muted); }
+
+.joinBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 50px;
+  transition: background 0.2s;
+}
+.joinBtn:hover { background: var(--primary-dark); }
+
+@media (max-width: 700px) {
+  .floatCard { display: none; }
+  .videoWrap { height: 280px; }
+}

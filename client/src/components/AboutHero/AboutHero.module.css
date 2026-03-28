@@ -1,0 +1,120 @@
+.hero {
+  position: relative;
+  height: 320px;
+  background:
+    linear-gradient(rgba(15, 15, 30, 0.68), rgba(15, 15, 30, 0.68)),
+    url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&q=80')
+    center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(212, 43, 58, 0.14) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Decorative hexagons – left side */
+.hexGroup {
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hex {
+  width: 28px;
+  height: 28px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.hexGreen { background: #1E7B5E; }
+
+.hexOutline {
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  clip-path: none;
+  border-radius: 4px;
+  transform: rotate(10deg);
+}
+
+.hexOutlineSm {
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  clip-path: none;
+  border-radius: 3px;
+  transform: rotate(-8deg);
+}
+
+/* Scroll indicator – right side */
+.scrollHint {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Center content */
+.content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-size: clamp(36px, 6vw, 56px);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 22px;
+  border-radius: 50px;
+  backdrop-filter: blur(4px);
+}
+
+.breadcrumbLink {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s;
+}
+.breadcrumbLink:hover { color: #fff; }
+
+.sep {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.breadcrumbCurrent {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .hero { height: 240px; }
+  .hexGroup, .scrollHint { display: none; }
+}
