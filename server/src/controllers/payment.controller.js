@@ -1,3 +1,4 @@
+const crypto   = require("crypto");
 const Payment  = require("../models/Payment");
 const Enrollment = require("../models/Enrollment");
 const Batch    = require("../models/Batch");
@@ -182,9 +183,52 @@ const getPayments = asyncHandler(async (req, res) => {
   );
 });
 
+// Razorpay webhook — receives server-to-server events (payment.captured, etc.)
+// Route must be registered BEFORE express.json() with express.raw({ type: "*/*" })
+const razorpayWebhook = async (req, res) => {
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  // Validate signature only when a secret is configured
+  if (webhookSecret) {
+    const signature = req.headers["x-razorpay-signature"];
+    const body = req.body; // raw Buffer
+    const expected = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(body)
+      .digest("hex");
+    if (expected !== signature) {
+      return res.status(400).json({ success: false, message: "Invalid webhook signature" });
+    }
+  }
+
+  let event;
+  try {
+    event = JSON.parse(req.body.toString());
+  } catch {
+    return res.status(400).json({ success: false, message: "Invalid JSON" });
+  }
+
+  if (event.event === "payment.captured") {
+    const payload = event.payload?.payment?.entity ?? {};
+    const orderId  = payload.order_id;
+    const paymentId = payload.id;
+
+    if (orderId) {
+      // Mark payment as captured if still pending (idempotent)
+      await Payment.findOneAndUpdate(
+        { razorpayOrderId: orderId, status: "pending" },
+        { status: "captured", razorpayPaymentId: paymentId, paidAt: new Date() }
+      );
+    }
+  }
+
+  res.json({ received: true });
+};
+
 module.exports = {
   createRazorpayOrder,
   verifyRazorpayPayment,
   createManualPayment,
   getPayments,
+  razorpayWebhook,
 };

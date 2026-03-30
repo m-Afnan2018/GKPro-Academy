@@ -5,9 +5,17 @@ const {
   verifyRazorpayPayment,
   createManualPayment,
   getPayments,
+  razorpayWebhook,
 } = require("../controllers/payment.controller");
 const { protect } = require("../middleware/auth");
 const { requireRole } = require("../middleware/roles");
+
+// Webhook — no auth, raw body so HMAC verification works
+router.post(
+  "/razorpay/webhook",
+  express.raw({ type: "*/*" }),
+  razorpayWebhook
+);
 
 router.use(protect);
 
