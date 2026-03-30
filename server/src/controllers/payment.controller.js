@@ -10,7 +10,7 @@ const { createOrder, verifySignature } = require("../services/payment.service");
 const { hasActiveCourseEnrollment } = require("./enrollment.controller");
 
 const createRazorpayOrder = asyncHandler(async (req, res) => {
-  const { planId, batchId } = req.body;
+  const { planId, batchId, upgradeEnrollmentId } = req.body;
 
   const [plan, batch] = await Promise.all([
     CoursePlan.findById(planId),
@@ -19,13 +19,30 @@ const createRazorpayOrder = asyncHandler(async (req, res) => {
   if (!plan)  throw new ApiError(404, "Plan not found.");
   if (!batch) throw new ApiError(404, "Batch not found.");
 
-  // Block order creation if already actively enrolled in this course
-  const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
-  if (existing) {
-    throw new ApiError(
-      409,
-      "You are already enrolled in this course. Cancel your current enrollment first to switch plans."
-    );
+  if (upgradeEnrollmentId) {
+    // Upgrade flow: validate that the old enrollment belongs to this student
+    const oldEnrollment = await Enrollment.findOne({
+      _id: upgradeEnrollmentId,
+      studentId: req.user._id,
+      status: "active",
+    });
+    if (!oldEnrollment) throw new ApiError(404, "Active enrollment to upgrade not found.");
+
+    // Block if selecting the exact same batch + plan
+    const sameBatch = oldEnrollment.batchId.toString() === batchId;
+    const samePlan  = planId && oldEnrollment.planId && oldEnrollment.planId.toString() === planId;
+    if (sameBatch && samePlan) {
+      throw new ApiError(409, "You are already on this plan and batch. Please choose a different plan or batch to switch.");
+    }
+  } else {
+    // Normal flow: block if already enrolled
+    const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
+    if (existing) {
+      throw new ApiError(
+        409,
+        "You are already enrolled in this course. Use the upgrade option to switch plans or batches."
+      );
+    }
   }
 
   const amountInPaise = plan.price * 100;
@@ -62,6 +79,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     razorpay_signature,
     planId,
     batchId,
+    upgradeEnrollmentId,
   } = req.body;
 
   // Log for debugging — remove once confirmed working
@@ -87,13 +105,23 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   const batch = await Batch.findById(batchId);
   if (!batch) throw new ApiError(404, "Batch not found.");
 
-  // Safety: prevent duplicate enrollment even if order was already processed
-  const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
-  if (existing) {
-    const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
-    return res.json(
-      new ApiResponse(200, { payment, enrollment: existing }, "Already enrolled. Payment recorded.")
-    );
+  if (upgradeEnrollmentId) {
+    // Upgrade flow: validate old enrollment still belongs to this student
+    const oldEnrollment = await Enrollment.findOne({
+      _id: upgradeEnrollmentId,
+      studentId: req.user._id,
+      status: "active",
+    });
+    if (!oldEnrollment) throw new ApiError(404, "Active enrollment to upgrade not found.");
+  } else {
+    // Normal flow: safety check against duplicate enrollment
+    const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
+    if (existing) {
+      const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+      return res.json(
+        new ApiResponse(200, { payment, enrollment: existing }, "Already enrolled. Payment recorded.")
+      );
+    }
   }
 
   const payment = await Payment.findOneAndUpdate(

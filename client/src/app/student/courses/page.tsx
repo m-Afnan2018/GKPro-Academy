@@ -119,6 +119,9 @@ export default function StudentCoursesPage() {
                       {slug && (
                         <Link href={`/courses/${slug}`} className={styles.cardLink}>View Details</Link>
                       )}
+                      {e.status === "active" && slug && (
+                        <Link href={`/courses/${slug}#upgrade`} className={styles.cardLink} style={{ color: "#1D4ED8" }}>Change Plan</Link>
+                      )}
                     </div>
                   </div>
                 );

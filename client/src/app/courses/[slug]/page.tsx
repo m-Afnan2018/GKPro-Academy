@@ -43,6 +43,10 @@ export default function CourseDetailPage() {
   const [selectedBatch, setSelectedBatch] = useState("");
   const [showModal, setShowModal]         = useState(false);
 
+  // Existing enrollment (for upgrade flow)
+  const [existingEnrollment, setExistingEnrollment] = useState<{ _id: string; batchId: any; planId: any } | null>(null);
+  const [upgradeMode, setUpgradeMode]               = useState(false);
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
@@ -62,6 +66,23 @@ export default function CourseDetailPage() {
             if (bs.length) setSelectedMode(bs[0].mode);
           })
           .catch(() => {});
+        // Check if student is already enrolled in this course
+        const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
+        if (tk) {
+          fetch(`${BASE}/enrollments?limit=100`, { headers: { Authorization: `Bearer ${tk}` } })
+            .then(r => r.json())
+            .then(ej => {
+              const enrollments: any[] = ej.data?.enrollments ?? [];
+              const active = enrollments.find((en: any) => {
+                if (en.status !== "active") return false;
+                const enCourseId = en.batchId?.courseId?._id ?? en.batchId?.courseId;
+                return enCourseId === d.course._id;
+              });
+              if (active) setExistingEnrollment(active);
+            })
+            .catch(() => {});
+        }
+
         // fetch related courses same category
         const catId = typeof d.course.categoryId === "object"
           ? (d.course.categoryId as any)._id
@@ -78,10 +99,11 @@ export default function CourseDetailPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = async (isUpgrade = false) => {
     const tk = getStudentToken();
     if (!tk) { router.push(`/login?next=/courses/${slug}`); return; }
     if (!selectedPlan) return;
+    setUpgradeMode(isUpgrade);
     setEnrollError(""); setEnrollDone(false); setSelectedBatch("");
     setShowModal(true);
     const batch = batches.find(b => b.mode === selectedMode) ?? batches[0];
@@ -93,11 +115,12 @@ export default function CourseDetailPage() {
     setEnrolling(true); setEnrollError("");
     try {
       const tk = getStudentToken();
+      const upgradeEnrollmentId = upgradeMode && existingEnrollment ? existingEnrollment._id : undefined;
       // Try Razorpay first
       const orderRes = await fetch(`${BASE}/payments/razorpay/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
-        body: JSON.stringify({ planId: selectedPlan._id, batchId: selectedBatch }),
+        body: JSON.stringify({ planId: selectedPlan._id, batchId: selectedBatch, upgradeEnrollmentId }),
       }).then(r => r.json());
 
       if (!orderRes.success) {
@@ -144,6 +167,7 @@ export default function CourseDetailPage() {
                   razorpay_signature: response.razorpay_signature,
                   planId: selectedPlan._id,
                   batchId: selectedBatch,
+                  upgradeEnrollmentId,
                 }),
               }).then(r => r.json());
               if (verifyRes.success) resolve();
@@ -310,14 +334,47 @@ export default function CourseDetailPage() {
               </div>
             )}
 
-            <button className={styles.buyBtn} onClick={handleBuyNow}>
-              {getStudentToken() ? "Enroll Now" : "Buy Now"}
-            </button>
-
-            {!getStudentToken() && (
-              <p className={styles.loginNote}>
-                Already have an account? <Link href="/login" className={styles.loginLink}>Log in</Link>
-              </p>
+            {existingEnrollment ? (() => {
+              const existingPlanId  = typeof existingEnrollment.planId  === "object" ? existingEnrollment.planId?._id  : existingEnrollment.planId;
+              const existingBatchId = typeof existingEnrollment.batchId === "object" ? existingEnrollment.batchId?._id : existingEnrollment.batchId;
+              const candidateBatch  = batches.find(b => b.mode === selectedMode) ?? batches[0];
+              const isSame = selectedPlan?._id === existingPlanId && candidateBatch?._id === existingBatchId;
+              return (
+                <div>
+                  <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#166534" }}>
+                    You are enrolled in this course.
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <Link
+                      href={`/student/courses/${existingEnrollment._id}`}
+                      className={styles.buyBtn}
+                      style={{ flex: 1, textAlign: "center", textDecoration: "none" }}
+                    >
+                      Continue Learning
+                    </Link>
+                    {!isSame && (
+                      <button
+                        className={styles.buyBtn}
+                        style={{ flex: 1, background: "#1D4ED8" }}
+                        onClick={() => handleBuyNow(true)}
+                      >
+                        Change Plan
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })() : (
+              <>
+                <button className={styles.buyBtn} onClick={() => handleBuyNow(false)}>
+                  {getStudentToken() ? "Enroll Now" : "Buy Now"}
+                </button>
+                {!getStudentToken() && (
+                  <p className={styles.loginNote}>
+                    Already have an account? <Link href="/login" className={styles.loginLink}>Log in</Link>
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -454,8 +511,8 @@ export default function CourseDetailPage() {
                 <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
                 </svg>
-                <h3>Enrolled Successfully!</h3>
-                <p>You are now enrolled in <strong>{course.title}</strong>.</p>
+                <h3>{upgradeMode ? "Plan Changed Successfully!" : "Enrolled Successfully!"}</h3>
+                <p>{upgradeMode ? "Your enrollment has been updated to the new plan." : <>You are now enrolled in <strong>{course.title}</strong>.</>}</p>
                 <Link href="/student/courses" className={styles.modalSuccessBtn} onClick={closeModal}>
                   Go to My Courses →
                 </Link>
@@ -463,7 +520,7 @@ export default function CourseDetailPage() {
             ) : (
               <>
                 <div className={styles.modalHead}>
-                  <h3>Confirm Enrollment</h3>
+                  <h3>{upgradeMode ? "Change Plan / Switch Batch" : "Confirm Enrollment"}</h3>
                   <button className={styles.modalClose} onClick={closeModal}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -501,7 +558,9 @@ export default function CourseDetailPage() {
                     onClick={handleConfirmEnroll}
                     disabled={enrolling || !selectedBatch}
                   >
-                    {enrolling ? "Processing…" : activePlan?.price ? `Pay ₹${activePlan.price.toLocaleString("en-IN")}` : "Confirm & Enroll"}
+                    {enrolling ? "Processing…" : activePlan?.price
+                    ? `${upgradeMode ? "Pay & Change Plan" : "Pay"} ₹${activePlan.price.toLocaleString("en-IN")}`
+                    : upgradeMode ? "Confirm Change" : "Confirm & Enroll"}
                   </button>
                 </div>
               </>
