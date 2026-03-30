@@ -11,6 +11,42 @@ import styles from "../admin.module.css";
 const LIMIT = 10;
 const blank = () => ({ title: "", content: "", type: "general" as Announcement["type"], validUntil: "", isActive: true });
 
+type AnnFormData = ReturnType<typeof blank>;
+function AnnForm({ f, setF, err }: { f: AnnFormData; setF: (v: AnnFormData) => void; err: string }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Title *</label>
+        <input className={styles.formInput} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Content *</label>
+        <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Type</label>
+          <select className={styles.formSelect} value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as Announcement["type"] })}>
+            <option value="general">General</option><option value="discount">Discount</option>
+            <option value="upcoming_batch">Upcoming Batch</option><option value="ongoing_batch">Ongoing Batch</option>
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Active</label>
+          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Valid Until (optional)</label>
+        <input className={styles.formInput} type="date" value={f.validUntil} onChange={(e) => setF({ ...f, validUntil: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
 export default function AnnouncementsPage() {
   const [items, setItems]         = useState<Announcement[]>([]);
   const [total, setTotal]         = useState(0);
@@ -76,39 +112,6 @@ export default function AnnouncementsPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
   const typeBadge = (t: string) => t === "discount" ? "red" : t === "upcoming_batch" || t === "ongoing_batch" ? "blue" : "gray";
-
-  const AnnForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Title *</label>
-        <input className={styles.formInput} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Content *</label>
-        <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Type</label>
-          <select className={styles.formSelect} value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as Announcement["type"] })}>
-            <option value="general">General</option><option value="discount">Discount</option>
-            <option value="upcoming_batch">Upcoming Batch</option><option value="ongoing_batch">Ongoing Batch</option>
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Active</label>
-          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
-            <option value="yes">Yes</option><option value="no">No</option>
-          </select>
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Valid Until (optional)</label>
-        <input className={styles.formInput} type="date" value={f.validUntil} onChange={(e) => setF({ ...f, validUntil: e.target.value })} />
-      </div>
-    </div>
-  );
 
   return (
     <AdminGuard>

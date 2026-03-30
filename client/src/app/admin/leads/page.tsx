@@ -12,6 +12,55 @@ const LIMIT = 10;
 
 const blank = () => ({ name: "", phone: "", email: "", courseId: "", source: "website" as Lead["source"], status: "new" as Lead["status"], notes: "" });
 
+type LeadFormData = ReturnType<typeof blank>;
+function LeadForm({ f, setF, err, courses }: { f: LeadFormData; setF: (v: LeadFormData) => void; err: string; courses: Course[] }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Name *</label>
+          <input className={styles.formInput} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Phone *</label>
+          <input className={styles.formInput} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Email</label>
+        <input className={styles.formInput} type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Course</label>
+          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
+            <option value="">— Select —</option>
+            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Source</label>
+          <select className={styles.formSelect} value={f.source} onChange={(e) => setF({ ...f, source: e.target.value as Lead["source"] })}>
+            <option value="website">Website</option><option value="whatsapp">WhatsApp</option>
+            <option value="demo">Demo</option><option value="referral">Referral</option><option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Status</label>
+        <select className={styles.formSelect} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as Lead["status"] })}>
+          <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Notes</label>
+        <textarea className={styles.formTextarea} rows={3} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
 export default function LeadsPage() {
   const [leads, setLeads]       = useState<Lead[]>([]);
   const [total, setTotal]       = useState(0);
@@ -106,52 +155,6 @@ export default function LeadsPage() {
   const statusBadge = (s: string) => s === "converted" ? "green" : s === "contacted" ? "blue" : "yellow";
   const sourceBadge = (s: string) => s === "whatsapp" ? "green" : s === "demo" ? "blue" : "gray";
 
-  const LeadForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Name *</label>
-          <input className={styles.formInput} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Phone *</label>
-          <input className={styles.formInput} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Email</label>
-        <input className={styles.formInput} type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Course</label>
-          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
-            <option value="">— Select —</option>
-            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Source</label>
-          <select className={styles.formSelect} value={f.source} onChange={(e) => setF({ ...f, source: e.target.value as Lead["source"] })}>
-            <option value="website">Website</option><option value="whatsapp">WhatsApp</option>
-            <option value="demo">Demo</option><option value="referral">Referral</option><option value="other">Other</option>
-          </select>
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Status</label>
-        <select className={styles.formSelect} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as Lead["status"] })}>
-          <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
-        </select>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Notes</label>
-        <textarea className={styles.formTextarea} rows={3} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
-      </div>
-    </div>
-  );
-
   return (
     <AdminGuard>
       <div className={styles.inner}>
@@ -234,7 +237,7 @@ export default function LeadsPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Add Lead">
-        <LeadForm f={form} setF={setForm} err={createError} />
+        <LeadForm f={form} setF={setForm} err={createError} courses={courses} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Saving…" : "Add Lead"}</button>
@@ -243,7 +246,7 @@ export default function LeadsPage() {
 
       <Modal open={!!editLead} onClose={() => setEditLead(null)} title="Edit Lead">
         {editLead && <>
-          <LeadForm f={eForm} setF={setEForm} err={saveError} />
+          <LeadForm f={eForm} setF={setEForm} err={saveError} courses={courses} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditLead(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

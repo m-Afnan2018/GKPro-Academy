@@ -9,6 +9,39 @@ import { subcategoriesApi, categoriesApi, type SubCategory, type Category } from
 import styles from "../admin.module.css";
 
 const LIMIT = 30;
+const blank = () => ({ name: "", categoryId: "", sortOrder: 0, isComingSoon: false });
+
+type SubFormData = ReturnType<typeof blank>;
+function SubForm({ f, setF, err, allCategories }: { f: SubFormData; setF: (v: SubFormData) => void; err: string; allCategories: Category[] }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Parent Category *</label>
+        <select className={styles.formSelect} value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value })}>
+          <option value="">— Select category —</option>
+          {allCategories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Name *</label>
+        <input className={styles.formInput} placeholder="e.g. CA Foundation Paper 1" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Sort Order</label>
+          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Coming Soon</label>
+          <select className={styles.formSelect} value={f.isComingSoon ? "yes" : "no"} onChange={(e) => setF({ ...f, isComingSoon: e.target.value === "yes" })}>
+            <option value="no">No</option><option value="yes">Yes</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SubcategoriesPage() {
   const [items, setItems]         = useState<SubCategory[]>([]);
@@ -20,7 +53,6 @@ export default function SubcategoriesPage() {
   const [allCategories, setAllCategories] = useState<Category[]>([]);
 
   // Create
-  const blank = () => ({ name: "", categoryId: "", sortOrder: 0, isComingSoon: false });
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState(blank());
   const [creating, setCreating]     = useState(false);
@@ -97,35 +129,6 @@ export default function SubcategoriesPage() {
   };
 
   const totalPages = Math.ceil(total / LIMIT);
-
-  const SubForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Parent Category *</label>
-        <select className={styles.formSelect} value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value })}>
-          <option value="">— Select category —</option>
-          {allCategories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-        </select>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Name *</label>
-        <input className={styles.formInput} placeholder="e.g. CA Foundation Paper 1" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Sort Order</label>
-          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Coming Soon</label>
-          <select className={styles.formSelect} value={f.isComingSoon ? "yes" : "no"} onChange={(e) => setF({ ...f, isComingSoon: e.target.value === "yes" })}>
-            <option value="no">No</option><option value="yes">Yes</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <AdminGuard>
@@ -218,7 +221,7 @@ export default function SubcategoriesPage() {
 
       {/* Create modal */}
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Subcategory">
-        <SubForm f={form} setF={setForm} err={createError} />
+        <SubForm f={form} setF={setForm} err={createError} allCategories={allCategories} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create"}</button>
@@ -228,7 +231,7 @@ export default function SubcategoriesPage() {
       {/* Edit modal */}
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit Subcategory">
         {editItem && <>
-          <SubForm f={eForm} setF={setEForm} err={saveError} />
+          <SubForm f={eForm} setF={setEForm} err={saveError} allCategories={allCategories} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

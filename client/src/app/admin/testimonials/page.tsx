@@ -11,6 +11,45 @@ import styles from "../admin.module.css";
 const LIMIT = 10;
 const blank = () => ({ studentName: "", courseName: "", content: "", rating: 5, photoUrl: "", isActive: true });
 
+type TestFormData = ReturnType<typeof blank>;
+function TestForm({ f, setF, err }: { f: TestFormData; setF: (v: TestFormData) => void; err: string }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Student Name *</label>
+          <input className={styles.formInput} value={f.studentName} onChange={(e) => setF({ ...f, studentName: e.target.value })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Course Name *</label>
+          <input className={styles.formInput} value={f.courseName} onChange={(e) => setF({ ...f, courseName: e.target.value })} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Testimonial *</label>
+        <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Rating (1–5)</label>
+          <input className={styles.formInput} type="number" min={1} max={5} value={f.rating} onChange={(e) => setF({ ...f, rating: Number(e.target.value) })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Active</label>
+          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Photo URL (optional)</label>
+        <input className={styles.formInput} placeholder="https://…" value={f.photoUrl} onChange={(e) => setF({ ...f, photoUrl: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
 export default function TestimonialsPage() {
   const [items, setItems]     = useState<Testimonial[]>([]);
   const [total, setTotal]     = useState(0);
@@ -76,42 +115,6 @@ export default function TestimonialsPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
   const stars = (n: number) => "★".repeat(Math.max(1, Math.min(5, n))) + "☆".repeat(5 - Math.max(1, Math.min(5, n)));
-
-  const TestForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Student Name *</label>
-          <input className={styles.formInput} value={f.studentName} onChange={(e) => setF({ ...f, studentName: e.target.value })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Course Name *</label>
-          <input className={styles.formInput} value={f.courseName} onChange={(e) => setF({ ...f, courseName: e.target.value })} />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Testimonial *</label>
-        <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Rating (1–5)</label>
-          <input className={styles.formInput} type="number" min={1} max={5} value={f.rating} onChange={(e) => setF({ ...f, rating: Number(e.target.value) })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Active</label>
-          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
-            <option value="yes">Yes</option><option value="no">No</option>
-          </select>
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Photo URL (optional)</label>
-        <input className={styles.formInput} placeholder="https://…" value={f.photoUrl} onChange={(e) => setF({ ...f, photoUrl: e.target.value })} />
-      </div>
-    </div>
-  );
 
   return (
     <AdminGuard>

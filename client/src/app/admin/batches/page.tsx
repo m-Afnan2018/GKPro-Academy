@@ -11,6 +11,68 @@ import styles from "../admin.module.css";
 const LIMIT = 10;
 
 const fmt = (d: string) => d ? new Date(d).toISOString().slice(0, 10) : "";
+const blankForm = () => ({ courseId: "", planId: "", name: "", mode: "live" as Batch["mode"], startDate: "", endDate: "", seatLimit: "", status: "upcoming" as Batch["status"], meetingLink: "" });
+
+type BatchFormData = ReturnType<typeof blankForm>;
+function BatchForm({ f, setF, err, courses, plans }: { f: BatchFormData; setF: (v: BatchFormData) => void; err: string; courses: Course[]; plans: CoursePlan[] }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Batch Name *</label>
+        <input className={styles.formInput} placeholder="e.g. May 2025 Batch" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Course</label>
+          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
+            <option value="">— Select —</option>
+            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Plan</label>
+          <select className={styles.formSelect} value={f.planId} onChange={(e) => setF({ ...f, planId: e.target.value })}>
+            <option value="">— Select —</option>
+            {plans.map((p) => <option key={p._id} value={p._id}>{typeof p.courseId === "object" ? (p.courseId as Course).title : ""} – {p.planType}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Mode</label>
+          <select className={styles.formSelect} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as Batch["mode"] })}>
+            <option value="live">Live</option><option value="recorded">Recorded</option><option value="one_on_one">One-on-One</option>
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Status</label>
+          <select className={styles.formSelect} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as Batch["status"] })}>
+            <option value="upcoming">Upcoming</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Start Date</label>
+          <input className={styles.formInput} type="date" value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>End Date</label>
+          <input className={styles.formInput} type="date" value={f.endDate} onChange={(e) => setF({ ...f, endDate: e.target.value })} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Seat Limit (leave blank for unlimited)</label>
+        <input className={styles.formInput} type="number" min={1} value={f.seatLimit} onChange={(e) => setF({ ...f, seatLimit: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Meeting Link (Google Meet / Zoom)</label>
+        <input className={styles.formInput} type="url" placeholder="https://meet.google.com/... or zoom.us/j/..." value={(f as any).meetingLink ?? ""} onChange={(e) => setF({ ...f, meetingLink: e.target.value } as any)} />
+      </div>
+    </div>
+  );
+}
 
 export default function BatchesPage() {
   const [batches, setBatches]   = useState<Batch[]>([]);
@@ -20,8 +82,6 @@ export default function BatchesPage() {
   const [error, setError]       = useState("");
   const [courses, setCourses]   = useState<Course[]>([]);
   const [plans, setPlans]       = useState<CoursePlan[]>([]);
-
-  const blankForm = () => ({ courseId: "", planId: "", name: "", mode: "live" as Batch["mode"], startDate: "", endDate: "", seatLimit: "", status: "upcoming" as Batch["status"], meetingLink: "" });
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState(blankForm());
   const [creating, setCreating]     = useState(false);
@@ -106,64 +166,6 @@ export default function BatchesPage() {
   const totalPages = Math.ceil(total / LIMIT);
   const statusBadge = (s: string) => s === "ongoing" ? "green" : s === "upcoming" ? "blue" : s === "cancelled" ? "red" : "gray";
 
-  const BatchForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Batch Name *</label>
-        <input className={styles.formInput} placeholder="e.g. May 2025 Batch" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Course</label>
-          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
-            <option value="">— Select —</option>
-            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Plan</label>
-          <select className={styles.formSelect} value={f.planId} onChange={(e) => setF({ ...f, planId: e.target.value })}>
-            <option value="">— Select —</option>
-            {plans.map((p) => <option key={p._id} value={p._id}>{typeof p.courseId === "object" ? (p.courseId as Course).title : ""} – {p.planType}</option>)}
-          </select>
-        </div>
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Mode</label>
-          <select className={styles.formSelect} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as Batch["mode"] })}>
-            <option value="live">Live</option><option value="recorded">Recorded</option><option value="one_on_one">One-on-One</option>
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Status</label>
-          <select className={styles.formSelect} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as Batch["status"] })}>
-            <option value="upcoming">Upcoming</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Start Date</label>
-          <input className={styles.formInput} type="date" value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>End Date</label>
-          <input className={styles.formInput} type="date" value={f.endDate} onChange={(e) => setF({ ...f, endDate: e.target.value })} />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Seat Limit (leave blank for unlimited)</label>
-        <input className={styles.formInput} type="number" min={1} value={f.seatLimit} onChange={(e) => setF({ ...f, seatLimit: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Meeting Link (Google Meet / Zoom)</label>
-        <input className={styles.formInput} type="url" placeholder="https://meet.google.com/... or zoom.us/j/..." value={(f as any).meetingLink ?? ""} onChange={(e) => setF({ ...f, meetingLink: e.target.value } as any)} />
-      </div>
-    </div>
-  );
-
   return (
     <AdminGuard>
       <div className={styles.inner}>
@@ -226,7 +228,7 @@ export default function BatchesPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Batch">
-        <BatchForm f={form} setF={setForm} err={createError} />
+        <BatchForm f={form} setF={setForm} err={createError} courses={courses} plans={plans} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create Batch"}</button>
@@ -235,7 +237,7 @@ export default function BatchesPage() {
 
       <Modal open={!!editBatch} onClose={() => setEditBatch(null)} title="Edit Batch">
         {editBatch && <>
-          <BatchForm f={eForm} setF={setEForm} err={saveError} />
+          <BatchForm f={eForm} setF={setEForm} err={saveError} courses={courses} plans={plans} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditBatch(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

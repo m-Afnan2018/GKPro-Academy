@@ -12,6 +12,50 @@ const LIMIT = 20;
 
 const emptyForm = () => ({ courseId: "", planType: "basic" as CoursePlan["planType"], price: 0, validityDays: 30, features: "", isActive: true });
 
+type PlanFormData = ReturnType<typeof emptyForm>;
+function PlanForm({ f, setF, err, courses }: { f: PlanFormData; setF: (v: PlanFormData) => void; err: string; courses: Course[] }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Course</label>
+        <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
+          <option value="">— Select course —</option>
+          {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
+        </select>
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Plan Type</label>
+          <select className={styles.formSelect} value={f.planType} onChange={(e) => setF({ ...f, planType: e.target.value as CoursePlan["planType"] })}>
+            <option value="basic">Basic</option><option value="standard">Standard</option><option value="premium">Premium</option>
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Active</label>
+          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Price (₹)</label>
+          <input className={styles.formInput} type="number" min={0} value={f.price} onChange={(e) => setF({ ...f, price: Number(e.target.value) })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Validity (days)</label>
+          <input className={styles.formInput} type="number" min={1} value={f.validityDays} onChange={(e) => setF({ ...f, validityDays: Number(e.target.value) })} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Features (comma-separated)</label>
+        <textarea className={styles.formTextarea} rows={3} placeholder="HD Videos, Live Sessions, Notes PDF" value={f.features} onChange={(e) => setF({ ...f, features: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
 export default function PlansPage() {
   const [plans, setPlans]       = useState<CoursePlan[]>([]);
   const [total, setTotal]       = useState(0);
@@ -106,47 +150,6 @@ export default function PlansPage() {
   const totalPages = Math.ceil(total / LIMIT);
   const planBadge = (t: string) => t === "premium" ? "red" : t === "standard" ? "blue" : "gray";
 
-  const PlanForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Course</label>
-        <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
-          <option value="">— Select course —</option>
-          {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
-        </select>
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Plan Type</label>
-          <select className={styles.formSelect} value={f.planType} onChange={(e) => setF({ ...f, planType: e.target.value as CoursePlan["planType"] })}>
-            <option value="basic">Basic</option><option value="standard">Standard</option><option value="premium">Premium</option>
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Active</label>
-          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
-            <option value="yes">Yes</option><option value="no">No</option>
-          </select>
-        </div>
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Price (₹)</label>
-          <input className={styles.formInput} type="number" min={0} value={f.price} onChange={(e) => setF({ ...f, price: Number(e.target.value) })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Validity (days)</label>
-          <input className={styles.formInput} type="number" min={1} value={f.validityDays} onChange={(e) => setF({ ...f, validityDays: Number(e.target.value) })} />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Features (comma-separated)</label>
-        <textarea className={styles.formTextarea} rows={3} placeholder="HD Videos, Live Sessions, Notes PDF" value={f.features} onChange={(e) => setF({ ...f, features: e.target.value })} />
-      </div>
-    </div>
-  );
-
   return (
     <AdminGuard>
       <div className={styles.inner}>
@@ -208,7 +211,7 @@ export default function PlansPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Plan">
-        <PlanForm f={form} setF={setForm} err={createError} />
+        <PlanForm f={form} setF={setForm} err={createError} courses={courses} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create Plan"}</button>
@@ -217,7 +220,7 @@ export default function PlansPage() {
 
       <Modal open={!!editPlan} onClose={() => setEditPlan(null)} title="Edit Plan">
         {editPlan && <>
-          <PlanForm f={eForm} setF={setEForm} err={saveError} />
+          <PlanForm f={eForm} setF={setEForm} err={saveError} courses={courses} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditPlan(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

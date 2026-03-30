@@ -11,6 +11,42 @@ import styles from "../admin.module.css";
 const LIMIT = 20;
 const blank = () => ({ courseId: "", question: "", answer: "", sortOrder: 0, isActive: true });
 
+type FaqFormData = ReturnType<typeof blank>;
+function FaqForm({ f, setF, err, courses }: { f: FaqFormData; setF: (v: FaqFormData) => void; err: string; courses: Course[] }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Question *</label>
+        <input className={styles.formInput} value={f.question} onChange={(e) => setF({ ...f, question: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Answer *</label>
+        <textarea className={styles.formTextarea} rows={4} value={f.answer} onChange={(e) => setF({ ...f, answer: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Course (optional)</label>
+          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
+            <option value="">General (no course)</option>
+            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Sort Order</label>
+          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Active</label>
+        <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
+          <option value="yes">Yes</option><option value="no">No</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function FaqsPage() {
   const [items, setItems]     = useState<Faq[]>([]);
   const [total, setTotal]     = useState(0);
@@ -92,39 +128,6 @@ export default function FaqsPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  const FaqForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Question *</label>
-        <input className={styles.formInput} value={f.question} onChange={(e) => setF({ ...f, question: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Answer *</label>
-        <textarea className={styles.formTextarea} rows={4} value={f.answer} onChange={(e) => setF({ ...f, answer: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Course (optional)</label>
-          <select className={styles.formSelect} value={f.courseId} onChange={(e) => setF({ ...f, courseId: e.target.value })}>
-            <option value="">General (no course)</option>
-            {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
-          </select>
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Sort Order</label>
-          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Active</label>
-        <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
-          <option value="yes">Yes</option><option value="no">No</option>
-        </select>
-      </div>
-    </div>
-  );
-
   return (
     <AdminGuard>
       <div className={styles.inner}>
@@ -193,7 +196,7 @@ export default function FaqsPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New FAQ" width={560}>
-        <FaqForm f={form} setF={setForm} err={createError} />
+        <FaqForm f={form} setF={setForm} err={createError} courses={courses} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create"}</button>
@@ -202,7 +205,7 @@ export default function FaqsPage() {
 
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit FAQ" width={560}>
         {editItem && <>
-          <FaqForm f={eForm} setF={setEForm} err={saveError} />
+          <FaqForm f={eForm} setF={setEForm} err={saveError} courses={courses} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

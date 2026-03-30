@@ -11,6 +11,39 @@ import styles from "../admin.module.css";
 const LIMIT = 10;
 const blank = () => ({ imageUrl: "", linkUrl: "", altText: "", sortOrder: 0, isActive: true });
 
+type BannerFormData = ReturnType<typeof blank>;
+function BannerForm({ f, setF, err }: { f: BannerFormData; setF: (v: BannerFormData) => void; err: string }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Image URL *</label>
+        <input className={styles.formInput} placeholder="https://…" value={f.imageUrl} onChange={(e) => setF({ ...f, imageUrl: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Link URL</label>
+        <input className={styles.formInput} placeholder="https://…" value={f.linkUrl} onChange={(e) => setF({ ...f, linkUrl: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Alt Text</label>
+        <input className={styles.formInput} value={f.altText} onChange={(e) => setF({ ...f, altText: e.target.value })} />
+      </div>
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Sort Order</label>
+          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Active</label>
+          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BannersPage() {
   const [items, setItems]     = useState<Banner[]>([]);
   const [total, setTotal]     = useState(0);
@@ -75,36 +108,6 @@ export default function BannersPage() {
   };
 
   const totalPages = Math.ceil(total / LIMIT);
-
-  const BannerForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Image URL *</label>
-        <input className={styles.formInput} placeholder="https://…" value={f.imageUrl} onChange={(e) => setF({ ...f, imageUrl: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Link URL</label>
-        <input className={styles.formInput} placeholder="https://…" value={f.linkUrl} onChange={(e) => setF({ ...f, linkUrl: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Alt Text</label>
-        <input className={styles.formInput} value={f.altText} onChange={(e) => setF({ ...f, altText: e.target.value })} />
-      </div>
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Sort Order</label>
-          <input className={styles.formInput} type="number" value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: Number(e.target.value) })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Active</label>
-          <select className={styles.formSelect} value={f.isActive ? "yes" : "no"} onChange={(e) => setF({ ...f, isActive: e.target.value === "yes" })}>
-            <option value="yes">Yes</option><option value="no">No</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <AdminGuard>

@@ -11,6 +11,33 @@ import styles from "../admin.module.css";
 const LIMIT = 10;
 const blank = () => ({ title: "", content: "", imageUrl: "", isPublished: false });
 
+type BlogFormData = ReturnType<typeof blank>;
+function BlogForm({ f, setF, err }: { f: BlogFormData; setF: (v: BlogFormData) => void; err: string }) {
+  return (
+    <div className={styles.form}>
+      {err && <div className={styles.errorBanner}>{err}</div>}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Title *</label>
+        <input className={styles.formInput} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Content * (HTML supported)</label>
+        <textarea className={styles.formTextarea} rows={8} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} style={{ minHeight: 160 }} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Cover Image URL (optional)</label>
+        <input className={styles.formInput} value={(f as any).imageUrl ?? ""} placeholder="https://…" onChange={(e) => setF({ ...f, imageUrl: e.target.value } as any)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Published</label>
+        <select className={styles.formSelect} value={f.isPublished ? "yes" : "no"} onChange={(e) => setF({ ...f, isPublished: e.target.value === "yes" })}>
+          <option value="no">No (Draft)</option><option value="yes">Yes (Published)</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function BlogsPage() {
   const [items, setItems]     = useState<Blog[]>([]);
   const [total, setTotal]     = useState(0);
@@ -76,30 +103,6 @@ export default function BlogsPage() {
   };
 
   const totalPages = Math.ceil(total / LIMIT);
-
-  const BlogForm = ({ f, setF, err }: { f: typeof form; setF: (v: typeof form) => void; err: string }) => (
-    <div className={styles.form}>
-      {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Title *</label>
-        <input className={styles.formInput} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Content * (HTML supported)</label>
-        <textarea className={styles.formTextarea} rows={8} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} style={{ minHeight: 160 }} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Cover Image URL (optional)</label>
-        <input className={styles.formInput} value={(f as any).imageUrl ?? ""} placeholder="https://…" onChange={(e) => setF({ ...f, imageUrl: e.target.value } as any)} />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Published</label>
-        <select className={styles.formSelect} value={f.isPublished ? "yes" : "no"} onChange={(e) => setF({ ...f, isPublished: e.target.value === "yes" })}>
-          <option value="no">No (Draft)</option><option value="yes">Yes (Published)</option>
-        </select>
-      </div>
-    </div>
-  );
 
   return (
     <AdminGuard>
