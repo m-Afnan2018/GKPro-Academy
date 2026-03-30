@@ -5,7 +5,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import { batchesApi, enrollmentsApi, type Course, type CoursePlan, type Faq, type Category, type Batch } from "@/lib/api";
-import { getStudentToken } from "@/lib/studentAuth";
+import { getStudentToken, getStudentUser } from "@/lib/studentAuth";
 import styles from "./course.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -101,9 +101,16 @@ export default function CourseDetailPage() {
       }).then(r => r.json());
 
       if (!orderRes.success) {
+        // Already enrolled — treat as success so user gets redirect to courses
+        if (orderRes.message?.includes("already enrolled")) {
+          setEnrollDone(true); return;
+        }
         // Razorpay not configured — fallback to free enrollment
-        await enrollmentsApi.create(selectedBatch, selectedPlan._id);
-        setEnrollDone(true); return;
+        if (orderRes.message?.includes("not configured")) {
+          await enrollmentsApi.create(selectedBatch, selectedPlan._id);
+          setEnrollDone(true); return;
+        }
+        throw new Error(orderRes.message ?? "Could not create payment order.");
       }
 
       // Load Razorpay script
@@ -144,7 +151,11 @@ export default function CourseDetailPage() {
             } catch (e) { reject(e); }
           },
           modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
-          prefill: {},
+          prefill: {
+            name:    getStudentUser()?.name  ?? "",
+            email:   getStudentUser()?.email ?? "",
+            contact: getStudentUser()?.phone ?? "",
+          },
           theme: { color: "#D42B3A" },
         };
         const rz = new (window as any).Razorpay(options);

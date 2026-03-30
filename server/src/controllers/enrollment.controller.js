@@ -88,7 +88,11 @@ const createEnrollment = asyncHandler(async (req, res) => {
   ]);
   if (!batch) throw new ApiError(404, "Batch not found.");
   if (!plan)  throw new ApiError(404, "Plan not found.");
-  if (batch.status === "cancelled") throw new ApiError(400, "This batch is cancelled.");
+  if (batch.status === "cancelled")  throw new ApiError(400, "This batch is cancelled.");
+  if (batch.status === "completed")  throw new ApiError(400, "This batch has already completed.");
+  if (batch.seatLimit && batch.enrolledCount >= batch.seatLimit) {
+    throw new ApiError(400, "This batch is full. No seats available.");
+  }
 
   // Block if student already has an ACTIVE enrollment in ANY batch of this course
   const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);

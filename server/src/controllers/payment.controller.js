@@ -64,12 +64,24 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     batchId,
   } = req.body;
 
+  // Log for debugging — remove once confirmed working
+  console.log("[verify] order:", razorpay_order_id, "| payment:", razorpay_payment_id, "| sig_len:", razorpay_signature?.length);
+
   const isValid = verifySignature(
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature
   );
-  if (!isValid) throw new ApiError(400, "Invalid payment signature.");
+
+  if (!isValid) {
+    // Log expected vs received to diagnose mismatch
+    const expected = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+    console.error("[verify] FAIL — expected:", expected, "| got:", razorpay_signature);
+    throw new ApiError(400, "Invalid payment signature.");
+  }
 
   // Find batch to get courseId for duplicate check
   const batch = await Batch.findById(batchId);
@@ -78,7 +90,6 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   // Safety: prevent duplicate enrollment even if order was already processed
   const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
   if (existing) {
-    // Payment already succeeded but enrollment exists — return success with existing
     const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
     return res.json(
       new ApiResponse(200, { payment, enrollment: existing }, "Already enrolled. Payment recorded.")
@@ -86,7 +97,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   }
 
   const payment = await Payment.findOneAndUpdate(
-    { razorpayOrderId: razorpay_order_id },
+    { razorpayOrderId: razorpay_order_id, status: "pending" },
     {
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
@@ -98,7 +109,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   if (!payment) throw new ApiError(404, "Payment record not found.");
 
   const plan = await CoursePlan.findById(planId);
-  const expiresAt = plan
+  const expiresAt = plan && plan.validityDays > 0
     ? new Date(Date.now() + plan.validityDays * 24 * 60 * 60 * 1000)
     : null;
 
@@ -120,6 +131,8 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     .populate("planId")
     .populate("paymentId");
 
+  console.log("[verify] SUCCESS — enrollment:", enrollment._id.toString());
+
   res.json(
     new ApiResponse(200, { payment, enrollment: populated }, "Payment verified. Enrollment created.")
   );
@@ -128,8 +141,17 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 const createManualPayment = asyncHandler(async (req, res) => {
   const { studentId, planId, batchId, amount } = req.body;
 
-  const plan = await CoursePlan.findById(planId);
-  const expiresAt = plan
+  const [plan, batch] = await Promise.all([
+    CoursePlan.findById(planId),
+    Batch.findById(batchId),
+  ]);
+  if (!batch) throw new ApiError(404, "Batch not found.");
+
+  // Block if student already enrolled at course level
+  const existing = await hasActiveCourseEnrollment(studentId, batch.courseId);
+  if (existing) throw new ApiError(409, "Student is already enrolled in this course.");
+
+  const expiresAt = plan && plan.validityDays > 0
     ? new Date(Date.now() + plan.validityDays * 24 * 60 * 60 * 1000)
     : null;
 
@@ -183,18 +205,15 @@ const getPayments = asyncHandler(async (req, res) => {
   );
 });
 
-// Razorpay webhook — receives server-to-server events (payment.captured, etc.)
-// Route must be registered BEFORE express.json() with express.raw({ type: "*/*" })
+// Registered in index.js BEFORE express.json() so req.body is a raw Buffer
 const razorpayWebhook = async (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-  // Validate signature only when a secret is configured
   if (webhookSecret) {
     const signature = req.headers["x-razorpay-signature"];
-    const body = req.body; // raw Buffer
     const expected = crypto
       .createHmac("sha256", webhookSecret)
-      .update(body)
+      .update(req.body)
       .digest("hex");
     if (expected !== signature) {
       return res.status(400).json({ success: false, message: "Invalid webhook signature" });
@@ -210,11 +229,9 @@ const razorpayWebhook = async (req, res) => {
 
   if (event.event === "payment.captured") {
     const payload = event.payload?.payment?.entity ?? {};
-    const orderId  = payload.order_id;
+    const orderId   = payload.order_id;
     const paymentId = payload.id;
-
     if (orderId) {
-      // Mark payment as captured if still pending (idempotent)
       await Payment.findOneAndUpdate(
         { razorpayOrderId: orderId, status: "pending" },
         { status: "captured", razorpayPaymentId: paymentId, paidAt: new Date() }
