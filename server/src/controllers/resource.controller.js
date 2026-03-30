@@ -6,8 +6,8 @@ const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 const { submitForApproval } = require("../services/approval.service");
 
-/* ── helper ──────────────────────────────────────────── */
-async function isEnrolled(userId, courseId) {
+/* ── helpers ─────────────────────────────────────────── */
+async function isEnrolledInCourse(userId, courseId) {
   const batches = await Batch.find({ courseId }).select("_id");
   if (!batches.length) return false;
   const enrollment = await Enrollment.findOne({
@@ -18,24 +18,41 @@ async function isEnrolled(userId, courseId) {
   return !!enrollment;
 }
 
+async function isEnrolledInBatch(userId, batchId) {
+  const enrollment = await Enrollment.findOne({ studentId: userId, batchId, status: "active" });
+  return !!enrollment;
+}
+
 /* ── controllers ─────────────────────────────────────── */
 
 const getResources = asyncHandler(async (req, res) => {
   const page  = parseInt(req.query.page)  || 1;
-  const limit = parseInt(req.query.limit) || 50;
+  const limit = parseInt(req.query.limit) || 200;
   const skip  = (page - 1) * limit;
 
   const isAdmin   = req.user && (req.user.role === "admin" || req.user.role === "manager");
   const isStudent = req.user && req.user.role === "student";
-  const filter = {};
+  const filter    = {};
 
-  if (req.query.courseId) {
-    filter.courseId = req.query.courseId;
-
+  if (req.query.batchId) {
+    // Batch-specific materials
+    filter.batchId = req.query.batchId;
     if (isStudent) {
-      const enrolled = await isEnrolled(req.user._id, req.query.courseId);
+      const enrolled = await isEnrolledInBatch(req.user._id, req.query.batchId);
       filter.approvalStatus = "approved";
-      if (!enrolled) filter.isPublic = true;  // unenrolled → only public
+      if (!enrolled) filter.isPublic = true;
+    } else if (!isAdmin) {
+      filter.isPublic = true;
+      filter.approvalStatus = "approved";
+    }
+  } else if (req.query.courseId) {
+    // Course-wide shared materials (no batch assigned)
+    filter.courseId = req.query.courseId;
+    filter.batchId  = null;
+    if (isStudent) {
+      const enrolled = await isEnrolledInCourse(req.user._id, req.query.courseId);
+      filter.approvalStatus = "approved";
+      if (!enrolled) filter.isPublic = true;
     } else if (!isAdmin) {
       filter.isPublic = true;
       filter.approvalStatus = "approved";
@@ -48,6 +65,7 @@ const getResources = asyncHandler(async (req, res) => {
   const [resources, total] = await Promise.all([
     Resource.find(filter)
       .populate("courseId", "title slug")
+      .populate("batchId",  "name mode courseId")
       .sort({ section: 1, sortOrder: 1 })
       .skip(skip).limit(limit),
     Resource.countDocuments(filter),
@@ -57,19 +75,19 @@ const getResources = asyncHandler(async (req, res) => {
 });
 
 const getResource = asyncHandler(async (req, res) => {
-  const resource = await Resource.findById(req.params.id).populate("courseId", "title slug");
+  const resource = await Resource.findById(req.params.id)
+    .populate("courseId", "title slug")
+    .populate("batchId",  "name mode");
   if (!resource) throw new ApiError(404, "Resource not found.");
   res.json(new ApiResponse(200, resource, "Resource retrieved."));
 });
 
 const createResource = asyncHandler(async (req, res) => {
-  req.body.createdBy  = req.user._id;
+  req.body.createdBy      = req.user._id;
   req.body.approvalStatus = req.isDraft ? "pending" : "approved";
   if (!req.isDraft) req.body.approvedBy = req.user._id;
-
   const resource = await Resource.create(req.body);
   if (req.isDraft) await submitForApproval("Resource", resource._id, req.user._id);
-
   res.status(201).json(new ApiResponse(201, resource, "Resource created."));
 });
 
@@ -101,8 +119,11 @@ const accessResource = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(200, { url: resource.url, type: resource.type }, "Access granted."));
   }
 
-  if (resource.courseId) {
-    const enrolled = await isEnrolled(req.user._id, resource.courseId);
+  if (resource.batchId) {
+    const enrolled = await isEnrolledInBatch(req.user._id, resource.batchId);
+    if (!enrolled) throw new ApiError(403, "You are not enrolled in this batch.");
+  } else if (resource.courseId) {
+    const enrolled = await isEnrolledInCourse(req.user._id, resource.courseId);
     if (!enrolled) throw new ApiError(403, "You are not enrolled in this course.");
   }
 

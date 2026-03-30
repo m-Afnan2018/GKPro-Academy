@@ -64,28 +64,49 @@ export default function LearnPage() {
     const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
     if (!tk) return;
 
-    fetch(`${BASE}/enrollments/${enrollmentId}`, { headers: { Authorization: `Bearer ${tk}` } })
-      .then((r) => r.json())
-      .then((json) => {
+    const fetchJson = (url: string) =>
+      fetch(url, { headers: { Authorization: `Bearer ${tk}` } }).then(r => r.json());
+
+    const run = async () => {
+      try {
+        const json = await fetchJson(`${BASE}/enrollments/${enrollmentId}`);
         if (!json.success) { setError(json.message ?? "Enrollment not found."); return; }
         const e = json.data as EnrollmentDetail;
         setEnrollment(e);
 
-        // fetch course resources
-        const courseId = typeof e.batchId?.courseId === "object" ? e.batchId.courseId._id : e.batchId?.courseId;
-        if (courseId) {
-          fetch(`${BASE}/resources?courseId=${courseId}&limit=200`, { headers: { Authorization: `Bearer ${tk}` } })
-            .then((r) => r.json())
-            .then((rj) => {
-              const rs: Resource[] = rj?.data?.resources ?? [];
-              setResources(rs);
-              if (rs.length) setActiveResource(rs[0]);
-            })
-            .catch(() => {});
+        const batchId  = typeof e.batchId === "object" ? e.batchId._id  : (e.batchId as string);
+        const courseId = typeof e.batchId?.courseId === "object"
+          ? (e.batchId.courseId as any)._id
+          : (e.batchId?.courseId as string | undefined);
+
+        const getResources = async (query: string): Promise<Resource[]> => {
+          const rj = await fetchJson(`${BASE}/resources?${query}&limit=200`);
+          return rj?.data?.resources ?? [];
+        };
+
+        if (batchId) {
+          const batchRes = await getResources(`batchId=${batchId}`);
+          if (batchRes.length) {
+            setResources(batchRes);
+            setActiveResource(batchRes[0]);
+          } else if (courseId) {
+            const courseRes = await getResources(`courseId=${courseId}`);
+            setResources(courseRes);
+            if (courseRes.length) setActiveResource(courseRes[0]);
+          }
+        } else if (courseId) {
+          const courseRes = await getResources(`courseId=${courseId}`);
+          setResources(courseRes);
+          if (courseRes.length) setActiveResource(courseRes[0]);
         }
-      })
-      .catch(() => setError("Failed to load course data."))
-      .finally(() => setLoading(false));
+      } catch {
+        setError("Failed to load course data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
   }, [enrollmentId]);
 
   // Group resources by section

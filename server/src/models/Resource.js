@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const resourceSchema = new mongoose.Schema({
   courseId:    { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
+  batchId:     { type: mongoose.Schema.Types.ObjectId, ref: "Batch",  default: null },
   title:       { type: String, required: true, trim: true },
   description: { type: String, trim: true },
   type:        { type: String, enum: ["video", "pdf", "link", "doc", "meet"], required: true },

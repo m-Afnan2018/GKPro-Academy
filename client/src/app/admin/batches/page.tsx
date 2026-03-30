@@ -5,6 +5,7 @@ import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
+import Link from "next/link";
 import { batchesApi, coursesApi, plansApi, type Batch, type Course, type CoursePlan } from "@/lib/api";
 import styles from "../admin.module.css";
 
@@ -187,7 +188,7 @@ export default function BatchesPage() {
                 : !batches.length ? <div className={styles.empty}><div className={styles.emptyIcon}>📅</div><div className={styles.emptyText}>No batches yet</div></div>
                 : (
                   <table className={styles.table}>
-                    <thead><tr><th>Name</th><th>Course</th><th>Mode</th><th>Start Date</th><th>Seats</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Course</th><th>Mode</th><th>Start Date</th><th>Seats</th><th>Status</th><th>Materials</th><th>Actions</th></tr></thead>
                     <tbody>
                       {batches.map((b) => (
                         <tr key={b._id}>
@@ -197,6 +198,11 @@ export default function BatchesPage() {
                           <td>{new Date(b.startDate).toLocaleDateString()}</td>
                           <td>{b.seatLimit ? `${b.enrolledCount}/${b.seatLimit}` : b.enrolledCount}</td>
                           <td><Badge variant={statusBadge(b.status) as any}>{b.status}</Badge></td>
+                          <td>
+                            <Link href={`/admin/batches/${b._id}/materials`} className={`${styles.btnGhost} ${styles.btnGhostGreen}`} style={{ textDecoration: "none" }}>
+                              Materials
+                            </Link>
+                          </td>
                           <td>
                             <div className={styles.actions}>
                               <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openEdit(b)}>Edit</button>
