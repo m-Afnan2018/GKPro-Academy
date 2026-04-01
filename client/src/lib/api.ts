@@ -120,6 +120,27 @@ export const facultyApi = {
   remove: (id: string) => del(`/faculty/${id}`),
 };
 
+/* ── media ───────────────────────────────────────── */
+
+export interface MediaFile {
+  filename: string;
+  url: string;
+  ext: string;
+  type: "image" | "video" | "pdf" | "document" | "other";
+  size: number;
+  sizeFormatted: string;
+  createdAt: string;
+  mtime: string;
+}
+
+export const mediaApi = {
+  list: (page = 1, limit = 50, type = "all", search = "") =>
+    get<{ data: { files: MediaFile[]; total: number } }>(
+      `/media?page=${page}&limit=${limit}&type=${type}&search=${encodeURIComponent(search)}`
+    ),
+  remove: (filename: string) => del(`/media/${encodeURIComponent(filename)}`),
+};
+
 /* ── enrollments ─────────────────────────────────── */
 
 export const enrollmentsApi = {
@@ -351,6 +372,7 @@ export interface Course {
   prerequisites?: string[];
   // Faculty (multiple)
   faculty?: Faculty[];
+  availableModes?: "both" | "online" | "recorded";
   status: "draft" | "published" | "archived";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   createdBy?: Partial<User>;

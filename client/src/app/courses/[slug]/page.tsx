@@ -57,8 +57,11 @@ export default function CourseDetailPage() {
         const d: CourseDetail = json.data;
         setData(d);
 
-        // Default mode: online if available, else recorded
-        if (d.course.onlinePrice) setSelectedMode("online");
+        // Default mode based on availableModes setting
+        const modes = d.course.availableModes ?? "both";
+        if (modes === "online") setSelectedMode("online");
+        else if (modes === "recorded") setSelectedMode("recorded");
+        else if (d.course.onlinePrice) setSelectedMode("online");
         else if (d.course.recordedPrice) setSelectedMode("recorded");
 
         // Check if student is already enrolled
@@ -219,12 +222,15 @@ export default function CourseDetailPage() {
     ? Math.round((1 - coursePrice / originalCoursePrice) * 100)
     : 0;
 
-  const hasBoth = !!(data?.course.onlinePrice && data?.course.recordedPrice);
+  const availableModes = data?.course.availableModes ?? "both";
+  const hasBoth = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
+  const hasOnlineOnly = availableModes === "online" || (!hasBoth && !!data?.course.onlinePrice && !data?.course.recordedPrice);
+  const hasRecordedOnly = availableModes === "recorded" || (!hasBoth && !!data?.course.recordedPrice && !data?.course.onlinePrice);
 
   /* ── Specs table rows ─── */
   const specs = data ? [
     ...(data.course.numLectures ? [{ label: "No of Lectures", value: data.course.numLectures }] : [{ label: "No of Lectures", value: "70 – 75 Lectures (Approx)" }]),
-    { label: "Mode", value: selectedMode === "online" ? "Online (Live)" : "Recorded" },
+    { label: "Mode", value: availableModes === "both" ? "Online (Live) + Recorded" : availableModes === "online" ? "Online (Live)" : "Recorded" },
     ...(data.course.duration   ? [{ label: "Duration",   value: data.course.duration }]   : []),
     ...(data.course.language   ? [{ label: "Language",   value: data.course.language }]   : []),
     ...(() => {
@@ -348,11 +354,22 @@ export default function CourseDetailPage() {
               </div>
             )}
 
-            {!hasBoth && (course.onlinePrice || course.recordedPrice) && (
-              <div className={styles.fieldRow}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                  Mode: {course.onlinePrice ? "Online (Live)" : "Recorded"}
-                </span>
+            {(hasOnlineOnly || hasRecordedOnly) && (
+              <div className={styles.fieldRow} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", background: hasOnlineOnly ? "#EFF6FF" : "#F0FDF4", borderRadius: 8, border: `1.5px solid ${hasOnlineOnly ? "#BFDBFE" : "#BBF7D0"}` }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: hasOnlineOnly ? "#1D4ED8" : "#16A34A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {hasOnlineOnly
+                    ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                  }
+                </div>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: hasOnlineOnly ? "#1D4ED8" : "#16A34A" }}>
+                    {hasOnlineOnly ? "Online / Live Only" : "Recorded Only"}
+                  </span>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
+                    {hasOnlineOnly ? "This course is available as live online classes." : "This course is available as pre-recorded video lectures."}
+                  </p>
+                </div>
               </div>
             )}
 

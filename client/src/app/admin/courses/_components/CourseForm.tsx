@@ -23,6 +23,7 @@ export interface CF {
   prerequisites: string[];
   technicalRequirements: string[];
   facultyIds: string[];
+  availableModes: "both" | "online" | "recorded";
   onlinePrice: string;
   onlineOriginalPrice: string;
   recordedPrice: string;
@@ -40,6 +41,7 @@ export const blankCF = (): CF => ({
   status: "draft", language: "", numLectures: "", duration: "",
   whoIsItFor: [], highlights: [], prerequisites: [], technicalRequirements: [],
   facultyIds: [],
+  availableModes: "both",
   onlinePrice: "", onlineOriginalPrice: "", recordedPrice: "", recordedOriginalPrice: "",
   bookEnabled: false, eBookPrice: "", eBookUrl: "", handbookPrice: "", handbookUrl: "",
   thumbnailUrl: "",
@@ -64,6 +66,7 @@ export const courseToForm = (c: Course): CF => ({
   prerequisites: c.prerequisites ?? [],
   technicalRequirements: c.technicalRequirements ?? [],
   facultyIds: (c.faculty ?? []).map(f => (typeof f === "object" ? (f as Faculty)._id : f as string)),
+  availableModes: c.availableModes ?? "both",
   onlinePrice: c.onlinePrice != null ? String(c.onlinePrice) : "",
   onlineOriginalPrice: c.onlineOriginalPrice != null ? String(c.onlineOriginalPrice) : "",
   recordedPrice: c.recordedPrice != null ? String(c.recordedPrice) : "",
@@ -91,6 +94,7 @@ export const formToPayload = (f: CF) => ({
   prerequisites: f.prerequisites.filter(Boolean),
   technicalRequirements: f.technicalRequirements.filter(Boolean),
   faculty: f.facultyIds,
+  availableModes: f.availableModes,
   thumbnailUrl: f.thumbnailUrl || undefined,
   onlinePrice:         f.onlinePrice         ? Number(f.onlinePrice)         : null,
   onlineOriginalPrice: f.onlineOriginalPrice ? Number(f.onlineOriginalPrice) : null,
@@ -329,6 +333,77 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
               <FL>Language</FL>
               <input className={styles.formInput} placeholder="e.g. Hindi / English" value={f.language} onChange={e => set("language", e.target.value)} />
             </div>
+          </div>
+
+          {/* ── Available Modes ── */}
+          <div className={styles.formGroup}>
+            <FL>Available Modes</FL>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {(["both", "online", "recorded"] as const).map(mode => {
+                const active = f.availableModes === mode;
+                const labels: Record<string, { label: string; sub: string; color: string; bg: string; icon: React.ReactNode }> = {
+                  both: {
+                    label: "Both",
+                    sub: "Live + Recorded",
+                    color: "#7C3AED",
+                    bg: "#F5F3FF",
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+                  },
+                  online: {
+                    label: "Live Only",
+                    sub: "Online / Live classes",
+                    color: "#1D4ED8",
+                    bg: "#EFF6FF",
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+                  },
+                  recorded: {
+                    label: "Recorded Only",
+                    sub: "Pre-recorded videos",
+                    color: "#16A34A",
+                    bg: "#F0FDF4",
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
+                  },
+                };
+                const meta = labels[mode];
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => set("availableModes", mode)}
+                    style={{
+                      flex: 1, minWidth: 140,
+                      padding: "10px 14px",
+                      border: `2px solid ${active ? meta.color : "#E5E7EB"}`,
+                      borderRadius: 10,
+                      background: active ? meta.bg : "#FAFAFA",
+                      cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 10,
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: active ? meta.color : "#E5E7EB",
+                      color: active ? "#fff" : "#9CA3AF",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.15s",
+                    }}>
+                      {meta.icon}
+                    </div>
+                    <div style={{ textAlign: "left" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: active ? meta.color : "#374151" }}>{meta.label}</div>
+                      <div style={{ fontSize: 11, color: active ? meta.color : "#9CA3AF", marginTop: 1 }}>{meta.sub}</div>
+                    </div>
+                    {active && (
+                      <div style={{ marginLeft: "auto", width: 18, height: 18, borderRadius: "50%", background: meta.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3"/></svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6 }}>Controls which enrollment modes are shown to students on the public course page.</p>
           </div>
 
           <div className={styles.formRow}>
