@@ -108,6 +108,18 @@ export const coursesApi = {
     ),
 };
 
+/* ── faculty ─────────────────────────────────────── */
+
+export const facultyApi = {
+  list: (page = 1, limit = 100) =>
+    get<{ data: { faculty: Faculty[]; total: number } }>(`/faculty?page=${page}&limit=${limit}`),
+  create: (body: Partial<Faculty>) =>
+    post<{ data: Faculty }>("/faculty", body),
+  update: (id: string, body: Partial<Faculty>) =>
+    patch<{ data: Faculty }>(`/faculty/${id}`, body),
+  remove: (id: string) => del(`/faculty/${id}`),
+};
+
 /* ── enrollments ─────────────────────────────────── */
 
 export const enrollmentsApi = {
@@ -299,6 +311,18 @@ export interface SubCategory {
   sortOrder: number;
 }
 
+export interface Faculty {
+  _id: string;
+  name: string;
+  designation?: string | null;
+  bio?: string | null;
+  avatar?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface Course {
   _id: string;
   title: string;
@@ -325,11 +349,8 @@ export interface Course {
   language?: string | null;
   highlights?: string[];
   prerequisites?: string[];
-  // Teacher/Faculty
-  teacherName?: string | null;
-  teacherDesignation?: string | null;
-  teacherBio?: string | null;
-  teacherAvatar?: string | null;
+  // Faculty (multiple)
+  faculty?: Faculty[];
   status: "draft" | "published" | "archived";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   createdBy?: Partial<User>;

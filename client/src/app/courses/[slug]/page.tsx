@@ -227,7 +227,11 @@ export default function CourseDetailPage() {
     { label: "Mode", value: selectedMode === "online" ? "Online (Live)" : "Recorded" },
     ...(data.course.duration   ? [{ label: "Duration",   value: data.course.duration }]   : []),
     ...(data.course.language   ? [{ label: "Language",   value: data.course.language }]   : []),
-    ...(data.course.teacherName ? [{ label: "Faculty",  value: data.course.teacherName }] : [{ label: "Faculty", value: "GKPro Expert Faculty" }]),
+    ...(() => {
+      const fac = data.course.faculty;
+      if (fac && fac.length) return [{ label: "Faculty", value: fac.map(f => f.name).join(", ") }];
+      return [{ label: "Faculty", value: "GKPro Expert Faculty" }];
+    })(),
   ] : [];
 
   if (loading) return (
@@ -556,24 +560,41 @@ export default function CourseDetailPage() {
           )}
 
           {tab === "faculty" && (
-            <div className={styles.facultyCard}>
-              <div className={styles.facultyAvatar} style={course.teacherAvatar ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
-                {course.teacherAvatar ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={course.teacherAvatar} alt={course.teacherName ?? "Teacher"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                )}
-              </div>
-              <div>
-                <h4 className={styles.facultyName}>{course.teacherName ?? "GKPro Expert Faculty"}</h4>
-                <p className={styles.facultyRole}>{course.teacherDesignation ?? "Chartered Accountant · Senior Instructor"}</p>
-                <p className={styles.facultyBio}>
-                  {course.teacherBio ?? "Our faculty members are experienced Chartered Accountants with years of teaching expertise in CA Foundation, Intermediate and Final examinations."}
-                </p>
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {course.faculty && course.faculty.length > 0 ? (
+                course.faculty.map(fac => (
+                  <div key={fac._id} className={styles.facultyCard}>
+                    <div className={styles.facultyAvatar} style={fac.avatar ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
+                      {fac.avatar ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className={styles.facultyName}>{fac.name}</h4>
+                      {fac.designation && <p className={styles.facultyRole}>{fac.designation}</p>}
+                      {fac.bio && <p className={styles.facultyBio}>{fac.bio}</p>}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.facultyCard}>
+                  <div className={styles.facultyAvatar}>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className={styles.facultyName}>GKPro Expert Faculty</h4>
+                    <p className={styles.facultyRole}>Chartered Accountant · Senior Instructor</p>
+                    <p className={styles.facultyBio}>Our faculty members are experienced Chartered Accountants with years of teaching expertise in CA Foundation, Intermediate and Final examinations.</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

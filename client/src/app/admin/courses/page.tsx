@@ -6,7 +6,7 @@ import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
-import { coursesApi, type Course, type Category, type SubCategory } from "@/lib/api";
+import { coursesApi, facultyApi, type Course, type Category, type SubCategory, type Faculty } from "@/lib/api";
 import CourseForm, { courseToForm, formToPayload, type CF } from "./_components/CourseForm";
 import styles from "../admin.module.css";
 
@@ -23,6 +23,7 @@ export default function CoursesPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [allSubcats, setAllSubcats] = useState<SubCategory[]>([]);
+  const [allFaculty, setAllFaculty] = useState<Faculty[]>([]);
 
   // Edit
   const [editCourse, setEditCourse] = useState<Course | null>(null);
@@ -48,6 +49,7 @@ export default function CoursesPage() {
   useEffect(() => {
     coursesApi.categories().then(r => setCategories(r.data.categories ?? [])).catch(() => {});
     coursesApi.subcategories().then(r => setAllSubcats(r.data.subcategories ?? [])).catch(() => {});
+    facultyApi.list(1, 200).then(r => setAllFaculty(r.data.faculty ?? [])).catch(() => {});
   }, []);
 
   const subcatsFor = (catId: string) =>
@@ -243,6 +245,7 @@ export default function CoursesPage() {
               setF={setEditForm}
               categories={categories}
               subcatsFor={subcatsFor}
+              allFaculty={allFaculty}
               error={saveError}
               editSlug={editCourse.slug}
             />

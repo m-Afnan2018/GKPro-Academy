@@ -27,7 +27,7 @@ const getCourses = asyncHandler(async (req, res) => {
   }
 
   const [courses, total] = await Promise.all([
-    Course.find(filter).populate("categoryId").skip(skip).limit(limit),
+    Course.find(filter).populate("categoryId").populate("faculty").skip(skip).limit(limit),
     Course.countDocuments(filter),
   ]);
 
@@ -37,6 +37,7 @@ const getCourses = asyncHandler(async (req, res) => {
 const getCourseBySlug = asyncHandler(async (req, res) => {
   const course = await Course.findOne({ slug: req.params.slug, status: "published" })
     .populate("categoryId")
+    .populate("faculty")
     .populate("createdBy", "name");
 
   if (!course) throw new ApiError(404, "Course not found.");
@@ -95,7 +96,7 @@ const getAllCoursesAdmin = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const [courses, total] = await Promise.all([
-    Course.find().populate("categoryId").populate("subcategoryId").populate("createdBy", "name").skip(skip).limit(limit),
+    Course.find().populate("categoryId").populate("subcategoryId").populate("faculty").populate("createdBy", "name").skip(skip).limit(limit),
     Course.countDocuments(),
   ]);
 

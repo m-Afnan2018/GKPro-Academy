@@ -5,7 +5,7 @@ import Link from "next/link";
 import Sidebar from "@/components/admin/Sidebar/Sidebar";
 import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
-import { coursesApi, type Category, type SubCategory } from "@/lib/api";
+import { coursesApi, facultyApi, type Category, type SubCategory, type Faculty } from "@/lib/api";
 import CourseForm, { blankCF, formToPayload, type CF } from "../_components/CourseForm";
 import styles from "../../admin.module.css";
 
@@ -17,10 +17,12 @@ export default function NewCoursePage() {
   const [error, setError]             = useState("");
   const [categories, setCategories]   = useState<Category[]>([]);
   const [allSubcats, setAllSubcats]   = useState<SubCategory[]>([]);
+  const [allFaculty, setAllFaculty]   = useState<Faculty[]>([]);
 
   useEffect(() => {
     coursesApi.categories().then(r => setCategories(r.data.categories ?? [])).catch(() => {});
     coursesApi.subcategories().then(r => setAllSubcats(r.data.subcategories ?? [])).catch(() => {});
+    facultyApi.list(1, 200).then(r => setAllFaculty(r.data.faculty ?? [])).catch(() => {});
   }, []);
 
   const subcatsFor = (catId: string) =>
@@ -63,6 +65,7 @@ export default function NewCoursePage() {
                 setF={setForm}
                 categories={categories}
                 subcatsFor={subcatsFor}
+                allFaculty={allFaculty}
                 error={error}
               />
 

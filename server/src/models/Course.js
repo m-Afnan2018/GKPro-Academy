@@ -26,11 +26,8 @@ const courseSchema = new mongoose.Schema({
   language:    { type: String, default: null },
   highlights:  [{ type: String }],
   prerequisites: [{ type: String }],
-  // Teacher / Faculty
-  teacherName:        { type: String, default: null },
-  teacherDesignation: { type: String, default: null },
-  teacherBio:         { type: String, default: null },
-  teacherAvatar:      { type: String, default: null },
+  // Faculty (multiple)
+  faculty: [{ type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }],
   status: { type: String, enum: ["draft", "published", "archived"], default: "draft" },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   approvalStatus: { type: String, enum: ["draft", "pending", "approved", "rejected"], default: "draft" },

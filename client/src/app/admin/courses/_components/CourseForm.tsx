@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, KeyboardEvent } from "react";
-import { type Course, type Category, type SubCategory } from "@/lib/api";
+import { type Course, type Category, type SubCategory, type Faculty } from "@/lib/api";
 import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import PdfUpload from "@/components/admin/PdfUpload/PdfUpload";
 import styles from "../../admin.module.css";
@@ -22,10 +22,7 @@ export interface CF {
   highlights: string[];
   prerequisites: string[];
   technicalRequirements: string[];
-  teacherName: string;
-  teacherDesignation: string;
-  teacherBio: string;
-  teacherAvatar: string;
+  facultyIds: string[];
   onlinePrice: string;
   onlineOriginalPrice: string;
   recordedPrice: string;
@@ -42,7 +39,7 @@ export const blankCF = (): CF => ({
   title: "", categoryId: "", subcategoryId: "", description: "", overview: "",
   status: "draft", language: "", numLectures: "", duration: "",
   whoIsItFor: [], highlights: [], prerequisites: [], technicalRequirements: [],
-  teacherName: "", teacherDesignation: "", teacherBio: "", teacherAvatar: "",
+  facultyIds: [],
   onlinePrice: "", onlineOriginalPrice: "", recordedPrice: "", recordedOriginalPrice: "",
   bookEnabled: false, eBookPrice: "", eBookUrl: "", handbookPrice: "", handbookUrl: "",
   thumbnailUrl: "",
@@ -66,10 +63,7 @@ export const courseToForm = (c: Course): CF => ({
   highlights: c.highlights ?? [],
   prerequisites: c.prerequisites ?? [],
   technicalRequirements: c.technicalRequirements ?? [],
-  teacherName: c.teacherName ?? "",
-  teacherDesignation: c.teacherDesignation ?? "",
-  teacherBio: c.teacherBio ?? "",
-  teacherAvatar: c.teacherAvatar ?? "",
+  facultyIds: (c.faculty ?? []).map(f => (typeof f === "object" ? (f as Faculty)._id : f as string)),
   onlinePrice: c.onlinePrice != null ? String(c.onlinePrice) : "",
   onlineOriginalPrice: c.onlineOriginalPrice != null ? String(c.onlineOriginalPrice) : "",
   recordedPrice: c.recordedPrice != null ? String(c.recordedPrice) : "",
@@ -96,10 +90,7 @@ export const formToPayload = (f: CF) => ({
   highlights: f.highlights.filter(Boolean),
   prerequisites: f.prerequisites.filter(Boolean),
   technicalRequirements: f.technicalRequirements.filter(Boolean),
-  teacherName: f.teacherName || null,
-  teacherDesignation: f.teacherDesignation || null,
-  teacherBio: f.teacherBio || null,
-  teacherAvatar: f.teacherAvatar || null,
+  faculty: f.facultyIds,
   thumbnailUrl: f.thumbnailUrl || undefined,
   onlinePrice:         f.onlinePrice         ? Number(f.onlinePrice)         : null,
   onlineOriginalPrice: f.onlineOriginalPrice ? Number(f.onlineOriginalPrice) : null,
@@ -258,11 +249,12 @@ export interface CourseFormProps {
   setF: (v: CF) => void;
   categories: Category[];
   subcatsFor: (id: string) => SubCategory[];
+  allFaculty: Faculty[];
   error?: string;
   editSlug?: string;
 }
 
-export default function CourseForm({ f, setF, categories, subcatsFor, error, editSlug }: CourseFormProps) {
+export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty, error, editSlug }: CourseFormProps) {
   const [tab, setTab] = useState<FormTab>("basic");
   const set = (key: keyof CF, val: any) => setF({ ...f, [key]: val });
 
@@ -413,51 +405,89 @@ export default function CourseForm({ f, setF, categories, subcatsFor, error, edi
         </div>
       )}
 
-      {/* ── Teacher ── */}
+      {/* ── Faculty ── */}
       {tab === "teacher" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-            title="Teacher / Faculty"
-            subtitle="Shown on the Faculty tab of the public course page"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+            title="Faculty"
+            subtitle="Assign one or more faculty members — manage them in Admin › Faculty"
           />
-          <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-            <div style={{ width: 110, flexShrink: 0 }}>
-              <FL>Photo</FL>
-              <ImageUpload value={f.teacherAvatar} onChange={v => set("teacherAvatar", v)} />
+
+          {allFaculty.length === 0 ? (
+            <div style={{ padding: "24px 16px", textAlign: "center", background: "#F9FAFB", borderRadius: 10, border: "1.5px dashed #E5E7EB" }}>
+              <p style={{ fontSize: 13, color: "#9CA3AF" }}>No faculty added yet.</p>
+              <a href="/admin/faculty" target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#D42B3A", fontWeight: 600 }}>Go to Faculty page →</a>
             </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-              <div className={styles.formGroup}>
-                <FL>Full Name</FL>
-                <input className={styles.formInput} placeholder="e.g. CA Priya Sharma" value={f.teacherName} onChange={e => set("teacherName", e.target.value)} />
+          ) : (
+            <>
+              {/* Picker grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+                {allFaculty.map(fac => {
+                  const selected = f.facultyIds.includes(fac._id);
+                  return (
+                    <button
+                      key={fac._id}
+                      type="button"
+                      onClick={() => set("facultyIds", selected
+                        ? f.facultyIds.filter(id => id !== fac._id)
+                        : [...f.facultyIds, fac._id]
+                      )}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "10px 12px", borderRadius: 10, textAlign: "left",
+                        border: `2px solid ${selected ? "#D42B3A" : "#E5E7EB"}`,
+                        background: selected ? "#FFF1F2" : "#FAFAFA",
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#E5E7EB", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {fac.avatar
+                          ? <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        }
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: selected ? "#D42B3A" : "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fac.name}</div>
+                        {fac.designation && <div style={{ fontSize: 11, color: "#6B7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fac.designation}</div>}
+                      </div>
+                      {/* Checkmark */}
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${selected ? "#D42B3A" : "#D1D5DB"}`, background: selected ? "#D42B3A" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                        {selected && <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3"/></svg>}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div className={styles.formGroup}>
-                <FL>Designation / Title</FL>
-                <input className={styles.formInput} placeholder="e.g. Chartered Accountant · Senior Instructor" value={f.teacherDesignation} onChange={e => set("teacherDesignation", e.target.value)} />
-              </div>
-            </div>
-          </div>
-          <div className={styles.formGroup}>
-            <FL>Bio</FL>
-            <textarea className={styles.formTextarea} rows={4} placeholder="Brief biography — experience, qualifications, teaching style…" value={f.teacherBio} onChange={e => set("teacherBio", e.target.value)} />
-          </div>
-          {(f.teacherName || f.teacherAvatar) && (
-            <div style={{ padding: 16, background: "#F9FAFB", borderRadius: 10, border: "1px solid #E5E7EB" }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 12 }}>Preview</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#E5E7EB", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {f.teacherAvatar
-                    ? <img src={f.teacherAvatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  }
+
+              {/* Selected preview */}
+              {f.facultyIds.length > 0 && (
+                <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 16 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 12 }}>
+                    Selected ({f.facultyIds.length})
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {allFaculty.filter(fac => f.facultyIds.includes(fac._id)).map(fac => (
+                      <div key={fac._id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", background: "#F9FAFB", borderRadius: 10, border: "1px solid #E5E7EB" }}>
+                        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#E5E7EB", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {fac.avatar
+                            ? <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          }
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{fac.name}</div>
+                          {fac.designation && <div style={{ fontSize: 12, color: "#6B7280", marginTop: 1 }}>{fac.designation}</div>}
+                          {fac.bio && <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4, lineHeight: 1.5, maxWidth: 420 }}>{fac.bio.slice(0, 120)}{fac.bio.length > 120 ? "…" : ""}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{f.teacherName || "Teacher Name"}</div>
-                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 1 }}>{f.teacherDesignation || "Designation"}</div>
-                  {f.teacherBio && <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4, lineHeight: 1.5, maxWidth: 400 }}>{f.teacherBio.slice(0, 140)}{f.teacherBio.length > 140 ? "…" : ""}</p>}
-                </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
       )}
