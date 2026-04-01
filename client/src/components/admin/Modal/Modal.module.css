@@ -19,8 +19,15 @@
 }
 
 @keyframes pop {
-  from { transform: scale(0.95); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .header {
@@ -51,6 +58,13 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.closeBtn:hover { background: #E5E7EB; }
 
-.body { padding: 24px; }
+.closeBtn:hover {
+  background: #E5E7EB;
+}
+
+.body {
+  height: calc(100% - 70px);
+  overflow-y: scroll;
+  padding: 1rem;
+}

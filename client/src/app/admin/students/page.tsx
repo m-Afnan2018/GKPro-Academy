@@ -4,7 +4,7 @@ import Sidebar from "@/components/admin/Sidebar/Sidebar";
 import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
-import { usersApi, type User, type Enrollment, type Batch, type Course } from "@/lib/api";
+import { usersApi, type User, type Enrollment, type Course } from "@/lib/api";
 import styles from "../admin.module.css";
 
 const LIMIT = 15;
@@ -72,9 +72,7 @@ export default function StudentsPage() {
   const totalPages = Math.ceil(total / LIMIT);
 
   const getCourseTitle = (e: Enrollment) => {
-    const b = typeof e.batchId === "object" ? e.batchId as Batch : null;
-    if (!b) return "—";
-    const c = typeof b.courseId === "object" ? b.courseId as Course : null;
+    const c = typeof e.courseId === "object" ? e.courseId as Course : null;
     return c?.title ?? "—";
   };
 
@@ -190,7 +188,7 @@ export default function StudentsPage() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{getCourseTitle(e)}</div>
                       <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                        {typeof e.batchId === "object" ? (e.batchId as Batch).name : "—"}
+                        {e.mode === "online" ? "Online" : "Recorded"}
                         {" · "}Enrolled {new Date(e.enrolledAt).toLocaleDateString()}
                         {e.expiresAt && ` · Expires ${new Date(e.expiresAt).toLocaleDateString()}`}
                       </div>

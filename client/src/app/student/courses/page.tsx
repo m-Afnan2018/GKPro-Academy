@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
-import { enrollmentsApi, type Enrollment, type Batch, type Course } from "@/lib/api";
+import { enrollmentsApi, type Enrollment, type Course } from "@/lib/api";
 import styles from "./courses.module.css";
 
 export default function StudentCoursesPage() {
@@ -25,27 +25,29 @@ export default function StudentCoursesPage() {
 
   const filtered = filter === "all" ? enrollments : enrollments.filter((e) => e.status === filter);
 
-  const courseTitle = (e: Enrollment) => {
-    const batch = e.batchId as Partial<Batch>;
-    if (batch && typeof batch === "object" && batch.courseId) {
-      const c = batch.courseId as Partial<Course>;
-      return typeof c === "object" ? c.title ?? "—" : "—";
-    }
-    return "—";
+  const courseTitle = (e: Enrollment): string => {
+    const batch = (e as any).batchId;
+    if (batch?.courseId?.title) return batch.courseId.title;
+    const c = e.courseId as Partial<Course>;
+    return typeof c === "object" && c ? c.title ?? "—" : "—";
   };
 
-  const courseSlug = (e: Enrollment) => {
-    const batch = e.batchId as Partial<Batch>;
-    if (batch && typeof batch === "object" && batch.courseId) {
-      const c = batch.courseId as Partial<Course>;
-      return typeof c === "object" ? c.slug ?? "" : "";
-    }
-    return "";
+  const courseSlug = (e: Enrollment): string => {
+    const batch = (e as any).batchId;
+    if (batch?.courseId?.slug) return batch.courseId.slug;
+    const c = e.courseId as Partial<Course>;
+    return typeof c === "object" && c ? c.slug ?? "" : "";
   };
 
-  const batchName = (e: Enrollment) => {
-    const batch = e.batchId as Partial<Batch>;
-    return batch && typeof batch === "object" ? batch.name ?? "—" : "—";
+  const courseThumbnail = (e: Enrollment): string => {
+    return (e as any).batchId?.courseId?.thumbnailUrl ?? "";
+  };
+
+  const enrollmentMode = (e: Enrollment): string => {
+    const m = (e as any).batchId?.mode ?? e.mode;
+    if (m === "recorded") return "Recorded";
+    if (m === "one_on_one") return "One-on-One";
+    return "Online (Live)";
   };
 
   const statusColor = (s: string) =>
@@ -95,17 +97,17 @@ export default function StudentCoursesPage() {
                 const slug = courseSlug(e);
                 return (
                   <div key={e._id} className={styles.card}>
-                    <div className={styles.cardTop}>
-                      <div className={styles.cardIcon}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                      <span className={`${styles.badge} ${statusColor(e.status)}`}>{e.status}</span>
+                    {/* Thumbnail */}
+                    <div style={{ height: 140, background: "linear-gradient(135deg,#1a1a2e,#3a3a5c)", borderRadius: "12px 12px 0 0", overflow: "hidden", position: "relative", marginBottom: 14 }}>
+                      {courseThumbnail(e) && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={courseThumbnail(e)} alt={courseTitle(e)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                      )}
+                      <span style={{ position: "absolute", top: 10, right: 10 }} className={`${styles.badge} ${statusColor(e.status)}`}>{e.status}</span>
                     </div>
+                    <div style={{ padding: "0 16px" }}>
                     <h3 className={styles.cardTitle}>{courseTitle(e)}</h3>
-                    <p className={styles.cardBatch}>{batchName(e)}</p>
+                    <p className={styles.cardBatch}>{enrollmentMode(e)}</p>
                     <div className={styles.cardDates}>
                       <span>Enrolled {new Date(e.enrolledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                       {e.expiresAt && (
@@ -119,9 +121,7 @@ export default function StudentCoursesPage() {
                       {slug && (
                         <Link href={`/courses/${slug}`} className={styles.cardLink}>View Details</Link>
                       )}
-                      {e.status === "active" && slug && (
-                        <Link href={`/courses/${slug}#upgrade`} className={styles.cardLink} style={{ color: "#1D4ED8" }}>Change Plan</Link>
-                      )}
+                    </div>
                     </div>
                   </div>
                 );

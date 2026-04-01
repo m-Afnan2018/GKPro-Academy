@@ -7,6 +7,7 @@ const {
   updateResource,
   deleteResource,
   accessResource,
+  reorderResources,
 } = require("../controllers/resource.controller");
 const { protect } = require("../middleware/auth");
 const { requireRole } = require("../middleware/roles");
@@ -31,6 +32,8 @@ router.get("/", optionalAuth, getResources);
 router.post("/:id/access", optionalAuth, accessResource);
 router.get("/:id", getResource);
 router.post("/", protect, requireRole("admin", "manager"), approvalGuard, createResource);
+// reorder must be before /:id to avoid being captured as an ID param
+router.patch("/reorder", protect, requireRole("admin", "manager"), reorderResources);
 router.patch("/:id", protect, requireRole("admin", "manager"), approvalGuard, updateResource);
 router.delete("/:id", protect, requireRole("admin"), deleteResource);
 

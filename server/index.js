@@ -17,6 +17,12 @@ app.post("/api/payments/razorpay/webhook", express.raw({ type: "*/*" }), razorpa
 
 app.use(express.json());
 
+// Serve uploaded files
+// Images are public (used on public website); material files (pdf/video/doc) require JWT
+const path = require("path");
+const { serveUploads } = require("./src/middleware/serveUploads");
+app.use("/uploads", serveUploads(path.join(__dirname, "uploads")));
+
 // Health check
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
@@ -39,6 +45,7 @@ app.use("/api/resources", require("./src/routes/resource.routes"));
 app.use("/api/blogs", require("./src/routes/blog.routes"));
 app.use("/api/faqs", require("./src/routes/faq.routes"));
 app.use("/api/approvals", require("./src/routes/approval.routes"));
+app.use("/api/upload",   require("./src/routes/upload.routes"));
 
 // Global error handler (must be last)
 app.use(errorHandler);

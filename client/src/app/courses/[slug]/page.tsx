@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
-import { batchesApi, enrollmentsApi, type Course, type CoursePlan, type Faq, type Category, type Batch } from "@/lib/api";
+import { enrollmentsApi, type Course, type Faq, type Category } from "@/lib/api";
 import { getStudentToken, getStudentUser } from "@/lib/studentAuth";
 import styles from "./course.module.css";
 
@@ -16,9 +16,10 @@ const CARD_GRADIENTS = [
   "linear-gradient(135deg,#1c3a4a 0%,#0f4c75 100%)",
 ];
 
-interface CourseDetail { course: Course; plans: CoursePlan[]; faqs: Faq[]; }
+interface CourseDetail { course: Course; faqs: Faq[]; }
 
 type Tab = "description" | "requirements" | "faculty" | "faq";
+type Mode = "online" | "recorded";
 
 export default function CourseDetailPage() {
   const { slug }  = useParams<{ slug: string }>();
@@ -27,25 +28,24 @@ export default function CourseDetailPage() {
   const [data, setData]         = useState<CourseDetail | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
-  const [batches, setBatches]   = useState<Batch[]>([]);
   const [related, setRelated]   = useState<Course[]>([]);
   const [tab, setTab]           = useState<Tab>("description");
   const [openFaq, setOpenFaq]   = useState<string | null>(null);
 
-  // Selected mode/plan
-  const [selectedMode, setSelectedMode]   = useState("");
-  const [selectedPlan, setSelectedPlan]   = useState<CoursePlan | null>(null);
+  const [selectedMode, setSelectedMode] = useState<Mode>("online");
 
-  // Enrollment modal
-  const [enrolling, setEnrolling]         = useState(false);
-  const [enrollError, setEnrollError]     = useState("");
-  const [enrollDone, setEnrollDone]       = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState("");
-  const [showModal, setShowModal]         = useState(false);
+  type BookType = "none" | "ebook" | "handbook";
+  const [selectedBook, setSelectedBook]         = useState<BookType>("none");
+  const [deliveryAddress, setDeliveryAddress]   = useState("");
+  const [addressError, setAddressError]         = useState("");
 
-  // Existing enrollment (for upgrade flow)
-  const [existingEnrollment, setExistingEnrollment] = useState<{ _id: string; batchId: any; planId: any } | null>(null);
-  const [upgradeMode, setUpgradeMode]               = useState(false);
+  const [enrolling, setEnrolling]     = useState(false);
+  const [enrollError, setEnrollError] = useState("");
+  const [enrollDone, setEnrollDone]   = useState(false);
+  const [showModal, setShowModal]     = useState(false);
+
+  // All active enrollments for this course (student may have bought both online + recorded)
+  const [courseEnrollments, setCourseEnrollments] = useState<{ _id: string; mode: Mode }[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -56,29 +56,24 @@ export default function CourseDetailPage() {
         if (!json.success) { setError(json.message ?? "Course not found."); return; }
         const d: CourseDetail = json.data;
         setData(d);
-        if (d.plans.length) setSelectedPlan(d.plans[0]);
-        // fetch batches (public now)
-        fetch(`${BASE}/batches?courseId=${d.course._id}&limit=50`)
-          .then(r => r.json())
-          .then(bj => {
-            const bs: Batch[] = bj.data?.batches ?? [];
-            setBatches(bs);
-            if (bs.length) setSelectedMode(bs[0].mode);
-          })
-          .catch(() => {});
-        // Check if student is already enrolled in this course
+
+        // Default mode: online if available, else recorded
+        if (d.course.onlinePrice) setSelectedMode("online");
+        else if (d.course.recordedPrice) setSelectedMode("recorded");
+
+        // Check if student is already enrolled
         const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
         if (tk) {
           fetch(`${BASE}/enrollments?limit=100`, { headers: { Authorization: `Bearer ${tk}` } })
             .then(r => r.json())
             .then(ej => {
               const enrollments: any[] = ej.data?.enrollments ?? [];
-              const active = enrollments.find((en: any) => {
+              const active = enrollments.filter((en: any) => {
                 if (en.status !== "active") return false;
-                const enCourseId = en.batchId?.courseId?._id ?? en.batchId?.courseId;
+                const enCourseId = typeof en.courseId === "object" ? en.courseId?._id : en.courseId;
                 return enCourseId === d.course._id;
               });
-              if (active) setExistingEnrollment(active);
+              if (active.length) setCourseEnrollments(active.map((en: any) => ({ _id: en._id, mode: en.mode })));
             })
             .catch(() => {});
         }
@@ -99,93 +94,97 @@ export default function CourseDetailPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const handleBuyNow = async (isUpgrade = false) => {
+  const handleBuyNow = () => {
     const tk = getStudentToken();
     if (!tk) { router.push(`/login?next=/courses/${slug}`); return; }
-    if (!selectedPlan) return;
-    setUpgradeMode(isUpgrade);
-    setEnrollError(""); setEnrollDone(false); setSelectedBatch("");
+    // Validate address before opening modal
+    if (selectedBook === "handbook" && !deliveryAddress.trim()) {
+      setAddressError("Please enter your delivery address for the handbook.");
+      return;
+    }
+    setAddressError(""); setEnrollError(""); setEnrollDone(false);
     setShowModal(true);
-    const batch = batches.find(b => b.mode === selectedMode) ?? batches[0];
-    if (batch) setSelectedBatch(batch._id);
   };
 
   const handleConfirmEnroll = async () => {
-    if (!selectedPlan || !selectedBatch) return;
+    if (!data) return;
     setEnrolling(true); setEnrollError("");
+    const price = selectedMode === "online" ? data.course.onlinePrice : data.course.recordedPrice;
+
     try {
       const tk = getStudentToken();
-      const upgradeEnrollmentId = upgradeMode && existingEnrollment ? existingEnrollment._id : undefined;
-      // Try Razorpay first
-      const orderRes = await fetch(`${BASE}/payments/razorpay/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
-        body: JSON.stringify({ planId: selectedPlan._id, batchId: selectedBatch, upgradeEnrollmentId }),
-      }).then(r => r.json());
 
-      if (!orderRes.success) {
-        // Already enrolled — treat as success so user gets redirect to courses
-        if (orderRes.message?.includes("already enrolled")) {
-          setEnrollDone(true); return;
+      if (price && price > 0) {
+        // Razorpay payment flow
+        const orderRes = await fetch(`${BASE}/payments/razorpay/create-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
+          body: JSON.stringify({ courseId: data.course._id, mode: selectedMode, bookType: selectedBook, deliveryAddress: selectedBook === "handbook" ? deliveryAddress : undefined }),
+        }).then(r => r.json());
+
+        if (!orderRes.success) {
+          if (orderRes.message?.includes("already enrolled")) { setEnrollDone(true); return; }
+          if (orderRes.message?.includes("not configured")) {
+            await enrollmentsApi.create(data.course._id, selectedMode, selectedBook, selectedBook === "handbook" ? deliveryAddress : undefined);
+            setEnrollDone(true); return;
+          }
+          throw new Error(orderRes.message ?? "Could not create payment order.");
         }
-        // Razorpay not configured — fallback to free enrollment
-        if (orderRes.message?.includes("not configured")) {
-          await enrollmentsApi.create(selectedBatch, selectedPlan._id);
-          setEnrollDone(true); return;
-        }
-        throw new Error(orderRes.message ?? "Could not create payment order.");
+
+        await new Promise<void>((resolve, reject) => {
+          if ((window as any).Razorpay) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load payment gateway"));
+          document.body.appendChild(s);
+        });
+
+        const { orderId, amount, currency, key } = orderRes.data;
+
+        await new Promise<void>((resolve, reject) => {
+          const options = {
+            key,
+            amount,
+            currency,
+            name: "GKPro Academy",
+            description: `${selectedMode === "online" ? "Online" : "Recorded"} — ${data.course.title}`,
+            order_id: orderId,
+            handler: async (response: any) => {
+              try {
+                const verifyRes = await fetch(`${BASE}/payments/razorpay/verify`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    courseId: data.course._id,
+                    mode: selectedMode,
+                    bookType: selectedBook,
+                    deliveryAddress: selectedBook === "handbook" ? deliveryAddress : undefined,
+                  }),
+                }).then(r => r.json());
+                if (verifyRes.success) resolve();
+                else reject(new Error(verifyRes.message ?? "Payment verification failed"));
+              } catch (e) { reject(e); }
+            },
+            modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+            prefill: {
+              name:    getStudentUser()?.name  ?? "",
+              email:   getStudentUser()?.email ?? "",
+              contact: getStudentUser()?.phone ?? "",
+            },
+            theme: { color: "#D42B3A" },
+          };
+          const rz = new (window as any).Razorpay(options);
+          rz.on("payment.failed", () => reject(new Error("Payment failed")));
+          rz.open();
+        });
+      } else {
+        // Free enrollment
+        await enrollmentsApi.create(data.course._id, selectedMode, selectedBook, selectedBook === "handbook" ? deliveryAddress : undefined);
       }
-
-      // Load Razorpay script
-      await new Promise<void>((resolve, reject) => {
-        if ((window as any).Razorpay) { resolve(); return; }
-        const s = document.createElement("script");
-        s.src = "https://checkout.razorpay.com/v1/checkout.js";
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error("Failed to load payment gateway"));
-        document.body.appendChild(s);
-      });
-
-      const { orderId, amount, currency, key } = orderRes.data;
-
-      await new Promise<void>((resolve, reject) => {
-        const options = {
-          key,
-          amount,
-          currency,
-          name: "GKPro Academy",
-          description: `${selectedPlan.planType} - ${data?.course.title}`,
-          order_id: orderId,
-          handler: async (response: any) => {
-            try {
-              const verifyRes = await fetch(`${BASE}/payments/razorpay/verify`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  planId: selectedPlan._id,
-                  batchId: selectedBatch,
-                  upgradeEnrollmentId,
-                }),
-              }).then(r => r.json());
-              if (verifyRes.success) resolve();
-              else reject(new Error(verifyRes.message ?? "Payment verification failed"));
-            } catch (e) { reject(e); }
-          },
-          modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
-          prefill: {
-            name:    getStudentUser()?.name  ?? "",
-            email:   getStudentUser()?.email ?? "",
-            contact: getStudentUser()?.phone ?? "",
-          },
-          theme: { color: "#D42B3A" },
-        };
-        const rz = new (window as any).Razorpay(options);
-        rz.on("payment.failed", () => reject(new Error("Payment failed")));
-        rz.open();
-      });
 
       setEnrollDone(true);
     } catch (e: any) {
@@ -197,28 +196,38 @@ export default function CourseDetailPage() {
 
   const closeModal = () => { setShowModal(false); setEnrollDone(false); setEnrollError(""); };
 
-  const catName = data ? (
-    typeof data.course.categoryId === "object"
-      ? (data.course.categoryId as Category).name
-      : ""
-  ) : "";
+  const catName = data?.course?.categoryId && typeof data.course.categoryId === "object"
+    ? (data.course.categoryId as Category).name
+    : "";
 
-  const activePlan = selectedPlan ?? data?.plans[0];
-  const originalPrice = activePlan ? Math.round(activePlan.price / 0.85 / 100) * 100 : 0;
-  const discount = activePlan && originalPrice
-    ? Math.round((1 - activePlan.price / originalPrice) * 100) : 0;
+  const coursePrice = data
+    ? (selectedMode === "online" ? data.course.onlinePrice : data.course.recordedPrice)
+    : null;
 
-  const modeLabel = (m: string) => m === "recorded" ? "Recorded" : m === "one_on_one" ? "One-on-One" : "Online (Live)";
+  const bookAddon = data?.course.bookEnabled
+    ? (selectedBook === "ebook"    ? (data.course.eBookPrice    ?? 0)
+     : selectedBook === "handbook" ? (data.course.handbookPrice ?? 0)
+     : 0)
+    : 0;
+
+  const price = coursePrice != null ? coursePrice + bookAddon : null;
+
+  const originalCoursePrice = data
+    ? (selectedMode === "online" ? (data.course.onlineOriginalPrice ?? null) : (data.course.recordedOriginalPrice ?? null))
+    : null;
+  const discount = coursePrice && originalCoursePrice && originalCoursePrice > coursePrice
+    ? Math.round((1 - coursePrice / originalCoursePrice) * 100)
+    : 0;
+
+  const hasBoth = !!(data?.course.onlinePrice && data?.course.recordedPrice);
 
   /* ── Specs table rows ─── */
   const specs = data ? [
-    { label: "No of Lectures",  value: "70 – 75 Lectures (Approx)" },
-    { label: "Duration",        value: activePlan ? `${activePlan.validityDays} Days Access` : "—" },
-    { label: "Mode",            value: selectedMode ? modeLabel(selectedMode) : "—" },
-    { label: "Validity",        value: activePlan ? `${activePlan.validityDays} Days from Activation` : "—" },
-    { label: "Study Material",  value: activePlan?.features?.join(" | ") || "Included" },
-    { label: "Faculty",         value: "GKPro Expert Faculty" },
-    { label: "Plan",            value: activePlan?.planType ? activePlan.planType.charAt(0).toUpperCase() + activePlan.planType.slice(1) : "—" },
+    ...(data.course.numLectures ? [{ label: "No of Lectures", value: data.course.numLectures }] : [{ label: "No of Lectures", value: "70 – 75 Lectures (Approx)" }]),
+    { label: "Mode", value: selectedMode === "online" ? "Online (Live)" : "Recorded" },
+    ...(data.course.duration   ? [{ label: "Duration",   value: data.course.duration }]   : []),
+    ...(data.course.language   ? [{ label: "Language",   value: data.course.language }]   : []),
+    ...(data.course.teacherName ? [{ label: "Faculty",  value: data.course.teacherName }] : [{ label: "Faculty", value: "GKPro Expert Faculty" }]),
   ] : [];
 
   if (loading) return (
@@ -240,7 +249,7 @@ export default function CourseDetailPage() {
     </>
   );
 
-  const { course, plans, faqs } = data;
+  const { course, faqs } = data;
 
   return (
     <>
@@ -258,7 +267,6 @@ export default function CourseDetailPage() {
             <span>{course.title}</span>
           </div>
         </div>
-        {/* Decorative chevrons */}
         <div className={styles.heroChevrons}>
           {[0,1,2].map(i => (
             <svg key={i} width="22" height="14" viewBox="0 0 22 14" fill="none" opacity={0.4 - i * 0.12}>
@@ -274,12 +282,17 @@ export default function CourseDetailPage() {
           {/* Left: preview image */}
           <div className={styles.previewWrap}>
             <div className={styles.previewImg}>
-              <div className={styles.previewOverlay} />
-              <button className={styles.previewPlay}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-              </button>
+              {course.thumbnailUrl
+                ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={course.thumbnailUrl}
+                    alt={course.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                )
+                : <div className={styles.previewOverlay} />
+              }
             </div>
           </div>
 
@@ -289,76 +302,153 @@ export default function CourseDetailPage() {
               The Complete {catName} – {course.title} Guideline 2026
             </h2>
 
-            {/* Mode dropdown */}
-            {batches.length > 0 && (
+            {/* Mode selector */}
+            {hasBoth && (
               <div className={styles.fieldRow}>
                 <label className={styles.fieldLabel}>Choose Your Mode:</label>
-                <select
-                  className={styles.fieldSelect}
-                  value={selectedMode}
-                  onChange={e => setSelectedMode(e.target.value)}
-                >
-                  <option value="">Select Mode</option>
-                  {[...new Set(batches.map(b => b.mode))].map(m => (
-                    <option key={m} value={m}>{modeLabel(m)}</option>
-                  ))}
-                </select>
+                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                  {(["online", "recorded"] as Mode[]).map((m) => {
+                    const mPrice = m === "online" ? course.onlinePrice : course.recordedPrice;
+                    if (!mPrice) return null;
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => setSelectedMode(m)}
+                        style={{
+                          flex: 1,
+                          padding: "10px 14px",
+                          borderRadius: 8,
+                          border: `2px solid ${selectedMode === m ? "#D42B3A" : "#E5E7EB"}`,
+                          background: selectedMode === m ? "#FFF1F2" : "#fff",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: selectedMode === m ? "#D42B3A" : "#374151",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {m === "online" ? "Online (Live)" : "Recorded"}
+                        <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2, color: selectedMode === m ? "#D42B3A" : "#6B7280" }}>
+                          ₹{mPrice.toLocaleString("en-IN")}
+                        </div>
+                        {(() => {
+                          const origP = m === "online" ? course.onlineOriginalPrice : course.recordedOriginalPrice;
+                          if (!origP || origP <= mPrice) return null;
+                          const pct = Math.round((1 - mPrice / origP) * 100);
+                          return <div style={{ fontSize: 10, fontWeight: 700, color: "#D42B3A", marginTop: 1 }}>{pct}% off</div>;
+                        })()}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
-            {/* Plan dropdown */}
-            {plans.length > 0 && (
+            {!hasBoth && (course.onlinePrice || course.recordedPrice) && (
               <div className={styles.fieldRow}>
-                <label className={styles.fieldLabel}>Choose Your Plan:</label>
-                <select
-                  className={styles.fieldSelect}
-                  value={selectedPlan?._id ?? ""}
-                  onChange={e => setSelectedPlan(plans.find(p => p._id === e.target.value) ?? null)}
-                >
-                  <option value="">Select Plan</option>
-                  {plans.map(p => (
-                    <option key={p._id} value={p._id}>
-                      {p.planType.charAt(0).toUpperCase() + p.planType.slice(1)} — ₹{p.price.toLocaleString("en-IN")}
-                    </option>
-                  ))}
-                </select>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+                  Mode: {course.onlinePrice ? "Online (Live)" : "Recorded"}
+                </span>
+              </div>
+            )}
+
+            {/* Book add-on selector */}
+            {data?.course.bookEnabled && (data.course.eBookPrice || data.course.handbookPrice) && (
+              <div className={styles.fieldRow}>
+                <label className={styles.fieldLabel}>Book Add-on:</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+                  {/* No Book option */}
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "none" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "none" ? "#FFF1F2" : "#fff" }}>
+                    <input type="radio" name="bookType" value="none" checked={selectedBook === "none"} onChange={() => { setSelectedBook("none"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>No Book</span>
+                  </label>
+                  {/* eBook option */}
+                  {data.course.eBookPrice ? (
+                    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "ebook" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "ebook" ? "#FFF1F2" : "#fff" }}>
+                      <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"} onChange={() => { setSelectedBook("ebook"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                        eBook (PDF)
+                        <span style={{ marginLeft: 8, fontSize: 12, color: "#D42B3A", fontWeight: 700 }}>+ ₹{data.course.eBookPrice.toLocaleString("en-IN")}</span>
+                      </span>
+                    </label>
+                  ) : null}
+                  {/* Handbook option */}
+                  {data.course.handbookPrice ? (
+                    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "handbook" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "handbook" ? "#FFF1F2" : "#fff" }}>
+                      <input type="radio" name="bookType" value="handbook" checked={selectedBook === "handbook"} onChange={() => { setSelectedBook("handbook"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                        Handbook (Physical)
+                        <span style={{ marginLeft: 8, fontSize: 12, color: "#D42B3A", fontWeight: 700 }}>+ ₹{data.course.handbookPrice.toLocaleString("en-IN")}</span>
+                      </span>
+                    </label>
+                  ) : null}
+                </div>
+                {/* Delivery address for handbook */}
+                {selectedBook === "handbook" && (
+                  <div style={{ marginTop: 10 }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Delivery Address <span style={{ color: "#D42B3A" }}>*</span></label>
+                    <textarea
+                      rows={3}
+                      placeholder="Full address with pin code…"
+                      value={deliveryAddress}
+                      onChange={(e) => { setDeliveryAddress(e.target.value); if (e.target.value.trim()) setAddressError(""); }}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${addressError ? "#DC2626" : "#E5E7EB"}`, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit" }}
+                    />
+                    {addressError && <p style={{ fontSize: 12, color: "#DC2626", marginTop: 3 }}>{addressError}</p>}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Price */}
-            {activePlan && (
+            {coursePrice != null && (
               <div className={styles.priceRow}>
-                <span className={styles.priceOld}>₹{originalPrice.toLocaleString("en-IN")}</span>
-                <span className={styles.priceNew}>₹{activePlan.price.toLocaleString("en-IN")}</span>
+                {originalCoursePrice && originalCoursePrice > coursePrice && (
+                  <span className={styles.priceOld}>₹{originalCoursePrice.toLocaleString("en-IN")}</span>
+                )}
+                <span className={styles.priceNew}>₹{coursePrice.toLocaleString("en-IN")}</span>
                 {discount > 0 && <span className={styles.discBadge}>{discount}% Off</span>}
               </div>
             )}
+            {bookAddon > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "#6B7280", padding: "2px 0" }}>
+                <span>+ {selectedBook === "ebook" ? "eBook" : "Handbook"}</span>
+                <span style={{ color: "#D42B3A", fontWeight: 600 }}>₹{bookAddon.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {bookAddon > 0 && coursePrice != null && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB", paddingTop: 8, marginTop: 4 }}>
+                <span>Total</span>
+                <span>₹{price!.toLocaleString("en-IN")}</span>
+              </div>
+            )}
 
-            {existingEnrollment ? (() => {
-              const existingPlanId  = typeof existingEnrollment.planId  === "object" ? existingEnrollment.planId?._id  : existingEnrollment.planId;
-              const existingBatchId = typeof existingEnrollment.batchId === "object" ? existingEnrollment.batchId?._id : existingEnrollment.batchId;
-              const candidateBatch  = batches.find(b => b.mode === selectedMode) ?? batches[0];
-              const isSame = selectedPlan?._id === existingPlanId && candidateBatch?._id === existingBatchId;
+            {courseEnrollments.length > 0 ? (() => {
+              const enrolledModes = courseEnrollments.map(e => e.mode);
+              const alreadyHasSelected = enrolledModes.includes(selectedMode);
+              // Link to the enrollment matching the selected mode, or the first one
+              const linkEnrollment = courseEnrollments.find(e => e.mode === selectedMode) ?? courseEnrollments[0];
+              const enrolledLabel = enrolledModes.map(m => m === "online" ? "Online" : "Recorded").join(" & ");
               return (
                 <div>
                   <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#166534" }}>
-                    You are enrolled in this course.
+                    You are enrolled in this course ({enrolledLabel}).
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
                     <Link
-                      href={`/student/courses/${existingEnrollment._id}`}
+                      href={`/student/courses/${linkEnrollment._id}`}
                       className={styles.buyBtn}
                       style={{ flex: 1, textAlign: "center", textDecoration: "none" }}
                     >
                       Continue Learning
                     </Link>
-                    {!isSame && (
+                    {!alreadyHasSelected && price && (
                       <button
                         className={styles.buyBtn}
                         style={{ flex: 1, background: "#1D4ED8" }}
-                        onClick={() => handleBuyNow(true)}
+                        onClick={handleBuyNow}
                       >
-                        Change Plan
+                        Also Buy {selectedMode === "online" ? "Online" : "Recorded"}
                       </button>
                     )}
                   </div>
@@ -366,7 +456,7 @@ export default function CourseDetailPage() {
               );
             })() : (
               <>
-                <button className={styles.buyBtn} onClick={() => handleBuyNow(false)}>
+                <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!price}>
                   {getStudentToken() ? "Enroll Now" : "Buy Now"}
                 </button>
                 {!getStudentToken() && (
@@ -393,7 +483,6 @@ export default function CourseDetailPage() {
         </div>
 
         <div className={styles.tabContent}>
-          {/* Description tab */}
           {tab === "description" && (
             <div className={styles.specsTable}>
               {specs.map((row, i) => (
@@ -408,45 +497,86 @@ export default function CourseDetailPage() {
                   <p className={styles.overviewText}>{course.overview}</p>
                 </div>
               )}
+              {course.highlights && course.highlights.length > 0 && (
+                <div className={styles.overviewBlock}>
+                  <h3 className={styles.overviewTitle}>Course Highlights</h3>
+                  {course.highlights.map((h, i) => (
+                    <div key={i} className={styles.reqItem} style={{ marginBottom: 6 }}>
+                      <span style={{ color: "#D42B3A", flexShrink: 0 }}>✓</span>
+                      <span>{h}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {course.whoIsItFor && course.whoIsItFor.length > 0 && (
+                <div className={styles.overviewBlock}>
+                  <h3 className={styles.overviewTitle}>Who Is This Course For?</h3>
+                  {course.whoIsItFor.map((w, i) => (
+                    <div key={i} className={styles.reqItem} style={{ marginBottom: 6 }}>
+                      <span className={styles.reqDot} />
+                      <span>{w}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Requirements tab */}
           {tab === "requirements" && (
             <div className={styles.reqList}>
-              {course.technicalRequirements && course.technicalRequirements.length > 0 ? (
-                course.technicalRequirements.map((r, i) => (
-                  <div key={i} className={styles.reqItem}>
-                    <span className={styles.reqDot} />
-                    <span>{r}</span>
-                  </div>
-                ))
+              {(course.prerequisites && course.prerequisites.length > 0) || (course.technicalRequirements && course.technicalRequirements.length > 0) ? (
+                <>
+                  {course.prerequisites && course.prerequisites.length > 0 && (
+                    <>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, marginTop: 0 }}>Prerequisites / Prior Knowledge</h4>
+                      {course.prerequisites.map((r, i) => (
+                        <div key={i} className={styles.reqItem}>
+                          <span className={styles.reqDot} />
+                          <span>{r}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {course.technicalRequirements && course.technicalRequirements.length > 0 && (
+                    <>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, marginTop: course.prerequisites?.length ? 16 : 0 }}>Technical Requirements</h4>
+                      {course.technicalRequirements.map((r, i) => (
+                        <div key={i} className={styles.reqItem}>
+                          <span className={styles.reqDot} />
+                          <span>{r}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
               ) : (
                 <p className={styles.emptyTab}>No specific requirements. This course is beginner-friendly.</p>
               )}
             </div>
           )}
 
-          {/* Faculty tab */}
           {tab === "faculty" && (
             <div className={styles.facultyCard}>
-              <div className={styles.facultyAvatar}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
+              <div className={styles.facultyAvatar} style={course.teacherAvatar ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
+                {course.teacherAvatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={course.teacherAvatar} alt={course.teacherName ?? "Teacher"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                )}
               </div>
               <div>
-                <h4 className={styles.facultyName}>GKPro Expert Faculty</h4>
-                <p className={styles.facultyRole}>Chartered Accountant · Senior Instructor</p>
+                <h4 className={styles.facultyName}>{course.teacherName ?? "GKPro Expert Faculty"}</h4>
+                <p className={styles.facultyRole}>{course.teacherDesignation ?? "Chartered Accountant · Senior Instructor"}</p>
                 <p className={styles.facultyBio}>
-                  Our faculty members are experienced Chartered Accountants with years of teaching
-                  expertise in CA Foundation, Intermediate and Final examinations.
+                  {course.teacherBio ?? "Our faculty members are experienced Chartered Accountants with years of teaching expertise in CA Foundation, Intermediate and Final examinations."}
                 </p>
               </div>
             </div>
           )}
 
-          {/* FAQ tab */}
           {tab === "faq" && (
             <div className={styles.faqList}>
               {faqs.length > 0 ? faqs.map(f => (
@@ -477,17 +607,16 @@ export default function CourseDetailPage() {
                 return (
                   <Link href={`/courses/${c.slug}`} key={c._id} className={styles.relCard}>
                     <div className={styles.relCardImg} style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}>
-                      <span className={`${styles.relBadge} ${i % 2 === 0 ? styles.badgeOnline : styles.badgeRecorded}`}>
-                        {i % 2 === 0 ? "Online" : "Recorded"}
+                      <span className={`${styles.relBadge} ${c.onlinePrice ? styles.badgeOnline : styles.badgeRecorded}`}>
+                        {c.onlinePrice ? "Online" : "Recorded"}
                       </span>
                     </div>
                     <div className={styles.relCardBody}>
                       <h3 className={styles.relCardTitle}>{c.title}</h3>
                       {c.description && <p className={styles.relCardDesc}>{c.description}</p>}
                       <div className={styles.relCardPrice}>
-                        <span className={styles.relPriceOld}>₹10,100</span>
-                        <span className={styles.relPriceNew}>₹8500</span>
-                        <span className={styles.relDiscount}>15% Off</span>
+                        {c.onlinePrice && <span className={styles.relPriceNew}>₹{c.onlinePrice.toLocaleString("en-IN")}</span>}
+                        {c.recordedPrice && <span className={styles.relPriceNew} style={{ marginLeft: c.onlinePrice ? 8 : 0 }}>₹{c.recordedPrice.toLocaleString("en-IN")}</span>}
                       </div>
                     </div>
                   </Link>
@@ -511,8 +640,8 @@ export default function CourseDetailPage() {
                 <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
                 </svg>
-                <h3>{upgradeMode ? "Plan Changed Successfully!" : "Enrolled Successfully!"}</h3>
-                <p>{upgradeMode ? "Your enrollment has been updated to the new plan." : <>You are now enrolled in <strong>{course.title}</strong>.</>}</p>
+                <h3>Enrolled Successfully!</h3>
+                <p>You are now enrolled in <strong>{course.title}</strong> ({selectedMode === "online" ? "Online" : "Recorded"}{selectedBook !== "none" ? ` + ${selectedBook === "ebook" ? "eBook" : "Handbook"}` : ""}).</p>
                 <Link href="/student/courses" className={styles.modalSuccessBtn} onClick={closeModal}>
                   Go to My Courses →
                 </Link>
@@ -520,7 +649,7 @@ export default function CourseDetailPage() {
             ) : (
               <>
                 <div className={styles.modalHead}>
-                  <h3>{upgradeMode ? "Change Plan / Switch Batch" : "Confirm Enrollment"}</h3>
+                  <h3>Confirm Enrollment</h3>
                   <button className={styles.modalClose} onClick={closeModal}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -528,26 +657,28 @@ export default function CourseDetailPage() {
                   </button>
                 </div>
                 <div className={styles.modalBody}>
-                  {activePlan && (
-                    <div className={styles.modalPlanRow}>
-                      <span className={styles.modalPlanType}>
-                        {activePlan.planType.charAt(0).toUpperCase() + activePlan.planType.slice(1)} Plan
-                      </span>
-                      <span className={styles.modalPlanPrice}>₹{activePlan.price.toLocaleString("en-IN")}</span>
+                  <div className={styles.modalPlanRow}>
+                    <span className={styles.modalPlanType}>
+                      {selectedMode === "online" ? "Online (Live)" : "Recorded"}
+                    </span>
+                    {coursePrice != null && <span className={styles.modalPlanPrice}>₹{coursePrice.toLocaleString("en-IN")}</span>}
+                  </div>
+                  {bookAddon > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", fontSize: 13, color: "#6B7280", borderTop: "1px solid #F3F4F6" }}>
+                      <span>+ {selectedBook === "ebook" ? "eBook (PDF)" : "Handbook (Physical)"}</span>
+                      <span style={{ color: "#D42B3A", fontWeight: 600 }}>₹{bookAddon.toLocaleString("en-IN")}</span>
                     </div>
                   )}
-                  {batches.length > 1 && (
-                    <>
-                      <label className={styles.modalLabel}>Select Batch</label>
-                      <select className={styles.modalSelect} value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)}>
-                        <option value="">— Choose a batch —</option>
-                        {batches.filter(b => !selectedMode || b.mode === selectedMode).map(b => (
-                          <option key={b._id} value={b._id}>
-                            {b.name} · {modeLabel(b.mode)} · {new Date(b.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                          </option>
-                        ))}
-                      </select>
-                    </>
+                  {bookAddon > 0 && coursePrice != null && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0 4px", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB" }}>
+                      <span>Total</span>
+                      <span>₹{price!.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                  {selectedBook === "handbook" && deliveryAddress && (
+                    <div style={{ marginTop: 8, padding: "8px 10px", background: "#F9FAFB", borderRadius: 6, fontSize: 12, color: "#374151" }}>
+                      <span style={{ fontWeight: 600 }}>Delivery to:</span> {deliveryAddress}
+                    </div>
                   )}
                   {enrollError && <div className={styles.modalError}>{enrollError}</div>}
                 </div>
@@ -556,11 +687,9 @@ export default function CourseDetailPage() {
                   <button
                     className={styles.modalConfirm}
                     onClick={handleConfirmEnroll}
-                    disabled={enrolling || !selectedBatch}
+                    disabled={enrolling}
                   >
-                    {enrolling ? "Processing…" : activePlan?.price
-                    ? `${upgradeMode ? "Pay & Change Plan" : "Pay"} ₹${activePlan.price.toLocaleString("en-IN")}`
-                    : upgradeMode ? "Confirm Change" : "Confirm & Enroll"}
+                    {enrolling ? "Processing…" : price ? `Pay ₹${price.toLocaleString("en-IN")}` : "Enroll Free"}
                   </button>
                 </div>
               </>

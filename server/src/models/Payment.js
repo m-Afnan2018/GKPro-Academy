@@ -14,6 +14,16 @@ const paymentSchema = new mongoose.Schema({
   recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   paidAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
+  orderId: { type: String, unique: true, sparse: true },
+});
+
+paymentSchema.pre("save", function (next) {
+  if (!this.orderId) {
+    const ts  = Date.now().toString(36).toUpperCase().slice(-6);
+    const rnd = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+    this.orderId = `GKP-${ts}${rnd}`;
+  }
+  next();
 });
 
 module.exports = mongoose.model("Payment", paymentSchema);

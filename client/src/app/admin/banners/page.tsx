@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
 import { bannersApi, type Banner } from "@/lib/api";
+import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import styles from "../admin.module.css";
 
 const LIMIT = 10;
@@ -17,8 +18,7 @@ function BannerForm({ f, setF, err }: { f: BannerFormData; setF: (v: BannerFormD
     <div className={styles.form}>
       {err && <div className={styles.errorBanner}>{err}</div>}
       <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Image URL *</label>
-        <input className={styles.formInput} placeholder="https://…" value={f.imageUrl} onChange={(e) => setF({ ...f, imageUrl: e.target.value })} />
+        <ImageUpload label="Banner Image *" value={f.imageUrl} onChange={(url) => setF({ ...f, imageUrl: url })} />
       </div>
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>Link URL</label>

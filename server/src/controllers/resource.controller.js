@@ -130,6 +130,15 @@ const accessResource = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, { url: resource.url, type: resource.type }, "Access granted."));
 });
 
+const reorderResources = asyncHandler(async (req, res) => {
+  const { items } = req.body; // [{ _id, sortOrder }]
+  if (!Array.isArray(items)) throw new ApiError(400, "items array required.");
+  await Promise.all(items.map(({ _id, sortOrder }) =>
+    Resource.findByIdAndUpdate(_id, { sortOrder })
+  ));
+  res.json(new ApiResponse(200, null, "Reordered."));
+});
+
 module.exports = {
-  getResources, getResource, createResource, updateResource, deleteResource, accessResource,
+  getResources, getResource, createResource, updateResource, deleteResource, accessResource, reorderResources,
 };

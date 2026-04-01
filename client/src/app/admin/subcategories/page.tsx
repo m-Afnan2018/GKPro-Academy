@@ -6,10 +6,11 @@ import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
 import { subcategoriesApi, categoriesApi, type SubCategory, type Category } from "@/lib/api";
+import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import styles from "../admin.module.css";
 
 const LIMIT = 30;
-const blank = () => ({ name: "", categoryId: "", sortOrder: 0, isComingSoon: false });
+const blank = () => ({ name: "", categoryId: "", imageUrl: "", sortOrder: 0, isComingSoon: false });
 
 type SubFormData = ReturnType<typeof blank>;
 function SubForm({ f, setF, err, allCategories }: { f: SubFormData; setF: (v: SubFormData) => void; err: string; allCategories: Category[] }) {
@@ -26,6 +27,9 @@ function SubForm({ f, setF, err, allCategories }: { f: SubFormData; setF: (v: Su
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>Name *</label>
         <input className={styles.formInput} placeholder="e.g. CA Foundation Paper 1" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <ImageUpload label="Subcategory Image (optional)" value={f.imageUrl} onChange={(url) => setF({ ...f, imageUrl: url })} />
       </div>
       <div className={styles.formRow}>
         <div className={styles.formGroup}>
@@ -84,15 +88,17 @@ export default function SubcategoriesPage() {
   }, []);
 
   const catName = (s: SubCategory) => {
-    if (typeof s.categoryId === "object") return (s.categoryId as Category).name;
-    return allCategories.find((c) => c._id === s.categoryId)?.name ?? "—";
+    if (s.categoryId && typeof s.categoryId === "object") return (s.categoryId as Category).name;
+    if (s.categoryId && typeof s.categoryId === "string") return allCategories.find((c) => c._id === s.categoryId)?.name ?? "—";
+    return "—";
   };
 
   const openEdit = (s: SubCategory) => {
     setEditItem(s);
     setEForm({
       name: s.name,
-      categoryId: typeof s.categoryId === "object" ? (s.categoryId as Category)._id : (s.categoryId as string),
+      categoryId: s.categoryId && typeof s.categoryId === "object" ? (s.categoryId as Category)._id : (s.categoryId as string ?? ""),
+      imageUrl: s.imageUrl ?? "",
       sortOrder: s.sortOrder,
       isComingSoon: s.isComingSoon,
     });
@@ -169,6 +175,7 @@ export default function SubcategoriesPage() {
                 <table className={styles.table}>
                   <thead>
                     <tr>
+                      <th>Image</th>
                       <th>Name</th>
                       <th>Parent Category</th>
                       <th>Slug</th>
@@ -180,6 +187,14 @@ export default function SubcategoriesPage() {
                   <tbody>
                     {items.map((s) => (
                       <tr key={s._id}>
+                        <td>
+                          {s.imageUrl
+                            ? <img src={s.imageUrl} alt={s.name} style={{ width: 48, height: 36, objectFit: "cover", borderRadius: 6, border: "1px solid #E5E7EB" }} />
+                            : <div style={{ width: 48, height: 36, borderRadius: 6, background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              </div>
+                          }
+                        </td>
                         <td><span className={styles.namePrimary}>{s.name}</span></td>
                         <td><Badge variant="blue">{catName(s)}</Badge></td>
                         <td><span style={{ fontFamily: "monospace", fontSize: 12, color: "#6B7280" }}>{s.slug}</span></td>

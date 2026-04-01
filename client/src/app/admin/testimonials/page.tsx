@@ -5,31 +5,78 @@ import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
-import { testimonialsApi, type Testimonial } from "@/lib/api";
+import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
+import { testimonialsApi, coursesApi, type Testimonial, type Course } from "@/lib/api";
 import styles from "../admin.module.css";
 
 const LIMIT = 10;
-const blank = () => ({ studentName: "", courseName: "", content: "", rating: 5, photoUrl: "", isActive: true });
+const blank = () => ({ studentName: "", courseId: "", isGeneral: false, content: "", rating: 5, photoUrl: "", isActive: true });
 
 type TestFormData = ReturnType<typeof blank>;
-function TestForm({ f, setF, err }: { f: TestFormData; setF: (v: TestFormData) => void; err: string }) {
+
+function TestForm({ f, setF, err, courses }: {
+  f: TestFormData;
+  setF: (v: TestFormData) => void;
+  err: string;
+  courses: Course[];
+}) {
   return (
     <div className={styles.form}>
       {err && <div className={styles.errorBanner}>{err}</div>}
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Student Name *</label>
-          <input className={styles.formInput} value={f.studentName} onChange={(e) => setF({ ...f, studentName: e.target.value })} />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Course Name *</label>
-          <input className={styles.formInput} value={f.courseName} onChange={(e) => setF({ ...f, courseName: e.target.value })} />
+
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Student Name *</label>
+        <input className={styles.formInput} value={f.studentName} onChange={(e) => setF({ ...f, studentName: e.target.value })} />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Course</label>
+        <select
+          className={styles.formSelect}
+          value={f.courseId}
+          onChange={(e) => setF({ ...f, courseId: e.target.value })}
+        >
+          <option value="">— Not linked to a course —</option>
+          {courses.map((c) => (
+            <option key={c._id} value={c._id}>{c.title}</option>
+          ))}
+        </select>
+        <p style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>
+          Leave blank for a general testimonial.
+        </p>
+      </div>
+
+      {/* isGeneral toggle */}
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Show on Home Page</label>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => setF({ ...f, isGeneral: !f.isGeneral })}
+            style={{
+              width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
+              background: f.isGeneral ? "#16A34A" : "#D1D5DB",
+              position: "relative", transition: "background 0.2s",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{
+              position: "absolute", top: 3, left: f.isGeneral ? 22 : 3,
+              width: 18, height: 18, borderRadius: "50%",
+              background: "#fff", transition: "left 0.2s", display: "block",
+            }} />
+          </button>
+          <span style={{ fontSize: 13, color: f.isGeneral ? "#16A34A" : "#6B7280" }}>
+            {f.isGeneral ? "Yes — visible on home page" : "No — course-specific only"}
+          </span>
         </div>
       </div>
+
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>Testimonial *</label>
         <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
       </div>
+
       <div className={styles.formRow}>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Rating (1–5)</label>
@@ -42,9 +89,9 @@ function TestForm({ f, setF, err }: { f: TestFormData; setF: (v: TestFormData) =
           </select>
         </div>
       </div>
+
       <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Photo URL (optional)</label>
-        <input className={styles.formInput} placeholder="https://…" value={f.photoUrl} onChange={(e) => setF({ ...f, photoUrl: e.target.value })} />
+        <ImageUpload label="Student Photo (optional)" value={f.photoUrl} onChange={(url) => setF({ ...f, photoUrl: url })} />
       </div>
     </div>
   );
@@ -56,6 +103,8 @@ export default function TestimonialsPage() {
   const [page, setPage]       = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [generalFilter, setGeneralFilter] = useState<"all" | "general" | "course">("all");
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState(blank());
@@ -69,6 +118,10 @@ export default function TestimonialsPage() {
 
   const [deleteItem, setDeleteItem] = useState<Testimonial | null>(null);
   const [deleting, setDeleting]     = useState(false);
+
+  useEffect(() => {
+    coursesApi.list(1, 200).then((r) => setAllCourses(r.data.courses ?? [])).catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -84,15 +137,36 @@ export default function TestimonialsPage() {
 
   const openEdit = (t: Testimonial) => {
     setEditItem(t);
-    setEForm({ studentName: t.studentName, courseName: t.courseName, content: t.content, rating: t.rating, photoUrl: t.photoUrl ?? "", isActive: t.isActive });
+    const cId = t.courseId
+      ? typeof t.courseId === "object" ? (t.courseId as Course)._id : t.courseId
+      : "";
+    setEForm({
+      studentName: t.studentName,
+      courseId: cId,
+      isGeneral: t.isGeneral ?? false,
+      content: t.content,
+      rating: t.rating,
+      photoUrl: t.photoUrl ?? "",
+      isActive: t.isActive,
+    });
     setSaveError("");
   };
 
-  const buildBody = (f: typeof form) => ({ ...f, photoUrl: f.photoUrl || undefined, rating: Number(f.rating) });
+  const buildBody = (f: TestFormData) => ({
+    studentName: f.studentName,
+    courseId:    f.courseId || null,
+    isGeneral:   f.isGeneral,
+    content:     f.content,
+    rating:      Number(f.rating),
+    photoUrl:    f.photoUrl || undefined,
+    isActive:    f.isActive,
+  });
 
   const handleCreate = async () => {
+    if (!form.studentName.trim()) { setCreateError("Student name is required"); return; }
+    if (!form.content.trim())     { setCreateError("Testimonial content is required"); return; }
     setCreating(true); setCreateError("");
-    try { await testimonialsApi.create(buildBody(form)); setShowCreate(false); setForm(blank()); load(); }
+    try { await testimonialsApi.create(buildBody(form) as any); setShowCreate(false); setForm(blank()); load(); }
     catch (e: any) { setCreateError(e.message); }
     finally { setCreating(false); }
   };
@@ -100,7 +174,7 @@ export default function TestimonialsPage() {
   const handleSave = async () => {
     if (!editItem) return;
     setSaving(true); setSaveError("");
-    try { await testimonialsApi.update(editItem._id, buildBody(eForm)); setEditItem(null); load(); }
+    try { await testimonialsApi.update(editItem._id, buildBody(eForm) as any); setEditItem(null); load(); }
     catch (e: any) { setSaveError(e.message); }
     finally { setSaving(false); }
   };
@@ -111,6 +185,18 @@ export default function TestimonialsPage() {
     try { await testimonialsApi.remove(deleteItem._id); setDeleteItem(null); load(); }
     catch (e: any) { setError(e.message); }
     finally { setDeleting(false); }
+  };
+
+  const filtered = items.filter((t) => {
+    if (generalFilter === "general") return t.isGeneral;
+    if (generalFilter === "course")  return !!t.courseId;
+    return true;
+  });
+
+  const courseName = (t: Testimonial) => {
+    if (!t.courseId) return null;
+    if (typeof t.courseId === "object") return (t.courseId as Course).title;
+    return allCourses.find((c) => c._id === t.courseId)?.title ?? "Course";
   };
 
   const totalPages = Math.ceil(total / LIMIT);
@@ -126,7 +212,13 @@ export default function TestimonialsPage() {
             {error && <div className={styles.errorBanner}>{error}</div>}
             <div className={styles.card}>
               <div className={styles.toolbar}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Student Testimonials</span>
+                <div className={styles.toolbarLeft}>
+                  <select className={styles.filterSelect} value={generalFilter} onChange={(e) => setGeneralFilter(e.target.value as any)}>
+                    <option value="all">All Testimonials</option>
+                    <option value="general">Home Page Only</option>
+                    <option value="course">Course-Linked Only</option>
+                  </select>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span style={{ fontSize: 13, color: "#6B7280" }}>{total} total</span>
                   <button className={styles.btnPrimary} onClick={() => { setShowCreate(true); setCreateError(""); setForm(blank()); }}>+ New</button>
@@ -134,18 +226,36 @@ export default function TestimonialsPage() {
               </div>
 
               {loading ? <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>Loading…</div>
-                : !items.length ? <div className={styles.empty}><div className={styles.emptyIcon}>💬</div><div className={styles.emptyText}>No testimonials yet</div></div>
+                : !filtered.length ? <div className={styles.empty}><div className={styles.emptyIcon}>💬</div><div className={styles.emptyText}>No testimonials yet</div></div>
                 : (
                   <table className={styles.table}>
-                    <thead><tr><th>Student</th><th>Course</th><th>Rating</th><th>Active</th><th>Approval</th><th>Actions</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Home Page</th>
+                        <th>Rating</th>
+                        <th>Active</th>
+                        <th>Approval</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      {items.map((t) => (
+                      {filtered.map((t) => (
                         <tr key={t._id}>
                           <td>
                             <div className={styles.namePrimary}>{t.studentName}</div>
                             <div className={styles.nameSecondary}>{t.content.slice(0, 50)}{t.content.length > 50 ? "…" : ""}</div>
                           </td>
-                          <td style={{ fontSize: 13 }}>{t.courseName}</td>
+                          <td style={{ fontSize: 13 }}>
+                            {courseName(t)
+                              ? <Badge variant="blue">{courseName(t)!}</Badge>
+                              : <span style={{ color: "#9CA3AF" }}>—</span>
+                            }
+                          </td>
+                          <td>
+                            <Badge variant={t.isGeneral ? "green" : "gray"}>{t.isGeneral ? "Yes" : "No"}</Badge>
+                          </td>
                           <td style={{ color: "#F59E0B", fontSize: 14 }}>{stars(t.rating)}</td>
                           <td><Badge variant={t.isActive ? "green" : "red"}>{t.isActive ? "Yes" : "No"}</Badge></td>
                           <td><Badge variant={t.approvalStatus === "approved" ? "green" : t.approvalStatus === "rejected" ? "red" : t.approvalStatus === "pending" ? "yellow" : "gray"}>{t.approvalStatus}</Badge></td>
@@ -180,7 +290,7 @@ export default function TestimonialsPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Testimonial">
-        <TestForm f={form} setF={setForm} err={createError} />
+        <TestForm f={form} setF={setForm} err={createError} courses={allCourses} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create"}</button>
@@ -189,7 +299,7 @@ export default function TestimonialsPage() {
 
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit Testimonial">
         {editItem && <>
-          <TestForm f={eForm} setF={setEForm} err={saveError} />
+          <TestForm f={eForm} setF={setEForm} err={saveError} courses={allCourses} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

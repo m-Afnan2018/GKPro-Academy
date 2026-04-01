@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
-import { type Resource, type Batch, type Course } from "@/lib/api";
+import { type Resource, type Course } from "@/lib/api";
 import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -41,10 +41,25 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
+interface BatchCourse {
+  _id: string;
+  title: string;
+  slug?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  eBookUrl?: string | null;
+  handbookUrl?: string | null;
+}
+
 interface EnrollmentDetail {
   _id: string;
   studentId: any;
-  batchId: Batch & { courseId: Course & { _id: string }; meetingLink?: string };
+  batchId: {
+    _id: string;
+    name: string;
+    mode: "live" | "recorded" | "one_on_one";
+    courseId: BatchCourse;
+  };
   planId: any;
   status: string;
   enrolledAt: string;
@@ -74,30 +89,20 @@ export default function LearnPage() {
         const e = json.data as EnrollmentDetail;
         setEnrollment(e);
 
-        const batchId  = typeof e.batchId === "object" ? e.batchId._id  : (e.batchId as string);
-        const courseId = typeof e.batchId?.courseId === "object"
-          ? (e.batchId.courseId as any)._id
-          : (e.batchId?.courseId as string | undefined);
+        const courseId = e.batchId?.courseId?._id;
+        const batchId  = e.batchId?._id;
 
-        const getResources = async (query: string): Promise<Resource[]> => {
-          const rj = await fetchJson(`${BASE}/resources?${query}&limit=200`);
-          return rj?.data?.resources ?? [];
-        };
-
-        if (batchId) {
-          const batchRes = await getResources(`batchId=${batchId}`);
-          if (batchRes.length) {
-            setResources(batchRes);
-            setActiveResource(batchRes[0]);
-          } else if (courseId) {
-            const courseRes = await getResources(`courseId=${courseId}`);
-            setResources(courseRes);
-            if (courseRes.length) setActiveResource(courseRes[0]);
-          }
-        } else if (courseId) {
-          const courseRes = await getResources(`courseId=${courseId}`);
-          setResources(courseRes);
-          if (courseRes.length) setActiveResource(courseRes[0]);
+        if (courseId) {
+          // Fetch batch-specific materials first, then course-wide materials
+          const [batchRj, courseRj] = await Promise.all([
+            batchId ? fetchJson(`${BASE}/resources?batchId=${batchId}&limit=200`) : Promise.resolve(null),
+            fetchJson(`${BASE}/resources?courseId=${courseId}&limit=200`),
+          ]);
+          const batchRes: Resource[]  = batchRj?.data?.resources  ?? [];
+          const courseRes: Resource[] = courseRj?.data?.resources ?? [];
+          const all = [...batchRes, ...courseRes];
+          setResources(all);
+          if (all.length) setActiveResource(all[0]);
         }
       } catch {
         setError("Failed to load course data.");
@@ -118,8 +123,7 @@ export default function LearnPage() {
   }, {});
 
   const course = enrollment?.batchId?.courseId;
-  const batch  = enrollment?.batchId;
-  const meetingLink = (batch as any)?.meetingLink;
+  const batchMode = enrollment?.batchId?.mode;
 
   const renderContent = (r: Resource) => {
     if (r.type === "video") {
@@ -210,25 +214,17 @@ export default function LearnPage() {
                   My Courses
                 </Link>
                 <div className={styles.courseInfo}>
-                  <h1 className={styles.courseTitle}>
-                    {typeof course === "object" ? (course as any).title : "Course"}
-                  </h1>
+                  <h1 className={styles.courseTitle}>{course?.title ?? "Course"}</h1>
                   <div className={styles.metaRow}>
-                    <span className={styles.metaBadge}>{batch?.mode === "recorded" ? "Recorded" : batch?.mode === "one_on_one" ? "1-on-1" : "Live"}</span>
-                    <span className={styles.metaText}>{batch?.name}</span>
+                    <span className={styles.metaBadge}>
+                      {batchMode === "recorded" ? "Recorded" : batchMode === "one_on_one" ? "One-on-One" : "Online (Live)"}
+                    </span>
+                    <span className={styles.metaText}>{enrollment.batchId?.name}</span>
                     {enrollment.expiresAt && (
-                      <span className={styles.metaText}>Expires {new Date(enrollment.expiresAt).toLocaleDateString()}</span>
+                      <span className={styles.metaText}>· Expires {new Date(enrollment.expiresAt).toLocaleDateString()}</span>
                     )}
                   </div>
                 </div>
-                {meetingLink && (
-                  <a href={meetingLink} target="_blank" rel="noreferrer" className={styles.joinBtn}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                    </svg>
-                    Join Live Class
-                  </a>
-                )}
               </div>
 
               {/* Main layout */}
@@ -259,6 +255,49 @@ export default function LearnPage() {
                         ))}
                       </div>
                     ))
+                  )}
+
+                  {/* Book PDFs included with the course */}
+                  {(course?.eBookUrl || course?.handbookUrl) && (
+                    <div className={styles.section} style={{ marginTop: 8, borderTop: "1px solid #F3F4F6", paddingTop: 12 }}>
+                      <div className={styles.sectionTitle}>Your Books</div>
+                      {course.eBookUrl && (
+                        <a
+                          href={course.eBookUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, textDecoration: "none", transition: "background 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "#F9FAFB")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span style={{ width: 28, height: 28, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#2563EB" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          </span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>eBook (PDF)</div>
+                            <div style={{ fontSize: 11, color: "#2563EB" }}>Download ↗</div>
+                          </div>
+                        </a>
+                      )}
+                      {course.handbookUrl && (
+                        <a
+                          href={course.handbookUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, textDecoration: "none", transition: "background 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "#F9FAFB")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span style={{ width: 28, height: 28, borderRadius: 6, background: "#F0FDF4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#16A34A" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                          </span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Handbook (PDF)</div>
+                            <div style={{ fontSize: 11, color: "#16A34A" }}>Download ↗</div>
+                          </div>
+                        </a>
+                      )}
+                    </div>
                   )}
                 </aside>
 

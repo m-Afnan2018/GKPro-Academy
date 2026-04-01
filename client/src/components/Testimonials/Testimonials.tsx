@@ -23,14 +23,14 @@ const FALLBACK = [
   },
 ];
 
-interface Testimonial { _id: string; studentName: string; courseName: string; content: string; rating: number; photoUrl?: string; }
+interface Testimonial { _id: string; studentName: string; courseId?: { title: string } | null; courseName?: string; content: string; rating: number; photoUrl?: string; }
 
 export default function Testimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    fetch(`${BASE}/testimonials?limit=10`)
+    fetch(`${BASE}/testimonials?general=true&limit=10`)
       .then((r) => r.json())
       .then((json) => { if (json?.data?.testimonials?.length) setTestimonials(json.data.testimonials); })
       .catch(() => {});
@@ -106,7 +106,9 @@ export default function Testimonials() {
                     )}
                     <div>
                       <div className={styles.personName}>{t.studentName}</div>
-                      <div className={styles.personLocation}>{t.courseName}</div>
+                      <div className={styles.personLocation}>
+                        {typeof t.courseId === "object" && t.courseId?.title ? t.courseId.title : t.courseName ?? ""}
+                      </div>
                     </div>
                   </div>
                   <p className={styles.text}>{t.content}</p>

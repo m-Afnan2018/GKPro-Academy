@@ -10,7 +10,7 @@ interface Props {
   width?: number;
 }
 
-export default function Modal({ open, onClose, title, children, width = 520 }: Props) {
+export default function Modal({ open, onClose, title, children, width = 720 }: Props) {
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -23,7 +23,7 @@ export default function Modal({ open, onClose, title, children, width = 520 }: P
     <div className={styles.backdrop} onClick={onClose}>
       <div
         className={styles.panel}
-        style={{ maxWidth: width }}
+        style={{ maxWidth: width, height: "90vh" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.header}>

@@ -108,39 +108,13 @@ export const coursesApi = {
     ),
 };
 
-/* ── plans ───────────────────────────────────────── */
-
-export const plansApi = {
-  list: (page = 1, limit = 20) =>
-    get<{ data: { plans: CoursePlan[]; total: number } }>(`/plans?page=${page}&limit=${limit}`),
-  create: (body: Partial<CoursePlan>) =>
-    post<{ data: CoursePlan }>("/plans", body),
-  update: (id: string, body: Partial<CoursePlan>) =>
-    patch<{ data: CoursePlan }>(`/plans/${id}`, body),
-  remove: (id: string) => del(`/plans/${id}`),
-};
-
-/* ── batches ─────────────────────────────────────── */
-
-export const batchesApi = {
-  list: (page = 1, limit = 10) =>
-    get<{ data: { batches: Batch[]; total: number } }>(`/batches?page=${page}&limit=${limit}`),
-  byCourse: (courseId: string) =>
-    get<{ data: { batches: Batch[]; total: number } }>(`/batches?courseId=${courseId}&limit=50`),
-  create: (body: Partial<Batch>) =>
-    post<{ data: Batch }>("/batches", body),
-  update: (id: string, body: Partial<Batch>) =>
-    patch<{ data: Batch }>(`/batches/${id}`, body),
-  remove: (id: string) => del(`/batches/${id}`),
-};
-
 /* ── enrollments ─────────────────────────────────── */
 
 export const enrollmentsApi = {
   list: (page = 1, limit = 10) =>
     get<{ data: { enrollments: Enrollment[]; total: number } }>(`/enrollments?page=${page}&limit=${limit}`),
-  create: (batchId: string, planId: string) =>
-    post<{ data: Enrollment }>("/enrollments", { batchId, planId }),
+  create: (courseId: string, mode: "online" | "recorded", bookType?: string, deliveryAddress?: string) =>
+    post<{ data: Enrollment }>("/enrollments", { courseId, mode, bookType, deliveryAddress }),
   update: (id: string, body: Partial<Enrollment>) =>
     patch<{ data: Enrollment }>(`/enrollments/${id}`, body),
   cancel: (id: string) =>
@@ -152,11 +126,11 @@ export const enrollmentsApi = {
 export const paymentsApi = {
   list: (page = 1, limit = 10) =>
     get<{ data: { payments: Payment[]; total: number } }>(`/payments?page=${page}&limit=${limit}`),
-  createOrder: (planId: string, batchId: string) =>
+  createOrder: (courseId: string, mode: "online" | "recorded", bookType?: string, deliveryAddress?: string) =>
     post<{ data: { orderId: string; amount: number; currency: string; key: string; paymentId: string } }>(
-      "/payments/razorpay/create-order", { planId, batchId }
+      "/payments/razorpay/create-order", { courseId, mode, bookType, deliveryAddress }
     ),
-  verifyPayment: (body: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string; planId: string; batchId: string }) =>
+  verifyPayment: (body: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string; courseId: string; mode: string; bookType?: string; deliveryAddress?: string }) =>
     post<{ data: { payment: Payment; enrollment: any } }>("/payments/razorpay/verify", body),
 };
 
@@ -256,6 +230,8 @@ export const resourcesApi = {
   update: (id: string, body: Partial<Resource>) =>
     patch<{ data: Resource }>(`/resources/${id}`, body),
   remove: (id: string) => del(`/resources/${id}`),
+  reorder: (items: { _id: string; sortOrder: number }[]) =>
+    patch<{ data: null }>("/resources/reorder", { items }),
   access: (id: string) =>
     post<{ data: { url: string; type: string } }>(`/resources/${id}/access`, {}),
 };
@@ -308,6 +284,7 @@ export interface Category {
   _id: string;
   name: string;
   slug: string;
+  imageUrl?: string;
   isComingSoon: boolean;
   sortOrder: number;
 }
@@ -317,6 +294,7 @@ export interface SubCategory {
   name: string;
   slug: string;
   categoryId: Category | string;
+  imageUrl?: string;
   isComingSoon: boolean;
   sortOrder: number;
 }
@@ -332,42 +310,41 @@ export interface Course {
   whoIsItFor?: string[];
   technicalRequirements?: string[];
   thumbnailUrl?: string;
+  onlinePrice?: number | null;
+  onlineOriginalPrice?: number | null;
+  recordedPrice?: number | null;
+  recordedOriginalPrice?: number | null;
+  bookEnabled?: boolean;
+  eBookPrice?: number | null;
+  eBookUrl?: string | null;
+  handbookPrice?: number | null;
+  handbookUrl?: string | null;
+  // Curriculum metadata
+  numLectures?: string | null;
+  duration?: string | null;
+  language?: string | null;
+  highlights?: string[];
+  prerequisites?: string[];
+  // Teacher/Faculty
+  teacherName?: string | null;
+  teacherDesignation?: string | null;
+  teacherBio?: string | null;
+  teacherAvatar?: string | null;
   status: "draft" | "published" | "archived";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   createdBy?: Partial<User>;
   createdAt: string;
 }
 
-export interface CoursePlan {
-  _id: string;
-  courseId: Course | string;
-  planType: "basic" | "standard" | "premium";
-  price: number;
-  validityDays: number;
-  features: string[];
-  isActive: boolean;
-}
-
-export interface Batch {
-  _id: string;
-  courseId: Course | string;
-  planId: CoursePlan | string;
-  name: string;
-  mode: "live" | "recorded" | "one_on_one";
-  startDate: string;
-  endDate?: string;
-  seatLimit?: number;
-  enrolledCount: number;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  createdAt: string;
-  meetingLink?: string;
-}
-
 export interface Enrollment {
   _id: string;
   studentId: Partial<User> | string;
-  batchId: Partial<Batch> | string;
-  planId: Partial<CoursePlan> | string;
+  courseId: Partial<Course> | string;
+  mode: "online" | "recorded";
+  pricePaid?: number;
+  bookType?: "none" | "ebook" | "handbook";
+  deliveryAddress?: string | null;
+  bookPricePaid?: number;
   enrolledAt: string;
   expiresAt?: string;
   status: "active" | "expired" | "cancelled";
@@ -422,11 +399,13 @@ export interface Banner {
 export interface Testimonial {
   _id: string;
   studentName: string;
-  courseName: string;
+  courseId?: Course | string | null;
+  courseName?: string;
   content: string;
   rating: number;
   photoUrl?: string;
   isActive: boolean;
+  isGeneral: boolean;
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
 }
 
@@ -465,12 +444,16 @@ export interface Approval {
 
 export interface Payment {
   _id: string;
+  orderId?: string;
   studentId: Partial<User>;
   enrollmentId?: string;
   amount: number;
   currency: string;
   method: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   status: string;
+  isManual?: boolean;
   paidAt?: string;
   createdAt: string;
 }

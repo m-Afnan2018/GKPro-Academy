@@ -5,7 +5,7 @@ import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
-import { enrollmentsApi, type Enrollment, type User, type Batch, type Course, type CoursePlan, type Payment } from "@/lib/api";
+import { enrollmentsApi, type Enrollment, type User, type Course, type Payment } from "@/lib/api";
 import styles from "../admin.module.css";
 
 const LIMIT = 15;
@@ -43,15 +43,8 @@ export default function EnrollmentsPage() {
   };
 
   const getStudent = (e: Enrollment) => typeof e.studentId === "object" ? e.studentId as User : null;
-  const getBatch   = (e: Enrollment) => typeof e.batchId === "object" ? e.batchId as Batch : null;
-  const getPlan    = (e: Enrollment) => typeof e.planId === "object" ? e.planId as CoursePlan : null;
+  const getCourse  = (e: Enrollment) => typeof e.courseId === "object" ? e.courseId as Course : null;
   const getPayment = (e: Enrollment) => typeof e.paymentId === "object" ? e.paymentId as Payment : null;
-
-  const getCourse = (e: Enrollment) => {
-    const b = getBatch(e);
-    if (!b) return null;
-    return typeof b.courseId === "object" ? b.courseId as Course : null;
-  };
 
   const filtered = enrollments.filter((e) => {
     if (!search) return true;
@@ -61,8 +54,7 @@ export default function EnrollmentsPage() {
     return (
       student?.name?.toLowerCase().includes(s) ||
       student?.email?.toLowerCase().includes(s) ||
-      course?.title?.toLowerCase().includes(s) ||
-      getBatch(e)?.name?.toLowerCase().includes(s)
+      course?.title?.toLowerCase().includes(s)
     );
   });
 
@@ -93,14 +85,12 @@ export default function EnrollmentsPage() {
                 : (
                   <table className={styles.table}>
                     <thead>
-                      <tr><th>Student</th><th>Course</th><th>Batch</th><th>Plan</th><th>Payment</th><th>Enrolled</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+                      <tr><th>Student</th><th>Course</th><th>Mode</th><th>Order ID</th><th>Payment</th><th>Enrolled</th><th>Status</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                       {filtered.map((e) => {
                         const student = getStudent(e);
                         const course  = getCourse(e);
-                        const batch   = getBatch(e);
-                        const plan    = getPlan(e);
                         const payment = getPayment(e);
                         return (
                           <tr key={e._id}>
@@ -115,18 +105,21 @@ export default function EnrollmentsPage() {
                               </div>
                             </td>
                             <td style={{ fontSize: 13 }}>{course?.title ?? "—"}</td>
-                            <td style={{ fontSize: 12, color: "#6B7280" }}>{batch?.name ?? "—"}</td>
-                            <td style={{ fontSize: 12, color: "#6B7280" }}>{plan?.planType ?? "—"}</td>
+                            <td style={{ fontSize: 12, color: "#6B7280" }}>{e.mode === "online" ? "Online" : "Recorded"}</td>
+                            <td>
+                              {payment?.orderId ? (
+                                <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: "#374151", background: "#F3F4F6", padding: "3px 8px", borderRadius: 5 }}>{payment.orderId}</span>
+                              ) : <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>}
+                            </td>
                             <td>
                               {payment ? (
                                 <div>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>₹{payment.amount?.toLocaleString()}</div>
-                                  <div style={{ fontSize: 11, color: "#6B7280" }}>{payment.method}</div>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>₹{payment.amount?.toLocaleString("en-IN")}</div>
+                                  <div style={{ fontSize: 11, color: "#6B7280", textTransform: "capitalize" }}>{payment.method}</div>
                                 </div>
-                              ) : <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>}
+                              ) : <span style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>Free</span>}
                             </td>
-                            <td style={{ fontSize: 12 }}>{new Date(e.enrolledAt).toLocaleDateString()}</td>
-                            <td style={{ fontSize: 12, color: "#6B7280" }}>{e.expiresAt ? new Date(e.expiresAt).toLocaleDateString() : "—"}</td>
+                            <td style={{ fontSize: 12 }}>{new Date(e.enrolledAt).toLocaleDateString("en-IN")}</td>
                             <td><Badge variant={statusBadge(e.status) as any}>{e.status}</Badge></td>
                             <td>
                               <div className={styles.actions}>
@@ -166,8 +159,6 @@ export default function EnrollmentsPage() {
         {viewItem && (() => {
           const student = getStudent(viewItem);
           const course  = getCourse(viewItem);
-          const batch   = getBatch(viewItem);
-          const plan    = getPlan(viewItem);
           const payment = getPayment(viewItem);
           return (
             <div className={styles.form}>
@@ -186,8 +177,9 @@ export default function EnrollmentsPage() {
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Enrollment</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {[
-                    ["Course", course?.title], ["Batch", batch?.name], ["Plan", plan?.planType],
-                    ["Mode", batch?.mode], ["Enrolled At", viewItem.enrolledAt ? new Date(viewItem.enrolledAt).toLocaleDateString() : "—"],
+                    ["Course", course?.title],
+                    ["Mode", viewItem.mode === "online" ? "Online (Live)" : "Recorded"],
+                    ["Enrolled At", viewItem.enrolledAt ? new Date(viewItem.enrolledAt).toLocaleDateString() : "—"],
                     ["Expires At", viewItem.expiresAt ? new Date(viewItem.expiresAt).toLocaleDateString() : "—"],
                     ["Status", viewItem.status],
                   ].map(([k, v]) => (
@@ -202,12 +194,41 @@ export default function EnrollmentsPage() {
                 <div style={{ background: "#F0FDF4", borderRadius: 12, padding: "16px 20px" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Payment</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {[["Amount", `₹${payment.amount?.toLocaleString()}`], ["Method", payment.method], ["Status", payment.status], ["Paid At", payment.paidAt ? new Date(payment.paidAt).toLocaleDateString() : "—"]].map(([k, v]) => (
+                    {[
+                      ["Order ID", payment.orderId ?? "—"],
+                      ["Amount", `₹${payment.amount?.toLocaleString("en-IN")}`],
+                      ["Method", payment.method],
+                      ["Status", payment.status],
+                      ["Paid At", payment.paidAt ? new Date(payment.paidAt).toLocaleDateString("en-IN") : "—"],
+                      ["Razorpay Ref", payment.razorpayPaymentId ?? "—"],
+                    ].map(([k, v]) => (
                       <div key={k}>
                         <div style={{ fontSize: 11, color: "#9CA3AF" }}>{k}</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{v || "—"}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", fontFamily: k === "Order ID" || k === "Razorpay Ref" ? "monospace" : "inherit" }}>{v || "—"}</div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+              {/* Book & delivery */}
+              {(viewItem.bookType && viewItem.bookType !== "none") && (
+                <div style={{ background: "#FFFBEB", borderRadius: 12, padding: "16px 20px", border: "1px solid #FDE68A" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Book Add-on</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>Type</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{viewItem.bookType === "ebook" ? "eBook (PDF)" : "Handbook (Physical)"}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>Book Price Paid</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>₹{(viewItem.bookPricePaid ?? 0).toLocaleString("en-IN")}</div>
+                    </div>
+                    {viewItem.deliveryAddress && (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>Delivery Address</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{viewItem.deliveryAddress}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
 import { blogsApi, type Blog, type User } from "@/lib/api";
+import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import styles from "../admin.module.css";
 
 const LIMIT = 10;
@@ -25,8 +26,7 @@ function BlogForm({ f, setF, err }: { f: BlogFormData; setF: (v: BlogFormData) =
         <textarea className={styles.formTextarea} rows={8} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} style={{ minHeight: 160 }} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Cover Image URL (optional)</label>
-        <input className={styles.formInput} value={(f as any).imageUrl ?? ""} placeholder="https://…" onChange={(e) => setF({ ...f, imageUrl: e.target.value } as any)} />
+        <ImageUpload label="Cover Image (optional)" value={(f as any).imageUrl ?? ""} onChange={(url) => setF({ ...f, imageUrl: url } as any)} />
       </div>
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>Published</label>

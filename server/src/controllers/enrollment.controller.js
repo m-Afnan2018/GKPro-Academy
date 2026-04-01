@@ -42,7 +42,7 @@ const getEnrollments = asyncHandler(async (req, res) => {
 const getEnrollment = asyncHandler(async (req, res) => {
   const enrollment = await Enrollment.findById(req.params.id)
     .populate("studentId", "name email phone")
-    .populate({ path: "batchId", populate: { path: "courseId", select: "title slug description thumbnailUrl" } })
+    .populate({ path: "batchId", populate: { path: "courseId", select: "title slug description thumbnailUrl eBookUrl handbookUrl" } })
     .populate("planId")
     .populate("paymentId");
 

@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
 import { categoriesApi, type Category } from "@/lib/api";
+import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import styles from "../admin.module.css";
 
 const LIMIT = 20;
@@ -19,6 +20,7 @@ export default function CategoriesPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [cName, setCName]           = useState("");
+  const [cImage, setCImage]         = useState("");
   const [cComing, setCComing]       = useState(false);
   const [cSort, setCSort]           = useState(0);
   const [creating, setCreating]     = useState(false);
@@ -26,6 +28,7 @@ export default function CategoriesPage() {
 
   const [editCat, setEditCat]     = useState<Category | null>(null);
   const [eName, setEName]         = useState("");
+  const [eImage, setEImage]       = useState("");
   const [eComing, setEComing]     = useState(false);
   const [eSort, setESort]         = useState(0);
   const [saving, setSaving]       = useState(false);
@@ -47,15 +50,15 @@ export default function CategoriesPage() {
   useEffect(() => { load(); }, [load]);
 
   const openEdit = (c: Category) => {
-    setEditCat(c); setEName(c.name); setEComing(c.isComingSoon); setESort(c.sortOrder); setSaveError("");
+    setEditCat(c); setEName(c.name); setEImage(c.imageUrl ?? ""); setEComing(c.isComingSoon); setESort(c.sortOrder); setSaveError("");
   };
 
   const handleCreate = async () => {
     if (!cName.trim()) { setCreateError("Name is required"); return; }
     setCreating(true); setCreateError("");
     try {
-      await categoriesApi.create({ name: cName, isComingSoon: cComing, sortOrder: cSort });
-      setShowCreate(false); setCName(""); setCComing(false); setCSort(0); load();
+      await categoriesApi.create({ name: cName, imageUrl: cImage || undefined, isComingSoon: cComing, sortOrder: cSort } as any);
+      setShowCreate(false); setCName(""); setCImage(""); setCComing(false); setCSort(0); load();
     } catch (e: any) { setCreateError(e.message); }
     finally { setCreating(false); }
   };
@@ -64,7 +67,7 @@ export default function CategoriesPage() {
     if (!editCat) return;
     setSaving(true); setSaveError("");
     try {
-      await categoriesApi.update(editCat._id, { name: eName, isComingSoon: eComing, sortOrder: eSort });
+      await categoriesApi.update(editCat._id, { name: eName, imageUrl: eImage || undefined, isComingSoon: eComing, sortOrder: eSort } as any);
       setEditCat(null); load();
     } catch (e: any) { setSaveError(e.message); }
     finally { setSaving(false); }
@@ -103,10 +106,18 @@ export default function CategoriesPage() {
                 <div className={styles.empty}><div className={styles.emptyIcon}>📂</div><div className={styles.emptyText}>No categories yet</div></div>
               ) : (
                 <table className={styles.table}>
-                  <thead><tr><th>Name</th><th>Slug</th><th>Sort</th><th>Coming Soon</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Image</th><th>Name</th><th>Slug</th><th>Sort</th><th>Coming Soon</th><th>Actions</th></tr></thead>
                   <tbody>
                     {categories.map((c) => (
                       <tr key={c._id}>
+                        <td>
+                          {c.imageUrl
+                            ? <img src={c.imageUrl} alt={c.name} style={{ width: 48, height: 36, objectFit: "cover", borderRadius: 6, border: "1px solid #E5E7EB" }} />
+                            : <div style={{ width: 48, height: 36, borderRadius: 6, background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              </div>
+                          }
+                        </td>
                         <td><span className={styles.namePrimary}>{c.name}</span></td>
                         <td><span style={{ fontFamily: "monospace", fontSize: 12, color: "#6B7280" }}>{c.slug}</span></td>
                         <td>{c.sortOrder}</td>
@@ -154,6 +165,9 @@ export default function CategoriesPage() {
             <label className={styles.formLabel}>Name *</label>
             <input className={styles.formInput} placeholder="e.g. CA Foundation" value={cName} onChange={(e) => setCName(e.target.value)} />
           </div>
+          <div className={styles.formGroup}>
+            <ImageUpload label="Category Image (optional)" value={cImage} onChange={setCImage} />
+          </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Sort Order</label>
@@ -181,6 +195,9 @@ export default function CategoriesPage() {
               <label className={styles.formLabel}>Name</label>
               <input className={styles.formInput} value={eName} onChange={(e) => setEName(e.target.value)} />
             </div>
+            <div className={styles.formGroup}>
+              <ImageUpload label="Category Image (optional)" value={eImage} onChange={setEImage} />
+            </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Sort Order</label>
@@ -205,6 +222,9 @@ export default function CategoriesPage() {
         {deleteCat && (
           <div className={styles.form}>
             <p style={{ fontSize: 14, color: "#4B5563" }}>Delete <strong>{deleteCat.name}</strong>? This cannot be undone.</p>
+            <div style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#92400E", marginTop: 8 }}>
+              All subcategories under this category will also be deleted. Courses will become uncategorised.
+            </div>
             <div className={styles.formActions}>
               <button className={styles.btnOutline} onClick={() => setDeleteCat(null)}>Cancel</button>
               <button className={styles.btnPrimary} style={{ background: "#DC2626" }} onClick={handleDelete} disabled={deleting}>{deleting ? "Deleting…" : "Delete"}</button>
