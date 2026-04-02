@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar/Navbar";
@@ -10,16 +10,18 @@ import styles from "./course.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
-const CARD_GRADIENTS = [
-  "linear-gradient(135deg,#1a1a2e 0%,#3a3a5c 100%)",
-  "linear-gradient(135deg,#0f3460 0%,#16213e 100%)",
-  "linear-gradient(135deg,#1c3a4a 0%,#0f4c75 100%)",
-];
-
 interface CourseDetail { course: Course; faqs: Faq[]; }
 
-type Tab = "description" | "requirements" | "faculty" | "faq";
+type Tab = "about" | "description" | "requirements" | "faculty" | "faq";
 type Mode = "online" | "recorded";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "about",        label: "About"        },
+  { key: "description",  label: "Description"  },
+  { key: "requirements", label: "Requirements" },
+  { key: "faculty",      label: "Faculty"      },
+  { key: "faq",          label: "FAQ"          },
+];
 
 export default function CourseDetailPage() {
   const { slug }  = useParams<{ slug: string }>();
@@ -29,8 +31,9 @@ export default function CourseDetailPage() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
   const [related, setRelated]   = useState<Course[]>([]);
-  const [tab, setTab]           = useState<Tab>("description");
+  const [activeTab, setActiveTab] = useState<Tab>("about");
   const [openFaq, setOpenFaq]   = useState<string | null>(null);
+  const tabsBarRef              = useRef<HTMLDivElement>(null);
 
   const [selectedMode, setSelectedMode] = useState<Mode>("online");
 
@@ -44,7 +47,6 @@ export default function CourseDetailPage() {
   const [enrollDone, setEnrollDone]   = useState(false);
   const [showModal, setShowModal]     = useState(false);
 
-  // All active enrollments for this course (student may have bought both online + recorded)
   const [courseEnrollments, setCourseEnrollments] = useState<{ _id: string; mode: Mode }[]>([]);
 
   useEffect(() => {
@@ -57,14 +59,12 @@ export default function CourseDetailPage() {
         const d: CourseDetail = json.data;
         setData(d);
 
-        // Default mode based on availableModes setting
         const modes = d.course.availableModes ?? "both";
         if (modes === "online") setSelectedMode("online");
         else if (modes === "recorded") setSelectedMode("recorded");
         else if (d.course.onlinePrice) setSelectedMode("online");
         else if (d.course.recordedPrice) setSelectedMode("recorded");
 
-        // Check if student is already enrolled
         const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
         if (tk) {
           fetch(`${BASE}/enrollments?limit=100`, { headers: { Authorization: `Bearer ${tk}` } })
@@ -81,7 +81,6 @@ export default function CourseDetailPage() {
             .catch(() => {});
         }
 
-        // fetch related courses same category
         const catId = typeof d.course.categoryId === "object"
           ? (d.course.categoryId as any)._id
           : d.course.categoryId;
@@ -97,10 +96,43 @@ export default function CourseDetailPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  /* ── Scroll-spy: highlight active tab as user scrolls ── */
+  useEffect(() => {
+    if (!data) return;
+    const navbarH = 70;
+    const tabsH   = 52;
+    const offset  = navbarH + tabsH + 16;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActiveTab(entry.target.id as Tab);
+          }
+        });
+      },
+      { rootMargin: `-${offset}px 0px -55% 0px`, threshold: 0 }
+    );
+
+    TABS.forEach(t => {
+      const el = document.getElementById(t.key);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [data]);
+
+  const scrollToSection = (key: Tab) => {
+    const el = document.getElementById(key);
+    if (!el) return;
+    const tabsH  = tabsBarRef.current?.offsetHeight ?? 52;
+    const offset = 70 + tabsH + 8;
+    const top    = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
   const handleBuyNow = () => {
     const tk = getStudentToken();
     if (!tk) { router.push(`/login?next=/courses/${slug}`); return; }
-    // Validate address before opening modal
     if (selectedBook === "handbook" && !deliveryAddress.trim()) {
       setAddressError("Please enter your delivery address for the handbook.");
       return;
@@ -118,7 +150,6 @@ export default function CourseDetailPage() {
       const tk = getStudentToken();
 
       if (price && price > 0) {
-        // Razorpay payment flow
         const orderRes = await fetch(`${BASE}/payments/razorpay/create-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
@@ -147,9 +178,7 @@ export default function CourseDetailPage() {
 
         await new Promise<void>((resolve, reject) => {
           const options = {
-            key,
-            amount,
-            currency,
+            key, amount, currency,
             name: "GKPro Academy",
             description: `${selectedMode === "online" ? "Online" : "Recorded"} — ${data.course.title}`,
             order_id: orderId,
@@ -185,7 +214,6 @@ export default function CourseDetailPage() {
           rz.open();
         });
       } else {
-        // Free enrollment
         await enrollmentsApi.create(data.course._id, selectedMode, selectedBook, selectedBook === "handbook" ? deliveryAddress : undefined);
       }
 
@@ -213,32 +241,27 @@ export default function CourseDetailPage() {
      : 0)
     : 0;
 
-  const price = coursePrice != null ? coursePrice + bookAddon : null;
+  const totalPrice = coursePrice != null ? coursePrice + bookAddon : null;
 
   const originalCoursePrice = data
     ? (selectedMode === "online" ? (data.course.onlineOriginalPrice ?? null) : (data.course.recordedOriginalPrice ?? null))
     : null;
-  const discount = coursePrice && originalCoursePrice && originalCoursePrice > coursePrice
+  const discountPct = coursePrice && originalCoursePrice && originalCoursePrice > coursePrice
     ? Math.round((1 - coursePrice / originalCoursePrice) * 100)
     : 0;
 
   const availableModes = data?.course.availableModes ?? "both";
-  const hasBoth = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
-  const hasOnlineOnly = availableModes === "online" || (!hasBoth && !!data?.course.onlinePrice && !data?.course.recordedPrice);
+  const hasBoth        = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
+  const hasOnlineOnly  = availableModes === "online"   || (!hasBoth && !!data?.course.onlinePrice   && !data?.course.recordedPrice);
   const hasRecordedOnly = availableModes === "recorded" || (!hasBoth && !!data?.course.recordedPrice && !data?.course.onlinePrice);
 
-  /* ── Specs table rows ─── */
-  const specs = data ? [
-    ...(data.course.numLectures ? [{ label: "No of Lectures", value: data.course.numLectures }] : [{ label: "No of Lectures", value: "70 – 75 Lectures (Approx)" }]),
-    { label: "Mode", value: availableModes === "both" ? "Online (Live) + Recorded" : availableModes === "online" ? "Online (Live)" : "Recorded" },
-    ...(data.course.duration   ? [{ label: "Duration",   value: data.course.duration }]   : []),
-    ...(data.course.language   ? [{ label: "Language",   value: data.course.language }]   : []),
-    ...(() => {
-      const fac = data.course.faculty;
-      if (fac && fac.length) return [{ label: "Faculty", value: fac.map(f => f.name).join(", ") }];
-      return [{ label: "Faculty", value: "GKPro Expert Faculty" }];
-    })(),
-  ] : [];
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "about",        label: "About"        },
+    { key: "description",  label: "Description"  },
+    { key: "requirements", label: "Requirements" },
+    { key: "faculty",      label: "Faculty"      },
+    { key: "faq",          label: "FAQ"          },
+  ];
 
   if (loading) return (
     <>
@@ -261,408 +284,521 @@ export default function CourseDetailPage() {
 
   const { course, faqs } = data;
 
+  const catSlug = course.categoryId && typeof course.categoryId === "object"
+    ? (course.categoryId as any).slug
+    : null;
+
   return (
     <>
       <Navbar />
 
-      {/* ── Hero ── */}
-      <div className={styles.hero}>
-        <div className={styles.heroOverlay} />
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>{catName} – {course.title}</h1>
-          <div className={styles.breadcrumb}>
-            <Link href="/">Home</Link><span>›</span>
-            <Link href="/courses">Courses</Link><span>›</span>
-            {catName && <><Link href="/courses">{catName}</Link><span>›</span></>}
-            <span>{course.title}</span>
-          </div>
-        </div>
-        <div className={styles.heroChevrons}>
-          {[0,1,2].map(i => (
-            <svg key={i} width="22" height="14" viewBox="0 0 22 14" fill="none" opacity={0.4 - i * 0.12}>
-              <polyline points="1 1 11 13 21 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Detail card ── */}
       <div className="container">
-        <div className={styles.detailCard}>
-          {/* Left: preview image */}
-          <div className={styles.previewWrap}>
-            <div className={styles.previewImg}>
-              {course.thumbnailUrl
-                ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={course.thumbnailUrl}
-                    alt={course.title}
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                )
-                : <div className={styles.previewOverlay} />
-              }
+        <div className={styles.pageLayout}>
+
+          {/* ══════════════ LEFT COLUMN ══════════════ */}
+          <div className={styles.leftCol}>
+
+            {/* Breadcrumb */}
+            <nav className={styles.breadcrumb}>
+              <Link href="/">Home</Link><span>›</span>
+              {catName && catSlug && <><Link href={`/category/${catSlug}`}>{catName}</Link><span>›</span></>}
+              <span>{course.title}</span>
+            </nav>
+
+            {/* Title */}
+            <h1 className={styles.courseTitle}>
+              {catName ? `${catName} – ${course.title}` : course.title}
+            </h1>
+
+            {/* Meta sub-line */}
+            <div className={styles.courseMeta}>
+              {course.targetAudience && (
+                <div className={styles.metaItem}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  For {course.targetAudience}
+                </div>
+              )}
+              {course.startDate && (
+                <div className={styles.metaItem}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  Live Classes from: <strong>{new Date(course.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</strong>
+                  {course.validityMonths && <> | Valid till: <strong>{new Date(new Date(course.startDate).setMonth(new Date(course.startDate).getMonth() + course.validityMonths)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</strong></>}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Right: purchase panel */}
-          <div className={styles.purchasePanel}>
-            <h2 className={styles.purchaseTitle}>
-              The Complete {catName} – {course.title} Guideline 2026
-            </h2>
+            {/* ── Sticky Tab Bar ── */}
+            <div className={styles.tabsBar} ref={tabsBarRef}>
+              {TABS.map(t => (
+                <button
+                  key={t.key}
+                  className={`${styles.tabBtn} ${activeTab === t.key ? styles.tabActive : ""}`}
+                  onClick={() => scrollToSection(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-            {/* Mode selector */}
-            {hasBoth && (
-              <div className={styles.fieldRow}>
-                <label className={styles.fieldLabel}>Choose Your Mode:</label>
-                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                  {(["online", "recorded"] as Mode[]).map((m) => {
-                    const mPrice = m === "online" ? course.onlinePrice : course.recordedPrice;
-                    if (!mPrice) return null;
-                    return (
-                      <button
-                        key={m}
-                        onClick={() => setSelectedMode(m)}
-                        style={{
-                          flex: 1,
-                          padding: "10px 14px",
-                          borderRadius: 8,
-                          border: `2px solid ${selectedMode === m ? "#D42B3A" : "#E5E7EB"}`,
-                          background: selectedMode === m ? "#FFF1F2" : "#fff",
-                          cursor: "pointer",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: selectedMode === m ? "#D42B3A" : "#374151",
-                          transition: "all 0.15s",
-                        }}
-                      >
-                        {m === "online" ? "Online (Live)" : "Recorded"}
-                        <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2, color: selectedMode === m ? "#D42B3A" : "#6B7280" }}>
-                          ₹{mPrice.toLocaleString("en-IN")}
+            {/* ── All sections rendered, scroll-navigated ── */}
+            <div className={styles.sectionsWrap}>
+
+              {/* About */}
+              <section id="about" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>About the Batch</h2>
+                {course.highlights && course.highlights.length > 0 ? (
+                  <ul className={styles.highlightList}>
+                    {course.highlights.map((h, i) => (
+                      <li key={i} className={styles.highlightItem}>
+                        <span className={styles.highlightIcon}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </span>
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className={styles.highlightList}>
+                    {[
+                      <><strong>800+ hrs of structured learning</strong> designed for CA Foundation 2026 aspirants with concept clarity + exam-focused preparation.</>,
+                      <>Regular <strong>doubt-solving sessions</strong> with expert faculty to ensure clear understanding of every concept.</>,
+                      <>Access to <strong>live classes + recorded lectures</strong>, along with class notes and practice material after every session.</>,
+                    ].map((text, i) => (
+                      <li key={i} className={styles.highlightItem}>
+                        <span className={styles.highlightIcon}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span>{text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {course.overview && <p className={styles.overviewText} style={{ marginTop: 20 }}>{course.overview}</p>}
+              </section>
+
+              {/* Description */}
+              <section id="description" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>Description</h2>
+                <div className={styles.specsTable}>
+                  {course.numLectures && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>No of Lectures</span>
+                      <span className={styles.specValue}>{course.numLectures}</span>
+                    </div>
+                  )}
+                  <div className={styles.specRow}>
+                    <span className={styles.specLabel}>Mode</span>
+                    <span className={styles.specValue}>
+                      {availableModes === "both" ? "Online (Live) + Recorded" : availableModes === "online" ? "Online (Live)" : "Recorded"}
+                    </span>
+                  </div>
+                  {course.duration && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>Duration</span>
+                      <span className={styles.specValue}>{course.duration}</span>
+                    </div>
+                  )}
+                  {course.language && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>Language</span>
+                      <span className={styles.specValue}>{course.language}</span>
+                    </div>
+                  )}
+                  {course.validity && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>Validity</span>
+                      <span className={styles.specValue}>{course.validity}</span>
+                    </div>
+                  )}
+                  {course.faculty && course.faculty.length > 0 && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>Faculty</span>
+                      <span className={styles.specValue}>{course.faculty.map(f => f.name).join(", ")}</span>
+                    </div>
+                  )}
+                  {course.studyMaterial && (
+                    <div className={styles.specRow}>
+                      <span className={styles.specLabel}>Study Material</span>
+                      <span className={styles.specValue}>{course.studyMaterial}</span>
+                    </div>
+                  )}
+                </div>
+                {course.whoIsItFor && course.whoIsItFor.length > 0 && (
+                  <div style={{ marginTop: 24 }}>
+                    <h3 className={styles.subHeading}>Who Is This Course For?</h3>
+                    <div className={styles.reqList}>
+                      {course.whoIsItFor.map((w, i) => (
+                        <div key={i} className={styles.reqItem}>
+                          <span className={styles.reqDot} /><span>{w}</span>
                         </div>
-                        {(() => {
-                          const origP = m === "online" ? course.onlineOriginalPrice : course.recordedOriginalPrice;
-                          if (!origP || origP <= mPrice) return null;
-                          const pct = Math.round((1 - mPrice / origP) * 100);
-                          return <div style={{ fontSize: 10, fontWeight: 700, color: "#D42B3A", marginTop: 1 }}>{pct}% off</div>;
-                        })()}
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* Requirements */}
+              <section id="requirements" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>Requirements</h2>
+                {(course.prerequisites && course.prerequisites.length > 0) || (course.technicalRequirements && course.technicalRequirements.length > 0) ? (
+                  <>
+                    {course.prerequisites && course.prerequisites.length > 0 && (
+                      <>
+                        <h3 className={styles.subHeading}>Prerequisites</h3>
+                        <div className={styles.reqList}>
+                          {course.prerequisites.map((r, i) => (
+                            <div key={i} className={styles.reqItem}><span className={styles.reqDot} /><span>{r}</span></div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {course.technicalRequirements && course.technicalRequirements.length > 0 && (
+                      <>
+                        <h3 className={styles.subHeading} style={{ marginTop: 20 }}>Technical Requirements</h3>
+                        <div className={styles.reqList}>
+                          {course.technicalRequirements.map((r, i) => (
+                            <div key={i} className={styles.reqItem}><span className={styles.reqDot} /><span>{r}</span></div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.reqSections}>
+                    {[
+                      { title: "Windows:", items: ["Android 10 or above", "Minimum 4 GB RAM", "All processors except MediaTek supported"] },
+                      { title: "iOS Devices:", items: ["iOS 17 or above"] },
+                      { title: "Windows Laptop:", items: ["6th Gen Processor or higher (2.0 GHz+)", "Windows 10 or above", "Minimum 4 GB RAM", "Windows 10 N not supported", "Lectures will not play on PC"] },
+                      { title: "macOS Devices:", items: ["macOS 13 (Ventura) or above"] },
+                      { title: "Internet Requirement:", items: ["Minimum 10 Mbps speed", "Stable internet connection required"] },
+                    ].map(sec => (
+                      <div key={sec.title} className={styles.reqSection}>
+                        <h4 className={styles.reqSectionTitle}>{sec.title}</h4>
+                        <div className={styles.reqList}>
+                          {sec.items.map((item, i) => (
+                            <div key={i} className={styles.reqItem}><span className={styles.reqDot} /><span>{item}</span></div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Faculty */}
+              <section id="faculty" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>Faculty</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {course.faculty && course.faculty.length > 0 ? (
+                    course.faculty.map(fac => (
+                      <div key={fac._id} className={styles.facultyCard}>
+                        <div className={styles.facultyAvatarWrap}>
+                          {fac.avatar ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={fac.avatar} alt={fac.name} className={styles.facultyImg} />
+                          ) : (
+                            <div className={styles.facultyAvatar}>
+                              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                              </svg>
+                            </div>
+                          )}
+                          {fac.designation && <p className={styles.facultyDesig}>{fac.designation}</p>}
+                        </div>
+                        <div className={styles.facultyInfo}>
+                          <h4 className={styles.facultyName}>{fac.name}</h4>
+                          {fac.designation && <p className={styles.facultyRole}>{fac.designation}</p>}
+                          {fac.bio && <p className={styles.facultyBio}>{fac.bio}</p>}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.facultyCard}>
+                      <div className={styles.facultyAvatarWrap}>
+                        <div className={styles.facultyAvatar}>
+                          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                          </svg>
+                        </div>
+                        <p className={styles.facultyDesig}>Co-Founder &amp; Managing Director</p>
+                      </div>
+                      <div className={styles.facultyInfo}>
+                        <h4 className={styles.facultyName}>GKPro Expert Faculty</h4>
+                        <p className={styles.facultyRole}>Chartered Accountant · Senior Instructor</p>
+                        <p className={styles.facultyBio}>Our faculty members are experienced Chartered Accountants with years of teaching expertise in CA Foundation, Intermediate and Final examinations.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* FAQ */}
+              <section id="faq" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>Faq</h2>
+                <div className={styles.faqList}>
+                  {faqs.length > 0 ? faqs.map(f => (
+                    <div key={f._id} className={`${styles.faqItem} ${openFaq === f._id ? styles.faqOpen : ""}`}>
+                      <button className={styles.faqQ} onClick={() => setOpenFaq(openFaq === f._id ? null : f._id)}>
+                        <span>{f.question}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          style={{ transform: openFaq === f._id ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
                       </button>
+                      {openFaq === f._id && <div className={styles.faqA}>{f.answer}</div>}
+                    </div>
+                  )) : (
+                    <p className={styles.emptyTab}>No FAQs available for this course yet.</p>
+                  )}
+                </div>
+              </section>
+
+            </div>
+            {/* end sectionsWrap */}
+
+            {/* ── Related courses ── */}
+            {related.length > 0 && (
+              <div className={styles.relatedSection}>
+                <h2 className={styles.relatedTitle}>Courses You May Like</h2>
+                <div className={styles.relatedGrid}>
+                  {related.map((c, i) => {
+                    const gradients = [
+                      "linear-gradient(135deg,#1a1a2e 0%,#3a3a5c 100%)",
+                      "linear-gradient(135deg,#0f3460 0%,#16213e 100%)",
+                      "linear-gradient(135deg,#1c3a4a 0%,#0f4c75 100%)",
+                    ];
+                    const onlineP   = c.onlinePrice   ?? 0;
+                    const recordedP = c.recordedPrice ?? 0;
+                    const leadPrice = onlineP && recordedP ? Math.min(onlineP, recordedP) : onlineP || recordedP;
+                    const origP     = onlineP && recordedP
+                      ? null
+                      : (onlineP ? (c.onlineOriginalPrice ?? null) : (c.recordedOriginalPrice ?? null));
+                    const relPct    = leadPrice && origP && origP > leadPrice
+                      ? Math.round((1 - leadPrice / origP) * 100) : 0;
+                    return (
+                      <Link href={`/courses/${c.slug}`} key={c._id} className={styles.relCard}>
+                        <div className={styles.relCardImg} style={{ background: gradients[i % gradients.length] }}>
+                          {c.thumbnailUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={c.thumbnailUrl} alt={c.title}
+                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                          )}
+                          <span className={`${styles.relBadge} ${c.onlinePrice ? styles.badgeOnline : styles.badgeRecorded}`}>
+                            {c.onlinePrice ? "Online" : "Recorded"}
+                          </span>
+                        </div>
+                        <div className={styles.relCardBody}>
+                          <h3 className={styles.relCardTitle}>{c.title}</h3>
+                          {c.description && <p className={styles.relCardDesc}>{c.description}</p>}
+                          <div className={styles.relCardPrice}>
+                            {origP && origP > leadPrice && (
+                              <span className={styles.relPriceOld}>₹{origP.toLocaleString("en-IN")}</span>
+                            )}
+                            {leadPrice > 0 && (
+                              <span className={styles.relPriceNew}>₹{leadPrice.toLocaleString("en-IN")}</span>
+                            )}
+                            {relPct > 0 && <span className={styles.relDiscount}>{relPct}% Off</span>}
+                          </div>
+                        </div>
+                      </Link>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {(hasOnlineOnly || hasRecordedOnly) && (
-              <div className={styles.fieldRow} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", background: hasOnlineOnly ? "#EFF6FF" : "#F0FDF4", borderRadius: 8, border: `1.5px solid ${hasOnlineOnly ? "#BFDBFE" : "#BBF7D0"}` }}>
-                <div style={{ width: 28, height: 28, borderRadius: 7, background: hasOnlineOnly ? "#1D4ED8" : "#16A34A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {hasOnlineOnly
-                    ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                  }
+          </div>
+          {/* end leftCol */}
+
+          {/* ══════════════ RIGHT STICKY CARD ══════════════ */}
+          <div className={styles.rightCol}>
+            <div className={styles.purchaseCard}>
+
+              {/* Thumbnail */}
+              <div className={styles.cardThumb}>
+                {course.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={course.thumbnailUrl} alt={course.title} className={styles.cardThumbImg} />
+                ) : (
+                  <div className={styles.cardThumbFallback} />
+                )}
+                <div className={styles.cardThumbOverlay} />
+                <div className={styles.cardThumbLabel}>
+                  <span className={styles.cardThumbTitle}>{course.title}</span>
                 </div>
-                <div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: hasOnlineOnly ? "#1D4ED8" : "#16A34A" }}>
-                    {hasOnlineOnly ? "Online / Live Only" : "Recorded Only"}
-                  </span>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
-                    {hasOnlineOnly ? "This course is available as live online classes." : "This course is available as pre-recorded video lectures."}
+              </div>
+
+              <div className={styles.cardBody}>
+                {/* Course name + badges */}
+                <div className={styles.cardNameRow}>
+                  <h3 className={styles.cardCourseName}>{course.title}</h3>
+                  <div className={styles.cardBadges}>
+                    {course.isNew      && <span className={styles.badge} style={{ background: "#EEF2FF", color: "#4F46E5" }}>New</span>}
+                    {course.language   && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>{course.language}</span>}
+                    {hasBoth           && <span className={styles.badge} style={{ background: "#F0FDF4", color: "#166534" }}>Live + Recorded</span>}
+                    {hasOnlineOnly     && <span className={styles.badge} style={{ background: "#EFF6FF", color: "#1D4ED8" }}>Live Only</span>}
+                    {hasRecordedOnly   && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>Recorded Only</span>}
+                  </div>
+                </div>
+
+                {/* Validity */}
+                {course.validityMonths && (
+                  <p className={styles.cardValidity}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Validity: {course.validityMonths} Months Access
                   </p>
-                </div>
-              </div>
-            )}
+                )}
 
-            {/* Book add-on selector */}
-            {data?.course.bookEnabled && (data.course.eBookPrice || data.course.handbookPrice) && (
-              <div className={styles.fieldRow}>
-                <label className={styles.fieldLabel}>Book Add-on:</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-                  {/* No Book option */}
-                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "none" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "none" ? "#FFF1F2" : "#fff" }}>
-                    <input type="radio" name="bookType" value="none" checked={selectedBook === "none"} onChange={() => { setSelectedBook("none"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>No Book</span>
-                  </label>
-                  {/* eBook option */}
-                  {data.course.eBookPrice ? (
-                    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "ebook" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "ebook" ? "#FFF1F2" : "#fff" }}>
-                      <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"} onChange={() => { setSelectedBook("ebook"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
-                      <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
-                        eBook (PDF)
-                        <span style={{ marginLeft: 8, fontSize: 12, color: "#D42B3A", fontWeight: 700 }}>+ ₹{data.course.eBookPrice.toLocaleString("en-IN")}</span>
-                      </span>
-                    </label>
-                  ) : null}
-                  {/* Handbook option */}
-                  {data.course.handbookPrice ? (
-                    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${selectedBook === "handbook" ? "#D42B3A" : "#E5E7EB"}`, background: selectedBook === "handbook" ? "#FFF1F2" : "#fff" }}>
-                      <input type="radio" name="bookType" value="handbook" checked={selectedBook === "handbook"} onChange={() => { setSelectedBook("handbook"); setAddressError(""); }} style={{ accentColor: "#D42B3A" }} />
-                      <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
-                        Handbook (Physical)
-                        <span style={{ marginLeft: 8, fontSize: 12, color: "#D42B3A", fontWeight: 700 }}>+ ₹{data.course.handbookPrice.toLocaleString("en-IN")}</span>
-                      </span>
-                    </label>
-                  ) : null}
-                </div>
-                {/* Delivery address for handbook */}
-                {selectedBook === "handbook" && (
-                  <div style={{ marginTop: 10 }}>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Delivery Address <span style={{ color: "#D42B3A" }}>*</span></label>
-                    <textarea
-                      rows={3}
-                      placeholder="Full address with pin code…"
-                      value={deliveryAddress}
-                      onChange={(e) => { setDeliveryAddress(e.target.value); if (e.target.value.trim()) setAddressError(""); }}
-                      style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${addressError ? "#DC2626" : "#E5E7EB"}`, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit" }}
-                    />
-                    {addressError && <p style={{ fontSize: 12, color: "#DC2626", marginTop: 3 }}>{addressError}</p>}
+                {/* Mode selector */}
+                {hasBoth && (
+                  <div className={styles.modeSection}>
+                    <p className={styles.modeSectionLabel}>Choose Your Mode:</p>
+                    <div className={styles.modeTabs}>
+                      {(["online", "recorded"] as Mode[]).map(m => {
+                        const mPrice = m === "online" ? course.onlinePrice : course.recordedPrice;
+                        if (!mPrice) return null;
+                        return (
+                          <button
+                            key={m}
+                            className={`${styles.modeTab} ${selectedMode === m ? styles.modeTabActive : ""}`}
+                            onClick={() => setSelectedMode(m)}
+                          >
+                            {m === "online" ? "Online" : "Recorded"}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Price */}
-            {coursePrice != null && (
-              <div className={styles.priceRow}>
-                {originalCoursePrice && originalCoursePrice > coursePrice && (
-                  <span className={styles.priceOld}>₹{originalCoursePrice.toLocaleString("en-IN")}</span>
-                )}
-                <span className={styles.priceNew}>₹{coursePrice.toLocaleString("en-IN")}</span>
-                {discount > 0 && <span className={styles.discBadge}>{discount}% Off</span>}
-              </div>
-            )}
-            {bookAddon > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "#6B7280", padding: "2px 0" }}>
-                <span>+ {selectedBook === "ebook" ? "eBook" : "Handbook"}</span>
-                <span style={{ color: "#D42B3A", fontWeight: 600 }}>₹{bookAddon.toLocaleString("en-IN")}</span>
-              </div>
-            )}
-            {bookAddon > 0 && coursePrice != null && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB", paddingTop: 8, marginTop: 4 }}>
-                <span>Total</span>
-                <span>₹{price!.toLocaleString("en-IN")}</span>
-              </div>
-            )}
-
-            {courseEnrollments.length > 0 ? (() => {
-              const enrolledModes = courseEnrollments.map(e => e.mode);
-              const alreadyHasSelected = enrolledModes.includes(selectedMode);
-              // Link to the enrollment matching the selected mode, or the first one
-              const linkEnrollment = courseEnrollments.find(e => e.mode === selectedMode) ?? courseEnrollments[0];
-              const enrolledLabel = enrolledModes.map(m => m === "online" ? "Online" : "Recorded").join(" & ");
-              return (
-                <div>
-                  <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#166534" }}>
-                    You are enrolled in this course ({enrolledLabel}).
+                {/* Single-mode info */}
+                {(hasOnlineOnly || hasRecordedOnly) && (
+                  <div className={styles.singleModeInfo} style={{ background: hasOnlineOnly ? "#EFF6FF" : "#F0FDF4", borderColor: hasOnlineOnly ? "#BFDBFE" : "#BBF7D0" }}>
+                    <span style={{ fontWeight: 700, color: hasOnlineOnly ? "#1D4ED8" : "#16A34A" }}>
+                      {hasOnlineOnly ? "Online / Live Only" : "Recorded Only"}
+                    </span>
                   </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <Link
-                      href={`/student/courses/${linkEnrollment._id}`}
-                      className={styles.buyBtn}
-                      style={{ flex: 1, textAlign: "center", textDecoration: "none" }}
-                    >
-                      Continue Learning
-                    </Link>
-                    {!alreadyHasSelected && price && (
-                      <button
-                        className={styles.buyBtn}
-                        style={{ flex: 1, background: "#1D4ED8" }}
-                        onClick={handleBuyNow}
-                      >
-                        Also Buy {selectedMode === "online" ? "Online" : "Recorded"}
-                      </button>
+                )}
+
+                {/* Book add-on */}
+                {data?.course.bookEnabled && (data.course.eBookPrice || data.course.handbookPrice) && (
+                  <div className={styles.bookSection}>
+                    <p className={styles.modeSectionLabel}>Choose Your Mode:</p>
+                    <div className={styles.bookOptions}>
+                      <label className={`${styles.bookOption} ${selectedBook === "none" ? styles.bookOptionActive : ""}`}>
+                        <input type="radio" name="bookType" value="none" checked={selectedBook === "none"}
+                          onChange={() => { setSelectedBook("none"); setAddressError(""); }} />
+                        <span>No Book</span>
+                      </label>
+                      {data.course.eBookPrice ? (
+                        <label className={`${styles.bookOption} ${selectedBook === "ebook" ? styles.bookOptionActive : ""}`}>
+                          <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"}
+                            onChange={() => { setSelectedBook("ebook"); setAddressError(""); }} />
+                          <span>eBook (PDF) <em>+₹{data.course.eBookPrice.toLocaleString("en-IN")}</em></span>
+                        </label>
+                      ) : null}
+                      {data.course.handbookPrice ? (
+                        <label className={`${styles.bookOption} ${selectedBook === "handbook" ? styles.bookOptionActive : ""}`}>
+                          <input type="radio" name="bookType" value="handbook" checked={selectedBook === "handbook"}
+                            onChange={() => { setSelectedBook("handbook"); setAddressError(""); }} />
+                          <span>Handbook (Physical) <em>+₹{data.course.handbookPrice.toLocaleString("en-IN")}</em></span>
+                        </label>
+                      ) : null}
+                    </div>
+                    {selectedBook === "handbook" && (
+                      <div style={{ marginTop: 8 }}>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                          Delivery Address <span style={{ color: "#D42B3A" }}>*</span>
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="Full address with pin code…"
+                          value={deliveryAddress}
+                          onChange={(e) => { setDeliveryAddress(e.target.value); if (e.target.value.trim()) setAddressError(""); }}
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${addressError ? "#DC2626" : "#E5E7EB"}`, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit" }}
+                        />
+                        {addressError && <p style={{ fontSize: 12, color: "#DC2626", marginTop: 3 }}>{addressError}</p>}
+                      </div>
                     )}
                   </div>
-                </div>
-              );
-            })() : (
-              <>
-                <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!price}>
-                  {getStudentToken() ? "Enroll Now" : "Buy Now"}
-                </button>
-                {!getStudentToken() && (
-                  <p className={styles.loginNote}>
-                    Already have an account? <Link href="/login" className={styles.loginLink}>Log in</Link>
-                  </p>
                 )}
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* ── Tabs ── */}
-        <div className={styles.tabsBar}>
-          {(["description", "requirements", "faculty", "faq"] as Tab[]).map(t => (
-            <button
-              key={t}
-              className={`${styles.tabBtn} ${tab === t ? styles.tabActive : ""}`}
-              onClick={() => setTab(t)}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.tabContent}>
-          {tab === "description" && (
-            <div className={styles.specsTable}>
-              {specs.map((row, i) => (
-                <div key={i} className={styles.specRow}>
-                  <span className={styles.specLabel}>{row.label}</span>
-                  <span className={styles.specValue}>{row.value}</span>
-                </div>
-              ))}
-              {course.overview && (
-                <div className={styles.overviewBlock}>
-                  <h3 className={styles.overviewTitle}>{course.title} Course Overview</h3>
-                  <p className={styles.overviewText}>{course.overview}</p>
-                </div>
-              )}
-              {course.highlights && course.highlights.length > 0 && (
-                <div className={styles.overviewBlock}>
-                  <h3 className={styles.overviewTitle}>Course Highlights</h3>
-                  {course.highlights.map((h, i) => (
-                    <div key={i} className={styles.reqItem} style={{ marginBottom: 6 }}>
-                      <span style={{ color: "#D42B3A", flexShrink: 0 }}>✓</span>
-                      <span>{h}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {course.whoIsItFor && course.whoIsItFor.length > 0 && (
-                <div className={styles.overviewBlock}>
-                  <h3 className={styles.overviewTitle}>Who Is This Course For?</h3>
-                  {course.whoIsItFor.map((w, i) => (
-                    <div key={i} className={styles.reqItem} style={{ marginBottom: 6 }}>
-                      <span className={styles.reqDot} />
-                      <span>{w}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {tab === "requirements" && (
-            <div className={styles.reqList}>
-              {(course.prerequisites && course.prerequisites.length > 0) || (course.technicalRequirements && course.technicalRequirements.length > 0) ? (
-                <>
-                  {course.prerequisites && course.prerequisites.length > 0 && (
-                    <>
-                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, marginTop: 0 }}>Prerequisites / Prior Knowledge</h4>
-                      {course.prerequisites.map((r, i) => (
-                        <div key={i} className={styles.reqItem}>
-                          <span className={styles.reqDot} />
-                          <span>{r}</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {course.technicalRequirements && course.technicalRequirements.length > 0 && (
-                    <>
-                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, marginTop: course.prerequisites?.length ? 16 : 0 }}>Technical Requirements</h4>
-                      {course.technicalRequirements.map((r, i) => (
-                        <div key={i} className={styles.reqItem}>
-                          <span className={styles.reqDot} />
-                          <span>{r}</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </>
-              ) : (
-                <p className={styles.emptyTab}>No specific requirements. This course is beginner-friendly.</p>
-              )}
-            </div>
-          )}
-
-          {tab === "faculty" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {course.faculty && course.faculty.length > 0 ? (
-                course.faculty.map(fac => (
-                  <div key={fac._id} className={styles.facultyCard}>
-                    <div className={styles.facultyAvatar} style={fac.avatar ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
-                      {fac.avatar ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                        </svg>
+                {/* Price */}
+                {coursePrice != null && (
+                  <div className={styles.priceBlock}>
+                    <div className={styles.priceRow}>
+                      <span className={styles.priceNew}>₹{coursePrice.toLocaleString("en-IN")}</span>
+                      {originalCoursePrice && originalCoursePrice > coursePrice && (
+                        <span className={styles.priceOld}>₹{originalCoursePrice.toLocaleString("en-IN")}</span>
                       )}
                     </div>
+                    {discountPct > 0 && (
+                      <div className={styles.discBadge}>Discount of {discountPct}% applied</div>
+                    )}
+                    {bookAddon > 0 && (
+                      <div className={styles.totalRow}>
+                        <span>Total</span>
+                        <span>₹{totalPrice!.toLocaleString("en-IN")}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Enrolled / Buy */}
+                {courseEnrollments.length > 0 ? (() => {
+                  const enrolledModes     = courseEnrollments.map(e => e.mode);
+                  const alreadyHasSelected = enrolledModes.includes(selectedMode);
+                  const linkEnrollment    = courseEnrollments.find(e => e.mode === selectedMode) ?? courseEnrollments[0];
+                  const enrolledLabel     = enrolledModes.map(m => m === "online" ? "Online" : "Recorded").join(" & ");
+                  return (
                     <div>
-                      <h4 className={styles.facultyName}>{fac.name}</h4>
-                      {fac.designation && <p className={styles.facultyRole}>{fac.designation}</p>}
-                      {fac.bio && <p className={styles.facultyBio}>{fac.bio}</p>}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.facultyCard}>
-                  <div className={styles.facultyAvatar}>
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className={styles.facultyName}>GKPro Expert Faculty</h4>
-                    <p className={styles.facultyRole}>Chartered Accountant · Senior Instructor</p>
-                    <p className={styles.facultyBio}>Our faculty members are experienced Chartered Accountants with years of teaching expertise in CA Foundation, Intermediate and Final examinations.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {tab === "faq" && (
-            <div className={styles.faqList}>
-              {faqs.length > 0 ? faqs.map(f => (
-                <div key={f._id} className={`${styles.faqItem} ${openFaq === f._id ? styles.faqOpen : ""}`}>
-                  <button className={styles.faqQ} onClick={() => setOpenFaq(openFaq === f._id ? null : f._id)}>
-                    <span>{f.question}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                      style={{ transform: openFaq === f._id ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                  {openFaq === f._id && <div className={styles.faqA}>{f.answer}</div>}
-                </div>
-              )) : (
-                <p className={styles.emptyTab}>No FAQs available for this course yet.</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Related courses ── */}
-        {related.length > 0 && (
-          <div className={styles.relatedSection}>
-            <h2 className={styles.relatedTitle}>Courses You May Like</h2>
-            <div className={styles.relatedGrid}>
-              {related.map((c, i) => {
-                const rCatName = typeof c.categoryId === "object" ? (c.categoryId as Category).name : "";
-                return (
-                  <Link href={`/courses/${c.slug}`} key={c._id} className={styles.relCard}>
-                    <div className={styles.relCardImg} style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}>
-                      <span className={`${styles.relBadge} ${c.onlinePrice ? styles.badgeOnline : styles.badgeRecorded}`}>
-                        {c.onlinePrice ? "Online" : "Recorded"}
-                      </span>
-                    </div>
-                    <div className={styles.relCardBody}>
-                      <h3 className={styles.relCardTitle}>{c.title}</h3>
-                      {c.description && <p className={styles.relCardDesc}>{c.description}</p>}
-                      <div className={styles.relCardPrice}>
-                        {c.onlinePrice && <span className={styles.relPriceNew}>₹{c.onlinePrice.toLocaleString("en-IN")}</span>}
-                        {c.recordedPrice && <span className={styles.relPriceNew} style={{ marginLeft: c.onlinePrice ? 8 : 0 }}>₹{c.recordedPrice.toLocaleString("en-IN")}</span>}
+                      <div className={styles.enrolledBadge}>
+                        You are enrolled ({enrolledLabel}).
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <Link href={`/student/courses/${linkEnrollment._id}`} className={styles.buyBtn}
+                          style={{ flex: 1, textAlign: "center", textDecoration: "none" }}>
+                          Continue Learning
+                        </Link>
+                        {!alreadyHasSelected && coursePrice && (
+                          <button className={styles.buyBtn} style={{ flex: 1, background: "#1D4ED8" }} onClick={handleBuyNow}>
+                            Also Buy {selectedMode === "online" ? "Online" : "Recorded"}
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </Link>
-                );
-              })}
+                  );
+                })() : (
+                  <>
+                    <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!coursePrice}>
+                      {getStudentToken() ? "Enroll Now" : "Buy Now"}
+                    </button>
+                    {!getStudentToken() && (
+                      <p className={styles.loginNote}>
+                        Already have an account? <Link href="/login" className={styles.loginLink}>Log in</Link>
+                      </p>
+                    )}
+                  </>
+                )}
+
+              </div>
+              {/* end cardBody */}
             </div>
+            {/* end purchaseCard */}
           </div>
-        )}
+          {/* end rightCol */}
+
+        </div>
+        {/* end pageLayout */}
 
         <div style={{ height: 60 }} />
       </div>
@@ -696,21 +832,19 @@ export default function CourseDetailPage() {
                 </div>
                 <div className={styles.modalBody}>
                   <div className={styles.modalPlanRow}>
-                    <span className={styles.modalPlanType}>
-                      {selectedMode === "online" ? "Online (Live)" : "Recorded"}
-                    </span>
+                    <span className={styles.modalPlanType}>{selectedMode === "online" ? "Online (Live)" : "Recorded"}</span>
                     {coursePrice != null && <span className={styles.modalPlanPrice}>₹{coursePrice.toLocaleString("en-IN")}</span>}
                   </div>
                   {bookAddon > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", fontSize: 13, color: "#6B7280", borderTop: "1px solid #F3F4F6" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6B7280", borderTop: "1px solid #F3F4F6", paddingTop: 6 }}>
                       <span>+ {selectedBook === "ebook" ? "eBook (PDF)" : "Handbook (Physical)"}</span>
                       <span style={{ color: "#D42B3A", fontWeight: 600 }}>₹{bookAddon.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                   {bookAddon > 0 && coursePrice != null && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0 4px", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB", paddingTop: 8, marginTop: 4 }}>
                       <span>Total</span>
-                      <span>₹{price!.toLocaleString("en-IN")}</span>
+                      <span>₹{totalPrice!.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                   {selectedBook === "handbook" && deliveryAddress && (
@@ -722,12 +856,8 @@ export default function CourseDetailPage() {
                 </div>
                 <div className={styles.modalFoot}>
                   <button className={styles.modalCancel} onClick={closeModal}>Cancel</button>
-                  <button
-                    className={styles.modalConfirm}
-                    onClick={handleConfirmEnroll}
-                    disabled={enrolling}
-                  >
-                    {enrolling ? "Processing…" : price ? `Pay ₹${price.toLocaleString("en-IN")}` : "Enroll Free"}
+                  <button className={styles.modalConfirm} onClick={handleConfirmEnroll} disabled={enrolling}>
+                    {enrolling ? "Processing…" : coursePrice && coursePrice > 0 ? "Pay Now" : "Enroll Free"}
                   </button>
                 </div>
               </>

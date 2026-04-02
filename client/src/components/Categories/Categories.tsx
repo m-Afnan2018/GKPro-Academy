@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import styles from "./Categories.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -63,17 +64,17 @@ export default function Categories() {
 
         <div className={styles.grid}>
           {display.map((cat, i) => (
-            <div key={cat._id} className={styles.card}>
+            <Link key={cat._id} href={`/category/${cat.slug}`} className={styles.card}>
               <div className={styles.imgWrap} style={{ background: CAT_GRADIENTS[i % CAT_GRADIENTS.length] }}>
                 <div className={styles.imgOverlay} />
               </div>
               <div className={styles.cardBody}>
                 <h3 className={styles.title}>{cat.name}</h3>
-                <a href={`/courses?category=${cat._id}`} className={styles.learnBtn}>
+                <span className={styles.learnBtn}>
                   LEARN MORE
-                </a>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

@@ -22,6 +22,12 @@ const getCategory = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, category, "Category retrieved."));
 });
 
+const getCategoryBySlug = asyncHandler(async (req, res) => {
+  const category = await CourseCategory.findOne({ slug: req.params.slug });
+  if (!category) throw new ApiError(404, "Category not found.");
+  res.json(new ApiResponse(200, category, "Category retrieved."));
+});
+
 const createCategory = asyncHandler(async (req, res) => {
   const category = await CourseCategory.create(req.body);
   res.status(201).json(new ApiResponse(201, category, "Category created."));
@@ -39,4 +45,4 @@ const deleteCategory = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, null, "Category deleted."));
 });
 
-module.exports = { getCategories, getCategory, createCategory, updateCategory, deleteCategory };
+module.exports = { getCategories, getCategory, getCategoryBySlug, createCategory, updateCategory, deleteCategory };

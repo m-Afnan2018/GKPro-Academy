@@ -103,6 +103,9 @@
   overflow: hidden;
   box-shadow: var(--shadow);
   transition: transform 0.25s, box-shadow 0.25s;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
 }
 .card:hover {
   transform: translateY(-4px);

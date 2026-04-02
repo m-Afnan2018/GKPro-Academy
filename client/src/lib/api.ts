@@ -317,7 +317,8 @@ export interface Category {
   _id: string;
   name: string;
   slug: string;
-  imageUrl?: string;
+  description?: string | null;
+  imageUrl?: string | null;
   isComingSoon: boolean;
   sortOrder: number;
 }
@@ -368,6 +369,12 @@ export interface Course {
   numLectures?: string | null;
   duration?: string | null;
   language?: string | null;
+  validity?: string | null;
+  studyMaterial?: string | null;
+  startDate?: string | null;
+  validityMonths?: number | null;
+  targetAudience?: string | null;
+  isNew?: boolean;
   highlights?: string[];
   prerequisites?: string[];
   // Faculty (multiple)

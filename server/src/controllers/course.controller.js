@@ -19,6 +19,10 @@ const getCourses = asyncHandler(async (req, res) => {
     if (cat) filter.categoryId = cat._id;
   }
 
+  if (req.query.subcategoryId) {
+    filter.subcategoryId = req.query.subcategoryId;
+  }
+
   if (req.query.search) {
     filter.$or = [
       { title: { $regex: req.query.search, $options: "i" } },
