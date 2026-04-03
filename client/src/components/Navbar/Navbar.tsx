@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image  from 'next/image'
 import { useRouter } from "next/navigation";
 import { getStudentUser, clearStudentSession } from "@/lib/studentAuth";
 import type { User, Category, SubCategory } from "@/lib/api";
 import styles from "./Navbar.module.css";
+import commonImages from "@/constants/commonImages";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
@@ -135,14 +137,7 @@ export default function Navbar() {
       <div className={`container ${styles.inner}`}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <div className={styles.logoIcon}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="16" fill="#D42B3A" />
-              <path d="M8 12l8-4 8 4-8 4-8-4z" fill="white" opacity="0.9" />
-              <path d="M8 12v6l8 4 8-4v-6" stroke="white" strokeWidth="1.5" fill="none" opacity="0.7" />
-            </svg>
-          </div>
-          <span className={styles.logoText}>GKPro</span>
+          <Image src={commonImages.logo} width={100} height={100}/>
         </Link>
 
         {/* Nav Links */}

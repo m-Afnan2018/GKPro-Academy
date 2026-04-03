@@ -1,9 +1,6 @@
 .hero {
   position: relative;
   min-height: 560px;
-  background:
-    linear-gradient(rgba(15, 15, 30, 0.72), rgba(15, 15, 30, 0.72)),
-    url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&q=80') center/cover no-repeat;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -145,7 +142,7 @@
 /* Right cards */
 .cards {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 14px;
   align-items: flex-end;
 }
@@ -153,27 +150,41 @@
 /* Stat card */
 .statCard {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 14px;
-  background: var(--primary);
-  color: white;
+  background-color: white;
+  color: black;
+  /* background: var(--primary); */
+  /* color: white; */
   padding: 14px 20px;
   border-radius: var(--radius-lg);
   width: 220px;
+  /* height: 150px; */
+  padding: 2rem;
   box-shadow: var(--shadow-md);
 }
 
-.statCardGreen {
-  background: var(--green);
+.statCardRed {
+  background: var(--primary);
+  color: white;
+}
+
+.statCardRed .statLabel {
+  color: white;
 }
 
 .statIcon {
-  font-size: 28px;
+  font-size: 18px;
 }
 
 .statNum {
   font-family: var(--font-heading);
   font-size: 22px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: 800;
 }
 
@@ -181,6 +192,15 @@
   font-size: 11px;
   opacity: 0.88;
   margin-top: 2px;
+  color: #555555;
+  font-family: Inter;
+  font-weight: 300;
+  font-style: Light;
+  line-height: 27.2px;
+  letter-spacing: 0%;
+  text-align: center;
+  vertical-align: middle;
+
 }
 
 /* Main image card */
