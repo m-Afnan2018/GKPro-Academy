@@ -1,4 +1,5 @@
 import styles from "./Features.module.css";
+import Image from "next/image";
 
 export default function Features() {
   return (
@@ -21,6 +22,12 @@ export default function Features() {
               and participate in structured group discussions for better clarity and engagement.
             </p>
             <a href="/courses" className={styles.applyBtn}>Apply Now</a>
+            <Image
+              alt="redHat"
+              src={'/images/1-5.png.png'}
+              width={100}
+              height={100}
+            />
           </div>
 
           {/* Card 2 — Recorded Classes */}
@@ -39,6 +46,12 @@ export default function Features() {
               with unlimited views. Learn at your own pace with structured study material and guided support.
             </p>
             <a href="/courses" className={styles.applyBtn}>Apply Now</a>
+            <Image
+              alt="redHat"
+              src={'/images/2-3.png.png'}
+              width={100}
+              height={100}
+            />
           </div>
         </div>
       </div>
