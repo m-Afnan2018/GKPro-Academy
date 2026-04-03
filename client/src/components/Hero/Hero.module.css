@@ -9,7 +9,7 @@
 .overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(212, 43, 58, 0.18) 0%, transparent 60%);
+  background: linear-gradient(120deg, rgba(114, 93, 224, 0.162) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -63,12 +63,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(212, 43, 58, 0.22);
+  background: rgba(212, 43, 57, 0.844);
   border: 1px solid rgba(212, 43, 58, 0.5);
   color: #FFB3BB;
   font-size: 12px;
   font-weight: 600;
-  padding: 6px 16px;
+  padding: 5px 16px;
   border-radius: 50px;
   margin-bottom: 20px;
   letter-spacing: 0.3px;
@@ -143,8 +143,16 @@
 .cards {
   display: flex;
   flex-direction: row;
-  gap: 14px;
   align-items: flex-end;
+  gap: 14px;
+}
+
+/* Left column: stacked stat cards */
+.statColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
 }
 
 /* Stat card */
@@ -152,17 +160,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 10px;
   background-color: white;
-  color: black;
-  /* background: var(--primary); */
-  /* color: white; */
-  padding: 14px 20px;
+  color: #1a1a1a;
+  padding: 28px 24px;
   border-radius: var(--radius-lg);
-  width: 220px;
-  /* height: 150px; */
-  padding: 2rem;
+  width: 180px;
   box-shadow: var(--shadow-md);
+  text-align: center;
 }
 
 .statCardRed {
@@ -171,112 +177,131 @@
 }
 
 .statCardRed .statLabel {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.statCardRed .statNum {
   color: white;
 }
 
 .statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
 }
 
 .statNum {
   font-family: var(--font-heading);
-  font-size: 22px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  font-size: 26px;
   font-weight: 800;
+  line-height: 1;
 }
 
 .statLabel {
-  font-size: 11px;
-  opacity: 0.88;
-  margin-top: 2px;
-  color: #555555;
-  font-family: Inter;
-  font-weight: 300;
-  font-style: Light;
-  line-height: 27.2px;
-  letter-spacing: 0%;
-  text-align: center;
-  vertical-align: middle;
-
+  font-size: 12px;
+  color: #666;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
-/* Main image card */
+/* Course image card (right column) */
 .imageCard {
   background: white;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  width: 280px;
+  width: 290px;
   box-shadow: var(--shadow-md);
   position: relative;
+  flex-shrink: 0;
 }
 
 .onlineBadge {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  left: 12px;
   background: #1E7B5E;
   color: white;
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
+  font-weight: 700;
+  padding: 4px 12px;
   border-radius: 50px;
   z-index: 2;
+  letter-spacing: 0.3px;
 }
 
 .cardImageWrap {
-  height: 140px;
+  height: 195px;
   overflow: hidden;
 }
 
 .cardImg {
-  aspect-ratio: 16 / 9;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .cardInfo {
-  padding: 14px 16px 16px;
-}
-
-.cardStars {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.cardRating {
-  font-size: 11px;
-  color: var(--text-muted);
+  padding: 14px 16px 18px;
 }
 
 .cardTitle {
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .cardDesc {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-body);
-  line-height: 1.5;
-  margin-bottom: 8px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+/* Price row */
+.cardPriceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardPricing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.originalPrice {
+  font-size: 13px;
+  color: #999;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.currentPrice {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.3px;
 }
 
 .discountBadge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #22C55E;
   color: white;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 2px 10px;
+  padding: 7px 18px;
   border-radius: 50px;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 @media (max-width: 860px) {

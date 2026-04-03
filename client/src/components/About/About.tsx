@@ -17,16 +17,7 @@ export default function About() {
           {/* Left: Images */}
           <div className={styles.imgCol}>
             <div className={styles.imgGrid}>
-              <img
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=300&h=220&fit=crop&q=80"
-                alt="Students studying"
-                className={styles.imgMain}
-              />
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=80"
-                alt="Instructor"
-                className={styles.imgSub}
-              />
+              <img className="imgMain" src="/images/about-gkpro.webp" alt="about gk img" />
             </div>
             <div className={styles.advisorBadge}>
               <div className={styles.advisorIcon}>🏆</div>
@@ -35,7 +26,6 @@ export default function About() {
                 <div className={styles.advisorLabel}>Experience Advisor</div>
               </div>
             </div>
-            <div className={styles.loveDecor}>love.</div>
           </div>
 
           {/* Right: Text */}
@@ -51,7 +41,11 @@ export default function About() {
               We prepare Chartered Accountants and finance professionals with
               practical career skills.
             </h2>
-
+            <span style={{ rotate: '-10deg' }}>
+              <svg width="240" height="15" viewBox="0 0 240 15" fill="none" className={styles.brushCurve}>
+                <path d="M5 10 Q 120 -5 235 10" stroke="var(--primary, #d1122a)" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
             <p className={styles.body}>
               At GKPro Academy, we specialise in Chartered Accountancy preparation
               and industry-focused accounting skill programs. Our structured courses

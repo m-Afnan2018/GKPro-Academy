@@ -120,117 +120,65 @@ export default function Hero() {
 
                 {/* Right: Floating cards */}
                 <div className={styles.cards}>
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "1rem",
-                        }}
-                    >
+                    {/* Left column: stacked stat cards */}
+                    <div className={styles.statColumn}>
                         {/* Stat card: learners */}
                         <div className={styles.statCard}>
                             <div className={styles.statIcon}>
                                 <Image
                                     alt="redHat"
                                     src={icons.redHat}
-                                    width={100}
-                                    height={100}
-                                    style={{width: '54px', height: '44px', objectFit: 'cover'}}
+                                    width={54}
+                                    height={44}
+                                    style={{ width: "54px", height: "44px", objectFit: "contain" }}
                                 />
                             </div>
-                            <div>
-                                <div className={styles.statNum}>250+</div>
-                                <div className={styles.statLabel}>
-                                    Our Happy Students
-                                </div>
-                            </div>
+                            <div className={styles.statNum}>5000+</div>
+                            <div className={styles.statLabel}>Successful Learners</div>
                         </div>
 
                         {/* Stat card: classes */}
-                        <div
-                            className={`${styles.statCard} ${styles.statCardRed}`}
-                        >
+                        <div className={`${styles.statCard} ${styles.statCardRed}`}>
                             <div className={styles.statIcon}>
                                 <Image
                                     alt="apple"
                                     src={icons.apple}
                                     width={54}
                                     height={44}
+                                    style={{ width: "54px", height: "44px", objectFit: "contain" }}
                                 />
                             </div>
-                            <div>
-                                <div className={styles.statNum}>3652+</div>
-                                <div className={styles.statLabel}>
-                                    Finished Session
-                                </div>
-                            </div>
+                            <div className={styles.statNum}>120+</div>
+                            <div className={styles.statLabel}>Live &amp; Recorded Classes</div>
                         </div>
                     </div>
 
-                    {/* Main image card */}
-                    {/*<div>
-                        <div>
-                          <div>
-                            <Image src={} alt="folder-image" width={14} height={10}/>
-                            <span>Data Science</span>
-                          </div>
-                          <div>
-                            <Image src={} alt="recorder-image" width={14} height={10}/>
-                          </div>
-                        </div>
-                        <div>
-                          <Image src={} alt="star-image" width={14} height={14}/>
-                        </div>
-                        <h3>Interior design concepts Masterclass</h3>
-                        <div>
-                          <div>
-                            <Image src={} alt="book-image" width={16} height={16}/>
-                            <span>0 Lessons</span>
-                          </div>
-                          <div>
-                            <Image src={} alt="book-image" width={16} height={16}/>
-                            <span>0 Lessons</span>
-                          </div>
-                        </div>
-                        <div>
-                          <div>
-                            <span>$65.00</span>
-                            <span>$55.00</span>
-                          </div>
-                          <div>
-                            <Image src={} alt="masum-billah" width={30} height={30}/>
-                            <p>Masum Billah</p>
-                          </div>
-                        </div>
-                    </div>
-                    */}
+                    {/* Right column: Course card */}
                     <div className={styles.imageCard}>
-                        <div className={styles.onlineBadge}>● Online</div>
+                        <div className={styles.onlineBadge}>Online</div>
                         <div className={styles.cardImageWrap}>
                             <Image
-                                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=200&fit=crop&q=80"
-                                width={100}
-                                height={100}
+                                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=220&fit=crop&q=80"
+                                width={400}
+                                height={220}
                                 alt="CA Accounting instructor"
                                 className={styles.cardImg}
                             />
                         </div>
                         <div className={styles.cardInfo}>
-                            <div className={styles.cardStars}>
-                                <span className="stars">★★★★★</span>
-                                <span className={styles.cardRating}>
-                                    4.9 (200+ ratings)
-                                </span>
-                            </div>
-                            <div className={styles.cardTitle}>
-                                CA Accounting
-                            </div>
+                            <div className={styles.cardTitle}>CA Accounting</div>
                             <p className={styles.cardDesc}>
                                 Master core accounting concepts, financial
-                                statements, and practical problem solving for CA
-                                exams.
+                                statements, and practical problem-solving
+                                for CA exams.
                             </p>
-                            <div className={styles.discountBadge}>10% Off</div>
+                            <div className={styles.cardPriceRow}>
+                                <div className={styles.cardPricing}>
+                                    <span className={styles.originalPrice}>₹10,100</span>
+                                    <span className={styles.currentPrice}>₹8500</span>
+                                </div>
+                                <div className={styles.discountBadge}>15% Off</div>
+                            </div>
                         </div>
                     </div>
                 </div>
