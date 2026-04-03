@@ -48,6 +48,7 @@ app.use("/api/approvals", require("./src/routes/approval.routes"));
 app.use("/api/faculty",  require("./src/routes/faculty.routes"));
 app.use("/api/media",    require("./src/routes/media.routes"));
 app.use("/api/upload",   require("./src/routes/upload.routes"));
+app.use("/api/search",   require("./src/routes/search.routes"));
 
 // Global error handler (must be last)
 app.use(errorHandler);

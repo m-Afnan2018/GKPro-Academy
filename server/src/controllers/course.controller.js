@@ -14,12 +14,20 @@ const getCourses = asyncHandler(async (req, res) => {
 
   const filter = { status: "published", approvalStatus: "approved" };
 
-  if (req.query.category) {
+  if (req.query.categoryIds) {
+    const ids = req.query.categoryIds.split(",").filter(Boolean);
+    if (ids.length === 1) filter.categoryId = ids[0];
+    else if (ids.length > 1) filter.categoryId = { $in: ids };
+  } else if (req.query.category) {
     const cat = await CourseCategory.findOne({ slug: req.query.category });
     if (cat) filter.categoryId = cat._id;
   }
 
-  if (req.query.subcategoryId) {
+  if (req.query.subcategoryIds) {
+    const ids = req.query.subcategoryIds.split(",").filter(Boolean);
+    if (ids.length === 1) filter.subcategoryId = ids[0];
+    else if (ids.length > 1) filter.subcategoryId = { $in: ids };
+  } else if (req.query.subcategoryId) {
     filter.subcategoryId = req.query.subcategoryId;
   }
 
@@ -30,8 +38,18 @@ const getCourses = asyncHandler(async (req, res) => {
     ];
   }
 
+  const sortMap = {
+    newest:     { createdAt: -1 },
+    oldest:     { createdAt:  1 },
+    price_asc:  { onlinePrice: 1,  recordedPrice: 1  },
+    price_desc: { onlinePrice: -1, recordedPrice: -1 },
+    name_asc:   { title:  1 },
+    name_desc:  { title: -1 },
+  };
+  const sortQuery = sortMap[req.query.sort] || { createdAt: -1 };
+
   const [courses, total] = await Promise.all([
-    Course.find(filter).populate("categoryId").populate("faculty").skip(skip).limit(limit),
+    Course.find(filter).populate("categoryId").populate("faculty").sort(sortQuery).skip(skip).limit(limit),
     Course.countDocuments(filter),
   ]);
 
