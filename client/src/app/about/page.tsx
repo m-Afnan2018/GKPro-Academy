@@ -23,7 +23,7 @@ export default function AboutPage() {
     <>
       <AnnouncementBar />
       <Navbar />
-      <main>
+      <main style={{ overflow: 'hidden' }}>
         <AboutHero />
         <WhyChooseUs />
         <AboutContent />

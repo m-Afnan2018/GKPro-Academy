@@ -4,13 +4,13 @@ const members = [
   {
     name: "Gagandeep Singh",
     role: "Co-Founder & Director",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=480&fit=crop&q=80",
+    img: "/images/GagandeepSingh.png",
     socials: ["facebook", "linkedin", "youtube"],
   },
   {
     name: "CA Kiranjeet Kaur",
     role: "Co-Founder & Managing Director",
-    img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=400&h=480&fit=crop&q=80",
+    img: "/images/KiranjeetKaur.png",
     socials: ["facebook", "linkedin", "youtube"],
   },
 ];
@@ -59,10 +59,6 @@ export default function Team() {
             <div key={m.name} className={styles.card}>
               <div className={styles.imgWrap}>
                 <img src={m.img} alt={m.name} className={styles.img} />
-              </div>
-              <div className={styles.badge}>
-                <p className={styles.memberName}>{m.name}</p>
-                <p className={styles.memberRole}>{m.role}</p>
               </div>
               <div className={styles.socials}>
                 {m.socials.map((s) => (

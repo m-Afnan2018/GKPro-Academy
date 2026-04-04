@@ -9,7 +9,7 @@ export default function Hero() {
         <section
             className={styles.hero}
             style={{
-                background: `linear-gradient(rgb(15 15 30 / 12%), rgb(15 15 30 / 1%)), url(${homeImage.banner.src}) center/cover no-repeat;`,
+                background: `linear-gradient(rgb(15 15 30 / 12%), rgb(15 15 30 / 1%)), url(${homeImage.banner.src}) center/cover no-repeat`,
             }}
         >
             {/* Dark overlay */}

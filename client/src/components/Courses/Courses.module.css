@@ -18,6 +18,7 @@
   color: var(--text-main);
   position: relative;
 }
+
 .heading::after {
   content: '';
   position: absolute;
@@ -44,7 +45,12 @@
   border: 1.5px solid var(--border);
   transition: all 0.2s;
 }
-.tab:hover { border-color: var(--primary); color: var(--primary); }
+
+.tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .tabActive {
   background: var(--primary);
   color: white;
@@ -66,13 +72,19 @@
   overflow: hidden;
   transition: transform 0.25s, box-shadow 0.25s;
 }
+
 .card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
 
-.cardPink { background: #FAE0E4; }
-.cardPink .body { background: #FAE0E4; }
+.cardPink {
+  background: #FAE0E4;
+}
+
+.cardPink .body {
+  background: #FAE0E4;
+}
 
 /* Image */
 .imgWrap {
@@ -87,7 +99,10 @@
   object-fit: cover;
   transition: transform 0.4s;
 }
-.card:hover .img { transform: scale(1.04); }
+
+.card:hover .img {
+  transform: scale(1.04);
+}
 
 .badge {
   position: absolute;
@@ -99,25 +114,34 @@
   border-radius: 50px;
   letter-spacing: 0.3px;
 }
-.badgeGreen { background: #1E7B5E; color: white; }
-.badgeRed { background: var(--primary); color: white; }
+
+.badgeGreen {
+  background: #1E7B5E;
+  color: white;
+}
+
+.badgeRed {
+  background: var(--primary);
+  color: white;
+}
 
 .comingSoon {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .comingSoon span {
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   color: white;
   font-size: 13px;
   font-weight: 600;
   padding: 8px 20px;
   border-radius: 50px;
-  border: 1.5px solid rgba(255,255,255,0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
 }
 
 .wishlist {
@@ -133,13 +157,18 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: color 0.2s;
 }
-.wishlist:hover { color: var(--primary); }
+
+.wishlist:hover {
+  color: var(--primary);
+}
 
 /* Body */
-.body { padding: 18px 18px 20px; }
+.body {
+  padding: 18px 18px 20px;
+}
 
 .ratingRow {
   display: flex;
@@ -147,7 +176,11 @@
   gap: 6px;
   margin-bottom: 6px;
 }
-.ratingText { font-size: 11px; color: var(--text-muted); }
+
+.ratingText {
+  font-size: 11px;
+  color: var(--text-muted);
+}
 
 .title {
   font-family: var(--font-heading);
@@ -195,9 +228,17 @@
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 @media (max-width: 560px) {
-  .grid { grid-template-columns: 1fr; }
-  .tabs { display: none; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    display: none;
+  }
 }

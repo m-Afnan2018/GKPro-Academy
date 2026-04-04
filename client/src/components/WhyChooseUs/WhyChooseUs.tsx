@@ -59,10 +59,6 @@ export default function WhyChooseUs() {
             </div>
           ))}
         </div>
-        {/* Center dot */}
-        <div className={styles.centerDot}>
-          <span className={styles.dot} />
-        </div>
       </div>
     </section>
   );

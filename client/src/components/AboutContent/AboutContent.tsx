@@ -7,27 +7,21 @@ export default function AboutContent() {
         <div className={styles.inner}>
 
           {/* Left: stacked images + badge */}
-          <div className={styles.imgCol}>
+          <div>
             <div className={styles.imgStack}>
               <img
-                src="https://images.unsplash.com/photo-1562774053-701939374585?w=420&h=300&fit=crop&q=80"
+                src="/images/about-gk.webp"
                 alt="GKPro campus"
                 className={styles.imgLarge}
               />
-              <img
-                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=300&h=220&fit=crop&q=80"
-                alt="Students"
-                className={styles.imgSmall}
-              />
             </div>
-            <div className={styles.advisorBadge}>
+            {/* <div className={styles.advisorBadge}>
               <div className={styles.advisorIcon}>🎓</div>
               <div>
                 <div className={styles.advisorNum}>10+</div>
                 <div className={styles.advisorLabel}>Experience Advisor</div>
               </div>
-            </div>
-            <span className={styles.loveDecor}>love.</span>
+            </div> */}
           </div>
 
           {/* Right: Text */}
