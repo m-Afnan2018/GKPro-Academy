@@ -52,7 +52,10 @@ export default function Testimonials() {
           <div className={styles.rightCol}>
             <div className={styles.header}>
               <span className={styles.label}>
-                <span className={styles.labelDot}></span>
+                <svg className={styles.labelIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
                 TESTIMONIALS
               </span>
               {pairs.length > 1 && (
