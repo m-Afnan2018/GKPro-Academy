@@ -32,12 +32,12 @@ async function request<T>(
   return json as T;
 }
 
-const get  = <T>(path: string)                => request<T>(path);
+const get = <T>(path: string) => request<T>(path);
 const post = <T>(path: string, body: unknown) =>
-  request<T>(path, { method: "POST",  body: JSON.stringify(body) });
+  request<T>(path, { method: "POST", body: JSON.stringify(body) });
 const patch = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
-const del  = <T>(path: string)                =>
+const del = <T>(path: string) =>
   request<T>(path, { method: "DELETE" });
 
 /* ── auth ────────────────────────────────────────── */
@@ -293,11 +293,11 @@ export const dashboardApi = {
       get<{ data: { total: number } }>("/approvals/pending?limit=1").catch(() => ({ data: { total: 0 } })),
       get<{ data: { payments: Payment[]; total: number } }>("/payments?limit=5").catch(() => ({ data: { payments: [], total: 0 } })),
     ]).then(([users, courses, enrollments, approvals, payments]) => ({
-      totalUsers:       (users as any).data?.total ?? 0,
-      totalCourses:     (courses as any).data?.total ?? 0,
+      totalUsers: (users as any).data?.total ?? 0,
+      totalCourses: (courses as any).data?.total ?? 0,
       totalEnrollments: (enrollments as any).data?.total ?? 0,
       pendingApprovals: (approvals as any).data?.total ?? 0,
-      recentPayments:   (payments as any).data?.payments ?? [],
+      recentPayments: (payments as any).data?.payments ?? [],
     })),
 };
 
@@ -469,6 +469,7 @@ export interface Blog {
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   publishedAt?: string;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface Faq {

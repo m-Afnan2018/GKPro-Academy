@@ -28,13 +28,13 @@ function BookIcon() {
 }
 
 export default function BlogListPage() {
-  const [blogs, setBlogs]           = useState<Blog[]>([]);
-  const [popular, setPopular]       = useState<Blog[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [popular, setPopular] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [total, setTotal]           = useState(0);
-  const [page, setPage]             = useState(1);
-  const [search, setSearch]         = useState("");
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const limit = 5;
 
@@ -48,7 +48,7 @@ export default function BlogListPage() {
         setBlogs(json.data.blogs ?? []);
         setTotal(json.data.total ?? 0);
       }
-    } catch {}
+    } catch { }
     finally { setLoading(false); }
   }, [page, search]);
 
@@ -58,11 +58,11 @@ export default function BlogListPage() {
     fetch(`${BASE}/blogs?isPublished=true&page=1&limit=3`)
       .then((r) => r.json())
       .then((json) => { if (json.success) setPopular(json.data.blogs ?? []); })
-      .catch(() => {});
+      .catch(() => { });
     fetch(`${BASE}/categories?limit=20`)
       .then((r) => r.json())
       .then((json) => { if (json.success) setCategories(json.data.categories ?? []); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -96,6 +96,8 @@ export default function BlogListPage() {
     }
     return pages;
   };
+
+  console.log(blogs);
 
   return (
     <>
@@ -135,31 +137,28 @@ export default function BlogListPage() {
             blogs.map((b, i) => (
               <article key={b._id} className={styles.card}>
                 {/* Image area */}
-                <div className={styles.cardImage} style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}>
+                <div className={styles.cardImage}>
+                  <img src={b.imageUrl} alt={b.title} />
                   <span className={styles.cardTag}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="2" y="2" width="20" height="20" rx="3" />
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
                     </svg>
                     Software
                   </span>
-                  {/* Decorative dots */}
-                  <div className={styles.imgDots}>
-                    {[0,1,2,3,4,5,6,7,8].map(n => <div key={n} className={styles.dot} />)}
-                  </div>
                 </div>
 
                 {/* Card body */}
                 <div className={styles.cardBody}>
                   <div className={styles.cardMeta}>
                     <span className={styles.metaItem}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                       </svg>
                       {authorName(b)}
                     </span>
-                    <span className={styles.metaDot} />
                     <span className={styles.metaItem}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                       </svg>
                       {formatDate(b.publishedAt ?? b.createdAt)}
@@ -171,6 +170,12 @@ export default function BlogListPage() {
                     {b.content?.replace(/<[^>]+>/g, "").slice(0, 180)}
                     {(b.content?.replace(/<[^>]+>/g, "").length ?? 0) > 180 ? "…" : ""}
                   </p>
+
+                  <Link href={`/blogs/${b.slug}`} className={styles.readMoreArrow} aria-label="Read blog">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </Link>
                 </div>
               </article>
             ))

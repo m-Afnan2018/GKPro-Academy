@@ -1,9 +1,8 @@
-/* ── Hero ──────────────────────────────────────────── */
 .hero {
   position: relative;
-  height: 260px;
+  height: 500px;
   /* background: linear-gradient(135deg, #1C1C2E 0%, #2D2D42 100%); */
-  background: image('/images/ContactBanner.webp') center / cover no-repeat;
+  background: url('/images/contact-hero.jpeg') center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;

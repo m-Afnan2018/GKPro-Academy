@@ -74,13 +74,10 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  background: #fff;
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
   display: flex;
+  align-items: flex-start;
+  gap: 6px;
   z-index: 200;
-  overflow: hidden;
 }
 
 /* Left panel — category list */
@@ -88,8 +85,10 @@
   width: 220px;
   flex-shrink: 0;
   padding: 10px 0;
-  border-right: 1.5px solid var(--border);
   background: #FAFAFA;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
 }
 
 .megaHeading {
@@ -161,6 +160,9 @@
   flex-shrink: 0;
   padding: 10px 0 14px;
   background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
 }
 
 .megaSubGrid {
