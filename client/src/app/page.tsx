@@ -17,7 +17,7 @@ export default function Home() {
     <>
       <AnnouncementBar />
       <Navbar />
-      <main>
+      <main style={{ overflow: 'hidden' }}>
         <Hero />
         <Categories />
         <Features />

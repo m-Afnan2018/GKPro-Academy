@@ -214,4 +214,12 @@
   .videoWrap {
     height: 280px;
   }
+
+  .playBtn {
+    left: 50%;
+  }
+
+  .videoText {
+    left: 50%;
+  }
 }

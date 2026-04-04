@@ -26,18 +26,18 @@ export default function Tutors() {
         <div className={styles.inner}>
           {/* Left: Tutor profile card */}
           <div className={styles.profileCard}>
-            <div className={styles.cardBgLeft}></div>
-            <div className={styles.facultyText}>Faculty</div>
+            {/* <div className={styles.cardBgLeft}></div> */}
+            {/* <div className={styles.facultyText}>Faculty</div> */}
             <img
               src="/images/tutor.png"
               alt="CA Kiranjeet Kaur"
               className={styles.profileImg}
             />
-            <div className={styles.bottomGradient}></div>
+            {/* <div className={styles.bottomGradient}></div>
             <div className={styles.profileBadge}>
               <div className={styles.profileName}>CA Kiranjeet Kaur</div>
               <div className={styles.profileRole}>Accounting Expert</div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right: Bio */}
