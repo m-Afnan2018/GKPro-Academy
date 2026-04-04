@@ -2,7 +2,7 @@ import commonImages from "@/constants/commonImages";
 import styles from "./Footer.module.css";
 import Link from "next/link";
 
-const companyLinks = ["Home", "About Us", "Course", "Blog", "Contact Us"];
+const companyLinks = [{ name: "Home", href: "/" }, { name: "About Us", href: "/about" }, { name: "Course", href: "/courses" }, { name: "Blog", href: "/blogs" }, { name: "Contact Us", href: "/contact" }];
 const usefulLinks = ["CA Courses", "Skill Course"];
 
 const MAP_EMBED_URL = "https://www.google.com/maps?q=30.7333,76.7794&output=embed";
@@ -31,7 +31,7 @@ export default function Footer() {
           </svg>
           <ul className={styles.linkList}>
             {companyLinks.map((l) => (
-              <li key={l}><Link href="#" className={styles.link}>{l}</Link></li>
+              <li key={l.name}><Link href={l.href} className={styles.link}>{l.name}</Link></li>
             ))}
           </ul>
         </div>
