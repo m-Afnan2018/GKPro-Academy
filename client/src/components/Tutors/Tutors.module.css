@@ -4,149 +4,211 @@
 }
 
 .topRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 60px;
 }
 
-.label {
-  display: inline-flex;
+.labelWrapper {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.labelIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px dashed var(--primary, #d1122a);
+  position: relative;
+}
+
+.labelText {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--primary);
-  margin-bottom: 10px;
+  color: var(--primary, #d1122a);
+}
+
+.headingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .heading {
-  font-size: 34px;
+  font-family: var(--font-heading, inherit);
+  font-size: 40px;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--text-main, #0b1120);
+  margin-bottom: 8px;
 }
 
-.underline {
-  position: relative;
-  display: inline-block;
-}
-.underline::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: var(--primary);
-  border-radius: 2px;
+.brushCurve {
+  width: 200px;
+  height: auto;
 }
 
 /* Inner layout */
 .inner {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 310px 1fr;
   gap: 60px;
   align-items: start;
 }
 
 /* Profile card */
 .profileCard {
-  border-radius: var(--radius-lg);
+  width: 100%;
+  height: 490px;
+  border-radius: 20px;
   overflow: hidden;
   position: relative;
-  background: var(--primary);
+  background: white;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.06);
 }
 
-.profileImgWrap { height: 340px; overflow: hidden; }
+.cardBgLeft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 140px;
+  height: 100%;
+  background: linear-gradient(170deg, #c3303c 0%, #d84550 100%);
+  z-index: 0;
+}
+
+.facultyText {
+  position: absolute;
+  top: 24px;
+  left: 20px;
+  font-family: var(--font-heading, Arial, sans-serif);
+  font-size: 60px;
+  font-weight: 800;
+  color: transparent;
+  -webkit-text-stroke: 1.2px rgba(255, 255, 255, 0.7);
+  writing-mode: vertical-lr; /* Vertical text */
+  transform: rotate(180deg);
+  letter-spacing: 3px;
+  z-index: 1;
+}
 
 .profileImg {
+  position: absolute;
+  top: 50px; /* Offset to show background */
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 50px);
   object-fit: cover;
   object-position: top;
-  filter: grayscale(20%);
+  z-index: 2;
+  /* Use filter if using default pictures without clear subjects, 
+     but keeping it natural as a cutout usually fits best */
+}
+
+.bottomGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(0deg, #d84550 0%, #c4323e 40%, transparent 100%);
+  z-index: 3;
 }
 
 .profileBadge {
-  padding: 16px 18px;
-  background: var(--primary);
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 4;
   color: white;
 }
 
 .profileName {
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 700;
+  margin-bottom: 2px;
 }
 
 .profileRole {
-  font-size: 12px;
-  opacity: 0.8;
-  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.9;
 }
 
 /* Bio col */
-.bioCol {}
+.bioCol {
+  padding-top: 10px;
+}
 
 .tutorName {
   font-family: var(--font-heading);
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--text-main);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .tutorRole {
-  font-size: 14px;
-  color: var(--primary);
-  font-weight: 600;
-  margin-bottom: 22px;
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 28px;
+}
+
+.bioBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .bio {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-body);
-  margin-bottom: 14px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-muted, #6b7280);
 }
 
 /* Socials */
 .socials {
   display: flex;
-  gap: 10px;
-  margin-bottom: 28px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .socialBtn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--bg-light);
-  border: 1.5px solid var(--border);
+  background: white;
+  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-body);
+  color: var(--text-main);
   transition: all 0.2s;
 }
-.socialBtn:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-/* Dots */
-.dots { display: flex; gap: 8px; }
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--border);
+.socialBtn:hover { 
+  background: var(--text-main); 
+  border-color: var(--text-main); 
+  color: white; 
 }
-.dotActive {
-  background: var(--primary);
-  width: 24px;
-  border-radius: 4px;
+
+.socialBtn:hover svg {
+  fill: white;
+  stroke: white;
 }
 
 @media (max-width: 860px) {
   .inner { grid-template-columns: 1fr; }
-  .profileCard { max-width: 280px; }
+  .profileCard { max-width: 320px; margin: 0 auto; height: 420px; }
 }

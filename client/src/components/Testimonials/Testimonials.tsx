@@ -33,7 +33,7 @@ export default function Testimonials() {
     fetch(`${BASE}/testimonials?general=true&limit=10`)
       .then((r) => r.json())
       .then((json) => { if (json?.data?.testimonials?.length) setTestimonials(json.data.testimonials); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const items = testimonials.length ? testimonials : FALLBACK;
@@ -46,29 +46,13 @@ export default function Testimonials() {
       <div className="container">
         <div className={styles.inner}>
           {/* Left: Rating block */}
-          <div className={styles.ratingBlock}>
-            <img
-              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=360&fit=crop&q=80"
-              alt="Students at GKPro"
-              className={styles.ratingImg}
-            />
-            <div className={styles.ratingOverlay} />
-            <div className={styles.ratingContent}>
-              <div className={styles.ratingNum}>4.8</div>
-              <div className="stars" style={{ fontSize: "22px", justifyContent: "center" }}>
-                ★★★★★
-              </div>
-              <div className={styles.ratingLabel}>Based Rating</div>
-            </div>
-          </div>
+
 
           {/* Right: Text + Cards */}
           <div className={styles.rightCol}>
             <div className={styles.header}>
               <span className={styles.label}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
+                <span className={styles.labelDot}></span>
                 TESTIMONIALS
               </span>
               {pairs.length > 1 && (
@@ -93,9 +77,21 @@ export default function Testimonials() {
             </h2>
 
             <div className={styles.cards}>
+              <div className={styles.ratingBlock}>
+                <img
+                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=360&fit=crop&q=80"
+                  alt="Students at GKPro"
+                  className={styles.ratingImg}
+                />
+                <div className={styles.ratingOverlay} />
+                <div className={styles.ratingContent}>
+                  <div className={styles.ratingNum}>4.8</div>
+                  <div className={styles.ratingStars}>★★★★★</div>
+                  <div className={styles.ratingLabel}>Based Rating</div>
+                </div>
+              </div>
               {current.map((t) => (
                 <div key={t._id} className={styles.card}>
-                  <div className={styles.quoteIcon}>&ldquo;&rdquo;</div>
                   <div className={styles.cardTop}>
                     {t.photoUrl ? (
                       <img src={t.photoUrl} alt={t.studentName} className={styles.avatar} />
@@ -112,9 +108,14 @@ export default function Testimonials() {
                     </div>
                   </div>
                   <p className={styles.text}>{t.content}</p>
-                  <div className="stars">{"★".repeat(t.rating)}</div>
+                  <div className={styles.cardBottom}>
+                    <div className={styles.cardStars}>{"★".repeat(t.rating)}</div>
+                    <div className={styles.quoteIcon}>&ldquo;&rdquo;</div>
+                  </div>
                 </div>
+
               ))}
+
             </div>
           </div>
         </div>

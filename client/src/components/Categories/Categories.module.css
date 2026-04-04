@@ -36,6 +36,7 @@
   position: relative;
   display: inline-block;
 }
+
 .underline::after {
   content: '';
   position: absolute;
@@ -66,7 +67,10 @@
   border-radius: 50px;
   transition: background 0.2s;
 }
-.viewAll:hover { background: var(--primary-dark); }
+
+.viewAll:hover {
+  background: var(--primary-dark);
+}
 
 .navArrows {
   display: flex;
@@ -85,7 +89,9 @@
   color: var(--text-body);
   transition: all 0.2s;
 }
-.navBtn:hover, .navBtnActive {
+
+.navBtn:hover,
+.navBtnActive {
   background: var(--primary);
   border-color: var(--primary);
   color: white;
@@ -107,6 +113,7 @@
   text-decoration: none;
   cursor: pointer;
 }
+
 .card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
@@ -124,12 +131,15 @@
   object-fit: cover;
   transition: transform 0.4s;
 }
-.card:hover .img { transform: scale(1.05); }
+
+.card:hover .img {
+  transform: scale(1.05);
+}
 
 .imgOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 60%);
 }
 
 .cardBody {
@@ -157,22 +167,33 @@
   align-items: center;
   width: 100%;
   justify-content: center;
-  padding: 10px 0;
+  padding: 14px 0;
   background: var(--primary);
   color: white;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
-  border-radius: var(--radius);
+  border-radius: 999px;
   transition: background 0.2s;
 }
-.learnBtn:hover { background: var(--primary-dark); }
+
+.learnBtn:hover {
+  background: var(--primary-dark);
+}
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-  .header { flex-direction: column; align-items: flex-start; }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 520px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

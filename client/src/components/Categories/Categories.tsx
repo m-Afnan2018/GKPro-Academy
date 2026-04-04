@@ -25,7 +25,7 @@ export default function Categories() {
     fetch(`${BASE}/categories?limit=8`)
       .then((r) => r.json())
       .then((json) => { if (json?.data?.categories) setCategories(json.data.categories); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const display = categories.length > 0 ? categories : [

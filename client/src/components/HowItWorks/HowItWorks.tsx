@@ -33,32 +33,6 @@ export default function HowItWorks() {
             </svg>
           </button>
 
-          {/* Floating course card */}
-          <div className={styles.floatCard}>
-            <div className={styles.floatCardLive}>● Live</div>
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&q=80"
-              alt="Instructor"
-              className={styles.floatAvatar}
-            />
-            <div className={styles.floatInfo}>
-              <div className={styles.floatName}>Dev Masum Billah</div>
-              <div className={styles.floatTitle}>The complete guide to build restful API</div>
-              <div className={styles.floatRating}>
-                <span className="stars">★★★★★</span>
-                <span className={styles.floatRatingNum}>4.2</span>
-              </div>
-              <div className={styles.floatStudents}>
-                <div className={styles.avatarStack}>
-                  {[1,2,3].map(i => (
-                    <div key={i} className={styles.avatarCircle} style={{ background: `hsl(${i*80},60%,55%)` }} />
-                  ))}
-                </div>
-                <span className={styles.studentLabel}>Online Students</span>
-              </div>
-              <a href="/courses" className={styles.joinBtn}>Join Now →</a>
-            </div>
-          </div>
         </div>
       </div>
     </section>

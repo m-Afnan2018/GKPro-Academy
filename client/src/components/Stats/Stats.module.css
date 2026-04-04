@@ -1,6 +1,6 @@
 .section {
   background: var(--primary);
-  padding: 48px 0;
+  padding: 35px 0;
 }
 
 .grid {
@@ -21,11 +21,13 @@
 .iconWrap {
   width: 64px;
   height: 64px;
-  background: rgba(255,255,255,0.14);
-  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 1px dashed #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 5px;
 }
 
 .label {
@@ -37,8 +39,14 @@
 }
 
 @media (max-width: 760px) {
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+  }
 }
+
 @media (max-width: 420px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

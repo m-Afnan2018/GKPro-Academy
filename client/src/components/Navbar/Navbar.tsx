@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image  from 'next/image'
+import Image from 'next/image'
 import { useRouter } from "next/navigation";
 import { getStudentUser, clearStudentSession } from "@/lib/studentAuth";
 import type { User, Category, SubCategory } from "@/lib/api";
@@ -11,30 +11,30 @@ import commonImages from "@/constants/commonImages";
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
 interface QuickResult {
-  courses:    { _id: string; title: string; slug: string; thumbnailUrl?: string; onlinePrice?: number; recordedPrice?: number }[];
-  blogs:      { _id: string; title: string; slug: string; imageUrl?: string }[];
+  courses: { _id: string; title: string; slug: string; thumbnailUrl?: string; onlinePrice?: number; recordedPrice?: number }[];
+  blogs: { _id: string; title: string; slug: string; imageUrl?: string }[];
   categories: { _id: string; name: string; slug: string }[];
 }
 
 export default function Navbar() {
   const router = useRouter();
-  const [user, setUser]               = useState<User | null>(null);
-  const [menuOpen, setMenuOpen]       = useState(false);
-  const [categories, setCategories]   = useState<Category[]>([]);
-  const [subcats, setSubcats]         = useState<SubCategory[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcats, setSubcats] = useState<SubCategory[]>([]);
   const [coursesOpen, setCoursesOpen] = useState(false);
-  const [hoveredCat, setHoveredCat]   = useState<Category | null>(null);
-  const coursesRef                    = useRef<HTMLLIElement>(null);
-  const closeTimer                    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hoveredCat, setHoveredCat] = useState<Category | null>(null);
+  const coursesRef = useRef<HTMLLIElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Search state
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [searchInput, setSearchInput]   = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
   const [quickResults, setQuickResults] = useState<QuickResult | null>(null);
-  const [searching, setSearching]       = useState(false);
-  const searchRef                       = useRef<HTMLDivElement>(null);
-  const searchInputRef                  = useRef<HTMLInputElement>(null);
-  const searchDebounce                  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searching, setSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setUser(getStudentUser());
@@ -44,7 +44,7 @@ export default function Navbar() {
     ]).then(([cj, sj]) => {
       if (cj.success) setCategories(cj.data.categories ?? []);
       if (sj.success) setSubcats(sj.data.subcategories ?? []);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   /* close search on outside click */
@@ -73,7 +73,7 @@ export default function Navbar() {
       try {
         const res = await fetch(`${BASE}/search?q=${encodeURIComponent(val.trim())}&type=all&limit=3`).then(r => r.json());
         setQuickResults(res.data ?? null);
-      } catch {}
+      } catch { }
       finally { setSearching(false); }
     }, 350);
   };
@@ -137,7 +137,7 @@ export default function Navbar() {
       <div className={`container ${styles.inner}`}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <Image src={commonImages.logo} width={100} height={100}/>
+          <Image alt="logo" src={commonImages.logo} width={100} height={100} />
         </Link>
 
         {/* Nav Links */}
@@ -179,7 +179,7 @@ export default function Navbar() {
                   <div className={styles.megaDivider} />
                   <Link href="/courses" className={styles.megaAllLink} onClick={close}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                     </svg>
                     All Courses
                   </Link>
@@ -192,7 +192,7 @@ export default function Navbar() {
                         <Link key={sub._id} href={`/category/${hoveredCat.slug}?sub=${sub.slug}`} className={styles.megaSubItem} onClick={close}>
                           <div className={styles.megaSubIcon}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                             </svg>
                           </div>
                           {sub.name}
@@ -217,7 +217,7 @@ export default function Navbar() {
             {searchOpen ? (
               <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" className={styles.searchBarIcon}>
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/>
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
                 </svg>
                 <input
                   ref={searchInputRef}
@@ -229,7 +229,7 @@ export default function Navbar() {
                 />
                 <button type="button" className={styles.searchBarClose} onClick={closeSearch}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
 
@@ -253,7 +253,7 @@ export default function Navbar() {
                                 <div className={styles.quickItemIcon}>
                                   {c.thumbnailUrl
                                     ? <img src={c.thumbnailUrl} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
                                   }
                                 </div>
                                 <div className={styles.quickItemBody}>
@@ -277,7 +277,7 @@ export default function Navbar() {
                                 <div className={styles.quickItemIcon}>
                                   {b.imageUrl
                                     ? <img src={b.imageUrl} alt={b.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                                   }
                                 </div>
                                 <span className={styles.quickItemTitle}>{b.title}</span>
@@ -292,7 +292,7 @@ export default function Navbar() {
                             {quickResults!.categories.map(c => (
                               <Link key={c._id} href={`/category/${c.slug}`} className={styles.quickItem} onClick={closeSearch}>
                                 <div className={styles.quickItemIcon}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
                                 </div>
                                 <span className={styles.quickItemTitle}>{c.name}</span>
                               </Link>
@@ -302,7 +302,7 @@ export default function Navbar() {
 
                         <button type="submit" className={styles.quickSeeAll}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/>
+                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
                           </svg>
                           See all results for &ldquo;{searchInput}&rdquo;
                         </button>
@@ -333,8 +333,8 @@ export default function Navbar() {
                   <div className={styles.dropEmail}>{user.email}</div>
                   <div className={styles.dropDivider} />
                   <Link href="/student/dashboard" className={styles.dropItem} onClick={() => setMenuOpen(false)}>My Dashboard</Link>
-                  <Link href="/student/courses"   className={styles.dropItem} onClick={() => setMenuOpen(false)}>My Courses</Link>
-                  <Link href="/student/profile"   className={styles.dropItem} onClick={() => setMenuOpen(false)}>Profile</Link>
+                  <Link href="/student/courses" className={styles.dropItem} onClick={() => setMenuOpen(false)}>My Courses</Link>
+                  <Link href="/student/profile" className={styles.dropItem} onClick={() => setMenuOpen(false)}>Profile</Link>
                   <div className={styles.dropDivider} />
                   <button className={`${styles.dropItem} ${styles.dropLogout}`} onClick={handleLogout}>Sign out</button>
                 </div>
@@ -343,7 +343,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link href="/contact" className={styles.btnExpert}>Call to Expert</Link>
-              <Link href="/login"   className={styles.btnLogin}>Log In</Link>
+              <Link href="/login" className={styles.btnLogin}>Log In</Link>
             </>
           )}
         </div>

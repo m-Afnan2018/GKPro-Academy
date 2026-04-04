@@ -18,7 +18,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={sora.variable}>
+    <html lang="en" className={sora.variable} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );
