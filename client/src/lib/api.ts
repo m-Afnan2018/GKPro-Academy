@@ -55,9 +55,11 @@ export const authApi = {
 /* ── users ───────────────────────────────────────── */
 
 export const usersApi = {
-  list: (page = 1, limit = 10) =>
-    get<{ data: { users: User[]; total: number } }>(`/users?page=${page}&limit=${limit}`),
-  update: (id: string, body: Partial<User>) =>
+  list: (page = 1, limit = 10, role?: string) =>
+    get<{ data: { users: User[]; total: number } }>(`/users?page=${page}&limit=${limit}${role ? `&role=${role}` : ""}`),
+  create: (body: { name: string; email: string; phone?: string; password: string; role: string; isActive?: boolean }) =>
+    post<{ data: User }>("/users", body),
+  update: (id: string, body: Partial<User> & { password?: string }) =>
     patch<{ data: User }>(`/users/${id}`, body),
   remove: (id: string) => del(`/users/${id}`),
 };

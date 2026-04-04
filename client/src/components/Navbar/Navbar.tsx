@@ -137,7 +137,7 @@ export default function Navbar() {
       <div className={`container ${styles.inner}`}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <Image alt="logo" src={commonImages.logo} width={100} height={100} />
+          <Image src={commonImages.logo} width={100} height={100} alt="GKPro Academy"/>
         </Link>
 
         {/* Nav Links */}
