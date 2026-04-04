@@ -1,5 +1,5 @@
 .section {
-  padding: 80px 0 60px;
+  padding: 50px 0 60px;
   background: var(--white);
   overflow: hidden;
   /* Prevent horizontal scroll from absolute elements */
@@ -62,6 +62,17 @@
   height: 140px;
   overflow: visible;
   pointer-events: none;
+}
+
+.labelIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px dashed var(--primary, #d1122a);
+  position: relative;
 }
 
 .btnWrapper {
