@@ -17,7 +17,7 @@ const getBlogs = asyncHandler(async (req, res) => {
     .populate("courseTags", "title slug")
     .skip(skip)
     .limit(limit);
-  if (isPublic) blogQuery = blogQuery.select("-content");
+  // if (isPublic) blogQuery = blogQuery.select("-content");
 
   const [blogs, total] = await Promise.all([
     blogQuery,

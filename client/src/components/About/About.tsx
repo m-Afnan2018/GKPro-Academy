@@ -19,20 +19,21 @@ export default function About() {
             <div className={styles.imgGrid}>
               <img className="imgMain" src="/images/about-gkpro.webp" alt="about gk img" />
             </div>
-            <div className={styles.advisorBadge}>
+            {/* <div className={styles.advisorBadge}>
               <div className={styles.advisorIcon}>🏆</div>
               <div>
                 <div className={styles.advisorNum}>10+</div>
                 <div className={styles.advisorLabel}>Experience Advisor</div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right: Text */}
           <div className={styles.textCol}>
             <span className={styles.label}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)">
-                <circle cx="12" cy="12" r="10" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
               </svg>
               ABOUT GKPro ACADEMY
             </span>

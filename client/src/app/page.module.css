@@ -30,6 +30,10 @@
   padding: 120px 60px;
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
 .intro {
   display: flex;
   flex-direction: column;

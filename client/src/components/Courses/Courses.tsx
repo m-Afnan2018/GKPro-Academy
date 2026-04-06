@@ -19,10 +19,10 @@ interface Batch { _id: string; courseId: string; mode: string; }
 interface Plan { _id: string; batchId: string; price: number; }
 
 export default function Courses() {
-  const [courses, setCourses]       = useState<Course[]>([]);
-  const [batches, setBatches]       = useState<Batch[]>([]);
-  const [plans, setPlans]           = useState<Plan[]>([]);
-  const [activeTab, setActiveTab]   = useState("all");
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [activeTab, setActiveTab] = useState("all");
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Courses() {
         setPlans(p?.data?.plans ?? []);
         setCategories(cat?.data?.categories ?? []);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const filteredCourses = courses.filter((c) => {

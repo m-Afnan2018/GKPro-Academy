@@ -19,8 +19,8 @@
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
   border-color: var(--primary-pink);
 }
 
@@ -35,7 +35,10 @@
   margin: 0 auto 22px;
   transition: background 0.2s;
 }
-.card:hover .iconWrap { background: var(--primary-pink); }
+
+.card:hover .iconWrap {
+  background: var(--primary-pink);
+}
 
 .title {
   font-family: var(--font-heading);
@@ -67,9 +70,13 @@
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 500px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

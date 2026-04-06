@@ -10,7 +10,7 @@ export default function AboutHero() {
       <div className={styles.hexGroup}>
         <div className={`${styles.hex} ${styles.hexGreen}`} />
         <div className={`${styles.hex} ${styles.hexOutline}`} />
-        <div className={`${styles.hex} ${styles.hexOutlineSm}`} />
+        <div className={`${styles.hex} $s{styles.hexOutlineSm}`} />
       </div>
 
       {/* Scroll indicator */}

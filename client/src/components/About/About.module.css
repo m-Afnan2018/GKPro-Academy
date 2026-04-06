@@ -121,11 +121,13 @@
   gap: 8px;
   font-size: 13px;
   color: var(--text-body);
+  background-color: #fff;
+  padding: 6px;
   font-weight: 500;
 }
 
 .check {
-  color: var(--primary);
+  color: rgb(130, 220, 130);
   font-weight: 800;
   font-size: 14px;
   flex-shrink: 0;
