@@ -133,7 +133,7 @@ export default function ImageUpload({ value, onChange, label }: Props) {
                 Drag & drop or{" "}
                 <span style={{ color: "#3B82F6", textDecoration: "underline" }}>browse</span>
               </div>
-              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>PNG, JPG, WebP, GIF · max 5 MB</div>
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>1280x720 ·PNG, JPG, WebP, GIF · max 5 MB</div>
             </>
           )}
         </div>

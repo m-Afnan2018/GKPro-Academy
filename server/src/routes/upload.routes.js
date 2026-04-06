@@ -39,6 +39,17 @@ router.post(
   }
 );
 
+/* ── Avatar upload (POST /api/upload/avatar) — any authenticated user ── */
+router.post(
+  "/avatar",
+  protect,
+  uploadImage.single("file"),
+  (req, res) => {
+    if (!req.file) throw new ApiError(400, "No file uploaded.");
+    res.json(new ApiResponse(200, { url: `/uploads/${req.file.filename}` }, "Avatar uploaded."));
+  }
+);
+
 /* ── PDF upload (POST /api/upload/pdf) ── */
 const pdfFilter = (_req, file, cb) => {
   if (file.mimetype === "application/pdf") cb(null, true);

@@ -57,6 +57,8 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+:global(.btnSpin) { animation: spin 0.7s linear infinite; }
+
 .infoCard {
   background: #fff; border-radius: 14px; border: 1.5px solid #F0F0F5; padding: 20px 28px;
   display: flex; flex-direction: column; gap: 12px;

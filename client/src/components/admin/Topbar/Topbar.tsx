@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { clearSession, getUser } from "@/lib/auth";
 import styles from "./Topbar.module.css";
 
@@ -20,15 +21,19 @@ export default function Topbar({ title }: Props) {
 
       <div className={styles.right}>
         {/* User chip */}
-        <div className={styles.userChip}>
-          <div className={styles.avatar}>
-            {user?.name?.[0]?.toUpperCase() ?? "A"}
+        <Link href="/admin/profile" style={{ textDecoration: "none" }} className={styles.userChip}>
+          <div className={styles.avatar} style={user?.avatarUrl ? { padding: 0, overflow: "hidden" } : {}}>
+            {user?.avatarUrl
+              /* eslint-disable-next-line @next/next/no-img-element */
+              ? <img src={user.avatarUrl} alt={user.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+              : user?.name?.[0]?.toUpperCase() ?? "A"
+            }
           </div>
           <div className={styles.userInfo}>
             <span className={styles.userName}>{user?.name ?? "Admin"}</span>
             <span className={styles.userRole}>{user?.role ?? "admin"}</span>
           </div>
-        </div>
+        </Link>
 
         {/* Logout */}
         <button className={styles.logoutBtn} onClick={logout} aria-label="Logout">

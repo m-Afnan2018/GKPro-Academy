@@ -52,6 +52,7 @@ const updateMe = asyncHandler(async (req, res) => {
   if (name)  user.name  = name;
   if (phone !== undefined) user.phone = phone;
   if (password) user.passwordHash = password; // pre-save hook will hash it
+  if (req.body.avatarUrl !== undefined) user.avatarUrl = req.body.avatarUrl || null;
 
   await user.save();
   const userObj = user.toObject();
@@ -59,4 +60,18 @@ const updateMe = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, userObj, "Profile updated."));
 });
 
-module.exports = { register, login, getMe, updateMe };
+const updateAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) throw new ApiError(400, "No image file provided.");
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw new ApiError(404, "User not found.");
+
+  user.avatarUrl = `/uploads/${req.file.filename}`;
+  await user.save();
+
+  const userObj = user.toObject();
+  delete userObj.passwordHash;
+  res.json(new ApiResponse(200, { user: userObj, avatarUrl: user.avatarUrl }, "Avatar updated."));
+});
+
+module.exports = { register, login, getMe, updateMe, updateAvatar };

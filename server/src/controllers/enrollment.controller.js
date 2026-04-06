@@ -1,38 +1,27 @@
 const Enrollment = require("../models/Enrollment");
-const Batch      = require("../models/Batch");
-const CoursePlan = require("../models/CoursePlan");
-const ApiError   = require("../utils/ApiError");
+const Course = require("../models/Course");
+const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 
-// Helper: check if student is already actively enrolled in any batch of a course
-async function hasActiveCourseEnrollment(studentId, courseId) {
-  const batches = await Batch.find({ courseId }).select("_id");
-  if (!batches.length) return null;
-  return Enrollment.findOne({
-    studentId,
-    batchId: { $in: batches.map((b) => b._id) },
-    status: "active",
-  });
-}
+const populateEnrollment = (query) =>
+  query
+    .populate("studentId", "name email phone avatarUrl")
+    .populate("courseId", "title slug thumbnailUrl onlinePrice recordedPrice", { strictPopulate: false })
+    .populate("paymentId");
 
 const getEnrollments = asyncHandler(async (req, res) => {
-  const page  = parseInt(req.query.page)  || 1;
+  const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  const skip  = (page - 1) * limit;
+  const skip = (page - 1) * limit;
 
   const filter = {};
   if (req.user.role === "student") filter.studentId = req.user._id;
 
   const [enrollments, total] = await Promise.all([
-    Enrollment.find(filter)
-      .populate("studentId", "name email phone")
-      .populate({ path: "batchId", populate: { path: "courseId", select: "title slug thumbnailUrl" } })
-      .populate("planId")
-      .populate("paymentId")
-      .sort({ enrolledAt: -1 })
-      .skip(skip)
-      .limit(limit),
+    populateEnrollment(
+      Enrollment.find(filter).sort({ enrolledAt: -1 }).skip(skip).limit(limit)
+    ),
     Enrollment.countDocuments(filter),
   ]);
 
@@ -41,9 +30,8 @@ const getEnrollments = asyncHandler(async (req, res) => {
 
 const getEnrollment = asyncHandler(async (req, res) => {
   const enrollment = await Enrollment.findById(req.params.id)
-    .populate("studentId", "name email phone")
-    .populate({ path: "batchId", populate: { path: "courseId", select: "title slug description thumbnailUrl eBookUrl handbookUrl" } })
-    .populate("planId")
+    .populate("studentId", "name email phone avatarUrl")
+    .populate("courseId", "title slug description thumbnailUrl onlinePrice recordedPrice eBookUrl", { strictPopulate: false })
     .populate("paymentId");
 
   if (!enrollment) throw new ApiError(404, "Enrollment not found.");
@@ -77,50 +65,66 @@ const cancelEnrollment = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, enrollment, "Enrollment cancelled."));
 });
 
-// Student self-enrollment: POST /api/enrollments { batchId, planId }
+// Student self-enrollment
 const createEnrollment = asyncHandler(async (req, res) => {
-  const { batchId, planId } = req.body;
-  if (!batchId || !planId) throw new ApiError(400, "batchId and planId are required.");
-
-  const [batch, plan] = await Promise.all([
-    Batch.findById(batchId),
-    CoursePlan.findById(planId),
-  ]);
-  if (!batch) throw new ApiError(404, "Batch not found.");
-  if (!plan)  throw new ApiError(404, "Plan not found.");
-  if (batch.status === "cancelled")  throw new ApiError(400, "This batch is cancelled.");
-  if (batch.status === "completed")  throw new ApiError(400, "This batch has already completed.");
-  if (batch.seatLimit && batch.enrolledCount >= batch.seatLimit) {
-    throw new ApiError(400, "This batch is full. No seats available.");
+  const { courseId, mode, bookType = "none", deliveryAddress } = req.body;
+  if (!courseId || !mode) throw new ApiError(400, "courseId and mode are required.");
+  if (!["online", "recorded"].includes(mode)) throw new ApiError(400, "Invalid mode.");
+  if (bookType === "handbook" && !deliveryAddress?.trim()) {
+    throw new ApiError(400, "Delivery address is required for handbook.");
   }
 
-  // Block if student already has an ACTIVE enrollment in ANY batch of this course
-  const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
-  if (existing) {
-    throw new ApiError(
-      409,
-      "You are already enrolled in this course. Cancel your current enrollment first to switch plans."
-    );
-  }
+  const course = await Course.findById(courseId);
+  if (!course) throw new ApiError(404, "Course not found.");
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + (plan.validityDays || 365));
+  const existing = await Enrollment.findOne({ studentId: req.user._id, courseId, status: "active" });
+  if (existing) throw new ApiError(409, "You are already enrolled in this course.");
+
+  const coursePrice = mode === "online" ? (course.onlinePrice ?? 0) : (course.recordedPrice ?? 0);
 
   const enrollment = await Enrollment.create({
     studentId: req.user._id,
-    batchId,
-    planId,
-    expiresAt,
+    courseId,
+    mode,
+    pricePaid: coursePrice,
+    bookType,
+    deliveryAddress: bookType === "handbook" ? deliveryAddress : null,
+    bookPricePaid: 0,
     status: "active",
   });
 
-  await Batch.findByIdAndUpdate(batchId, { $inc: { enrolledCount: 1 } });
+  const populated = await populateEnrollment(Enrollment.findById(enrollment._id));
+  res.status(201).json(new ApiResponse(201, populated, "Enrolled successfully."));
+});
 
-  const populated = await Enrollment.findById(enrollment._id)
-    .populate("studentId", "name email phone")
-    .populate({ path: "batchId", populate: { path: "courseId", select: "title slug thumbnailUrl" } })
-    .populate("planId");
+// Admin-only: enroll any student in a course
+const adminCreateEnrollment = asyncHandler(async (req, res) => {
+  const { studentId, courseId, mode, bookType = "none", deliveryAddress } = req.body;
+  if (!studentId || !courseId || !mode) {
+    throw new ApiError(400, "studentId, courseId, and mode are required.");
+  }
+  if (!["online", "recorded"].includes(mode)) throw new ApiError(400, "Invalid mode.");
 
+  const course = await Course.findById(courseId);
+  if (!course) throw new ApiError(404, "Course not found.");
+
+  const existing = await Enrollment.findOne({ studentId, courseId, status: "active" });
+  if (existing) throw new ApiError(409, "Student is already enrolled in this course.");
+
+  const coursePrice = mode === "online" ? (course.onlinePrice ?? 0) : (course.recordedPrice ?? 0);
+
+  const enrollment = await Enrollment.create({
+    studentId,
+    courseId,
+    mode,
+    pricePaid: coursePrice,
+    bookType,
+    deliveryAddress: bookType === "handbook" ? deliveryAddress : null,
+    bookPricePaid: 0,
+    status: "active",
+  });
+
+  const populated = await populateEnrollment(Enrollment.findById(enrollment._id));
   res.status(201).json(new ApiResponse(201, populated, "Enrolled successfully."));
 });
 
@@ -130,5 +134,5 @@ module.exports = {
   updateEnrollment,
   cancelEnrollment,
   createEnrollment,
-  hasActiveCourseEnrollment,
+  adminCreateEnrollment,
 };

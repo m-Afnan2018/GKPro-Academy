@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./Courses.module.css";
+import Image from "next/image";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
@@ -101,7 +102,7 @@ export default function Courses() {
                     style={course.thumbnailUrl ? undefined : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
                   >
                     {course.thumbnailUrl && (
-                      <img src={course.thumbnailUrl} alt={course.title} className={styles.img} />
+                      <Image width={100} height={100} src={course.thumbnailUrl} alt={course.title} className={styles.img} />
                     )}
                     <span className={`${styles.badge} ${badgeClass}`}>{badgeLabel}</span>
                   </div>

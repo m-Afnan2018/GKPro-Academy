@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, trim: true },
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: ["student", "manager", "admin"], default: "student" },
+  avatarUrl: { type: String, default: null },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });

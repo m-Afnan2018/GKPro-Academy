@@ -4,7 +4,8 @@ import Sidebar from "@/components/admin/Sidebar/Sidebar";
 import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
-import { usersApi, type User, type Enrollment, type Course } from "@/lib/api";
+import Modal from "@/components/admin/Modal/Modal";
+import { usersApi, enrollmentsApi, coursesApi, type User, type Enrollment, type Course } from "@/lib/api";
 import styles from "../admin.module.css";
 
 const LIMIT = 15;
@@ -19,6 +20,15 @@ export default function StudentsPage() {
   const [enrollMap, setEnrollMap]   = useState<Record<string, Enrollment[]>>({});
   const [viewUser, setViewUser]     = useState<User | null>(null);
   const [viewEnrolls, setViewEnrolls] = useState<Enrollment[]>([]);
+
+  // Enroll modal state
+  const [enrollTarget, setEnrollTarget] = useState<User | null>(null);
+  const [allCourses, setAllCourses]     = useState<Course[]>([]);
+  const [enrollCourse, setEnrollCourse] = useState("");
+  const [enrollMode, setEnrollMode]     = useState<"online" | "recorded">("online");
+  const [enrolling, setEnrolling]       = useState(false);
+  const [enrollError, setEnrollError]   = useState("");
+  const [enrollSuccess, setEnrollSuccess] = useState("");
 
   const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
@@ -58,10 +68,54 @@ export default function StudentsPage() {
       .catch(() => {});
   }, [users]);
 
+  useEffect(() => {
+    coursesApi.list(1, 200).then((r) => setAllCourses(r.data.courses ?? [])).catch(() => {});
+  }, []);
+
   const openView = (u: User) => {
     setViewUser(u);
     setViewEnrolls(enrollMap[u._id] ?? []);
   };
+
+  const openEnroll = (u: User) => {
+    setEnrollTarget(u);
+    setEnrollCourse("");
+    setEnrollMode("online");
+    setEnrollError("");
+    setEnrollSuccess("");
+  };
+
+  const handleEnroll = async () => {
+    if (!enrollTarget || !enrollCourse) { setEnrollError("Please select a course."); return; }
+    setEnrolling(true); setEnrollError(""); setEnrollSuccess("");
+    try {
+      await enrollmentsApi.adminCreate(enrollTarget._id, enrollCourse, enrollMode);
+      setEnrollSuccess(`${enrollTarget.name} has been enrolled successfully.`);
+      // Refresh enroll map
+      const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_admin_token") : null;
+      if (tk) {
+        const json = await fetch(`${BASE}/enrollments?limit=500`, { headers: { Authorization: `Bearer ${tk}` } }).then(r => r.json());
+        const all: Enrollment[] = json?.data?.enrollments ?? [];
+        const map: Record<string, Enrollment[]> = {};
+        for (const e of all) {
+          const sid = typeof e.studentId === "object" ? (e.studentId as User)._id : e.studentId as string;
+          if (!map[sid]) map[sid] = [];
+          map[sid].push(e);
+        }
+        setEnrollMap(map);
+      }
+    } catch (e: any) {
+      setEnrollError(e.message ?? "Enrollment failed.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  // Determine available modes for selected course
+  const selectedCourseObj = allCourses.find((c) => c._id === enrollCourse);
+  const modeOptions: { value: "online" | "recorded"; label: string }[] = [];
+  if (selectedCourseObj?.onlinePrice) modeOptions.push({ value: "online", label: `Online — ₹${selectedCourseObj.onlinePrice.toLocaleString("en-IN")}` });
+  if (selectedCourseObj?.recordedPrice) modeOptions.push({ value: "recorded", label: `Recorded — ₹${selectedCourseObj.recordedPrice.toLocaleString("en-IN")}` });
 
   const filtered = users.filter((u) => {
     if (!search) return true;
@@ -126,7 +180,13 @@ export default function StudentsPage() {
                             </td>
                             <td style={{ fontSize: 12, color: "#6B7280" }}>{new Date(u.createdAt).toLocaleDateString()}</td>
                             <td>
-                              <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openView(u)}>View Details</button>
+                              <div className={styles.actions}>
+                                <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openView(u)}>View Details</button>
+                                <button className={`${styles.btnGhost} ${styles.btnGhostGreen}`} onClick={() => openEnroll(u)}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                  Enroll
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -164,8 +224,12 @@ export default function StudentsPage() {
 
             {/* Profile */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, background: "#F9FAFB", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-                {viewUser.name[0]?.toUpperCase()}
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#fff", flexShrink: 0, overflow: "hidden" }}>
+                {(viewUser as any).avatarUrl
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  ? <img src={(viewUser as any).avatarUrl} alt={viewUser.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : viewUser.name[0]?.toUpperCase()
+                }
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{viewUser.name}</div>
@@ -205,6 +269,90 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
+      {/* Enroll student modal */}
+      <Modal open={!!enrollTarget} onClose={() => setEnrollTarget(null)} title="Enroll Student in Course" width={480}>
+        {enrollTarget && (
+          <div className={styles.form}>
+            {/* Student info */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F9FAFB", borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0, overflow: "hidden" }}>
+                {(enrollTarget as any).avatarUrl
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  ? <img src={(enrollTarget as any).avatarUrl} alt={enrollTarget.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : enrollTarget.name[0]?.toUpperCase()
+                }
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{enrollTarget.name}</div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>{enrollTarget.email}</div>
+              </div>
+            </div>
+
+            {enrollSuccess ? (
+              <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#16A34A", borderRadius: 8, padding: "14px 16px", fontSize: 13, fontWeight: 500 }}>
+                {enrollSuccess}
+              </div>
+            ) : (
+              <>
+                {enrollError && <div className={styles.errorBanner}>{enrollError}</div>}
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Course *</label>
+                  <select
+                    className={styles.formSelect}
+                    value={enrollCourse}
+                    onChange={(e) => { setEnrollCourse(e.target.value); setEnrollMode("online"); setEnrollError(""); }}
+                  >
+                    <option value="">— Select a course —</option>
+                    {allCourses.filter(c => c.status === "published").map((c) => (
+                      <option key={c._id} value={c._id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {enrollCourse && modeOptions.length > 0 && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Mode *</label>
+                    <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                      {modeOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setEnrollMode(opt.value)}
+                          style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: `2px solid ${enrollMode === opt.value ? "#D42B3A" : "#E5E7EB"}`, background: enrollMode === opt.value ? "#FFF1F2" : "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: enrollMode === opt.value ? "#D42B3A" : "#374151", transition: "all 0.15s" }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {enrollCourse && modeOptions.length === 0 && (
+                  <div style={{ fontSize: 13, color: "#DC2626", background: "#FEF2F2", padding: "10px 14px", borderRadius: 8 }}>
+                    This course has no pricing set up yet.
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className={styles.formActions}>
+              <button className={styles.btnOutline} onClick={() => setEnrollTarget(null)}>
+                {enrollSuccess ? "Close" : "Cancel"}
+              </button>
+              {!enrollSuccess && (
+                <button
+                  className={styles.btnPrimary}
+                  onClick={handleEnroll}
+                  disabled={enrolling || !enrollCourse || modeOptions.length === 0}
+                >
+                  {enrolling ? "Enrolling…" : "Enroll Student"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </AdminGuard>
   );
 }

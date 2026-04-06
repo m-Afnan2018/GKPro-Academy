@@ -643,7 +643,7 @@
 .priceBlock {
   background: #F9FAFB;
   border-radius: 10px;
-  padding: 14px 16px;
+  /* padding: 14px 1 6px; */
   display: flex;
   flex-direction: column;
   gap: 6px;

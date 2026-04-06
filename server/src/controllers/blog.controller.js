@@ -27,6 +27,20 @@ const getBlogs = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, { blogs, total, page, limit }, "Blogs retrieved."));
 });
 
+const getBlogById = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id)
+    .populate("authorId", "name")
+    .populate("courseTags", "title slug");
+  if (!blog) throw new ApiError(404, "Blog not found.");
+
+  const isPublic = !req.user || req.user.role === "student";
+  if (isPublic && (!blog.isPublished || blog.approvalStatus !== "approved")) {
+    throw new ApiError(404, "Blog not found.");
+  }
+
+  res.json(new ApiResponse(200, blog, "Blog retrieved."));
+});
+
 const getBlogBySlug = asyncHandler(async (req, res) => {
   const filter = { slug: req.params.slug };
   const isPublic = !req.user || req.user.role === "student";
@@ -72,4 +86,4 @@ const deleteBlog = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, null, "Blog deleted."));
 });
 
-module.exports = { getBlogs, getBlogBySlug, createBlog, updateBlog, deleteBlog };
+module.exports = { getBlogs, getBlogById, getBlogBySlug, createBlog, updateBlog, deleteBlog };

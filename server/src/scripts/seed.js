@@ -7,7 +7,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/gkpro";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/gkpro";
 
 /* ── models ─────────────────────────────────────── */
 const CourseCategory = require("../models/CourseCategory");

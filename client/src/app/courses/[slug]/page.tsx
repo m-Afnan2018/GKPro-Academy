@@ -638,7 +638,7 @@ export default function CourseDetailPage() {
               <div className={styles.cardBody}>
                 {/* Course name + badges */}
                 <div className={styles.cardNameRow}>
-                  <h3 className={styles.cardCourseName}>{course.title}</h3>
+                  {/*<h3 className={styles.cardCourseName}>{course.title}</h3>*/}
                   <div className={styles.cardBadges}>
                     {course.isNew      && <span className={styles.badge} style={{ background: "#EEF2FF", color: "#4F46E5" }}>New</span>}
                     {course.language   && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>{course.language}</span>}

@@ -150,6 +150,8 @@ export const enrollmentsApi = {
     get<{ data: { enrollments: Enrollment[]; total: number } }>(`/enrollments?page=${page}&limit=${limit}`),
   create: (courseId: string, mode: "online" | "recorded", bookType?: string, deliveryAddress?: string) =>
     post<{ data: Enrollment }>("/enrollments", { courseId, mode, bookType, deliveryAddress }),
+  adminCreate: (studentId: string, courseId: string, mode: "online" | "recorded") =>
+    post<{ data: Enrollment }>("/enrollments/admin", { studentId, courseId, mode }),
   update: (id: string, body: Partial<Enrollment>) =>
     patch<{ data: Enrollment }>(`/enrollments/${id}`, body),
   cancel: (id: string) =>
@@ -311,6 +313,7 @@ export interface User {
   email: string;
   phone?: string;
   role: "student" | "manager" | "admin";
+  avatarUrl?: string | null;
   isActive: boolean;
   createdAt: string;
 }
