@@ -57,6 +57,11 @@
   border-color: var(--primary);
 }
 
+.tabActive:hover {
+  background: var(--bg-light);
+  color: var(--text-main);
+}
+
 /* Grid */
 .grid {
   display: grid;
