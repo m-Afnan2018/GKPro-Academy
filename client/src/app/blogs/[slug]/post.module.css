@@ -136,7 +136,14 @@
 .articleImage {
   /* height: 300px; */
   aspect-ratio: 16 / 9;
+  position: relative;
   background: linear-gradient(135deg, #1a1a2e 0%, #3a3a5c 100%);
+}
+
+.articleImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .articleBody {
