@@ -248,7 +248,8 @@ export default function BlogListPage() {
               <ul className={styles.popularList}>
                 {popular.map((b, i) => (
                   <li key={b._id} className={styles.popularItem}>
-                    <div className={styles.popularThumb} style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }} />
+                    {/* <div className={styles.popularThumb} style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }} /> */}
+                    <img src={b.imageUrl} alt={b.title} className={styles.popularThumb} />
                     <div className={styles.popularInfo}>
                       <Link href={`/blogs/${b.slug}`} className={styles.popularTitle}>{b.title}</Link>
                       <span className={styles.popularDate}>— {formatDate(b.publishedAt ?? b.createdAt)}</span>

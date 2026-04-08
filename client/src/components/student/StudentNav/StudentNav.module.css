@@ -23,6 +23,7 @@
   flex-shrink: 0;
   text-decoration: none;
 }
+
 .logoText {
   font-family: var(--font-heading);
   font-size: 20px;
@@ -46,8 +47,17 @@
   transition: all 0.15s;
   text-decoration: none;
 }
-.link:hover { background: var(--bg-light); color: var(--primary); }
-.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+.link:hover {
+  background: var(--bg-light);
+  color: var(--primary);
+}
+
+.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
 
 .right {
   display: flex;
@@ -67,9 +77,14 @@
   transition: background 0.2s;
   white-space: nowrap;
 }
-.browseCta:hover { background: var(--primary-dark); }
 
-.avatarWrap { position: relative; }
+.browseCta:hover {
+  background: var(--primary-dark);
+}
+
+.avatarWrap {
+  position: relative;
+}
 
 .avatar {
   width: 36px;
@@ -87,7 +102,10 @@
   transition: opacity 0.15s;
   font-family: var(--font-heading);
 }
-.avatar:hover { opacity: 0.85; }
+
+.avatar:hover {
+  opacity: 0.85;
+}
 
 .dropdown {
   position: absolute;
@@ -96,7 +114,7 @@
   background: #fff;
   border: 1.5px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   min-width: 200px;
   padding: 12px 0 8px;
   z-index: 200;
@@ -111,6 +129,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .dropEmail {
   padding: 2px 14px 8px;
   font-size: 11px;
@@ -120,7 +139,11 @@
   text-overflow: ellipsis;
 }
 
-.divider { height: 1px; background: var(--border); margin: 4px 0; }
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
 
 .dropItem {
   display: flex;
@@ -138,11 +161,31 @@
   font-family: var(--font-body);
   text-align: left;
 }
-.dropItem:hover { background: var(--bg-light); color: var(--text-main); }
-.dropLogout { color: #DC2626; }
-.dropLogout:hover { background: #FEF2F2; color: #DC2626; }
+
+.dropItem:hover {
+  background: var(--bg-light);
+  color: var(--text-main);
+}
+
+.dropLogout {
+  color: #DC2626;
+}
+
+.dropLogout:hover {
+  background: #FEF2F2;
+  color: #DC2626;
+}
 
 @media (max-width: 768px) {
-  .links { display: none; }
-  .browseCta { display: none; }
+  .links {
+    display: none;
+  }
+
+  .browseCta {
+    display: none;
+  }
+
+  .inner {
+    justify-content: space-between;
+  }
 }
