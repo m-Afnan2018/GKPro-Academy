@@ -49,7 +49,7 @@ const updateMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("+passwordHash");
   if (!user) throw new ApiError(404, "User not found.");
 
-  if (name)  user.name  = name;
+  if (name) user.name = name;
   if (phone !== undefined) user.phone = phone;
   if (password) user.passwordHash = password; // pre-save hook will hash it
   if (req.body.avatarUrl !== undefined) user.avatarUrl = req.body.avatarUrl || null;
@@ -60,13 +60,15 @@ const updateMe = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, userObj, "Profile updated."));
 });
 
+const SERVER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api").replace(/\/api$/, "");
+
 const updateAvatar = asyncHandler(async (req, res) => {
   if (!req.file) throw new ApiError(400, "No image file provided.");
 
   const user = await User.findById(req.user._id);
   if (!user) throw new ApiError(404, "User not found.");
 
-  user.avatarUrl = `/uploads/${req.file.filename}`;
+  user.avatarUrl = `${SERVER_BASE}/uploads/${req.file.filename}`;
   await user.save();
 
   const userObj = user.toObject();
