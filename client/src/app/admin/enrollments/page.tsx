@@ -96,7 +96,13 @@ export default function EnrollmentsPage() {
                             <tr key={e._id}>
                               <td>
                                 <div className={styles.nameCell}>
-                                  <div className={styles.nameAvatar}>{student?.name?.[0]?.toUpperCase() ?? "?"}</div>
+                                  {
+                                    student?.avatarUrl ? (
+                                      <img src={student.avatarUrl} alt={student.name} className={styles.nameAvatar} />
+                                    ) : (
+                                      <div className={styles.nameAvatar}>{student?.name?.[0]?.toUpperCase() ?? "?"}</div>
+                                    )
+                                  }
                                   <div>
                                     <div className={styles.namePrimary}>{student?.name ?? "—"}</div>
                                     <div className={styles.nameSecondary}>{student?.email ?? ""}</div>

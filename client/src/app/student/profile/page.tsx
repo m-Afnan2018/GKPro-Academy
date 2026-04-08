@@ -11,15 +11,15 @@ const SERVER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/a
 export default function StudentProfilePage() {
   const user = getStudentUser();
 
-  const [name, setName]         = useState(user?.name ?? "");
-  const [phone, setPhone]       = useState(user?.phone ?? "");
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm]   = useState("");
-  const [avatar, setAvatar]     = useState(user?.avatarUrl ?? "");
+  const [confirm, setConfirm] = useState("");
+  const [avatar, setAvatar] = useState(user?.avatarUrl ?? "");
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving]     = useState(false);
-  const [success, setSuccess]   = useState("");
-  const [error, setError]       = useState("");
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const initials = user?.name
@@ -38,7 +38,7 @@ export default function StudentProfilePage() {
         body: fd,
       }).then((r) => r.json());
       if (!res.success) throw new Error(res.message ?? "Upload failed");
-      const newUrl = SERVER_BASE + res.data.avatarUrl;
+      const newUrl = res.data.avatarUrl;
       setAvatar(newUrl);
       // Persist updated user to session so navbar/other pages reflect the new avatar
       saveStudentSession(tk!, res.data.user);
@@ -54,7 +54,7 @@ export default function StudentProfilePage() {
     e.preventDefault();
     setError(""); setSuccess("");
     if (password && password !== confirm) { setError("Passwords do not match."); return; }
-    if (password && password.length < 6)  { setError("Password must be at least 6 characters."); return; }
+    if (password && password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setSaving(true);
     try {
       const body: Record<string, any> = { name, phone, avatarUrl: avatar || null };
@@ -98,7 +98,7 @@ export default function StudentProfilePage() {
                 >
                   {uploading
                     ? <span style={{ width: 10, height: 10, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "block", animation: "spin 0.7s linear infinite" }} />
-                    : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   }
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }} />
@@ -113,7 +113,7 @@ export default function StudentProfilePage() {
             <div className={styles.divider} />
 
             {success && <div className={styles.successBox}>{success}</div>}
-            {error   && <div className={styles.errorBox}>{error}</div>}
+            {error && <div className={styles.errorBox}>{error}</div>}
 
             <form onSubmit={handleSave} className={styles.form}>
               <h2 className={styles.sectionHead}>Personal Information</h2>

@@ -1,12 +1,12 @@
-const express  = require("express");
-const multer   = require("multer");
-const path     = require("path");
-const fs       = require("fs");
-const router   = express.Router();
-const { protect }      = require("../middleware/auth");
-const { requireRole }  = require("../middleware/roles");
-const ApiError         = require("../utils/ApiError");
-const ApiResponse      = require("../utils/ApiResponse");
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const router = express.Router();
+const { protect } = require("../middleware/auth");
+const { requireRole } = require("../middleware/roles");
+const ApiError = require("../utils/ApiError");
+const ApiResponse = require("../utils/ApiResponse");
 
 // __dirname = /app/src/routes  →  ../../ = /app  →  /app/uploads (matches Docker volume)
 const UPLOADS_DIR = path.join(__dirname, "../../uploads");
@@ -14,8 +14,8 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename:    (_req, file, cb) => {
-    const ext  = path.extname(file.originalname).toLowerCase();
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
     cb(null, name);
   },

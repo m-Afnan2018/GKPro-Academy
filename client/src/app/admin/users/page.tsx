@@ -31,42 +31,42 @@ function Section({ title }: { title: string }) {
 }
 
 export default function UsersPage() {
-  const [users, setUsers]       = useState<User[]>([]);
-  const [total, setTotal]       = useState(0);
-  const [page, setPage]         = useState(1);
-  const [search, setSearch]     = useState("");
-  const [roleFilter, setRole]   = useState("");
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [meId, setMeId] = useState("");
   useEffect(() => { setMeId(getAdminUser()?._id ?? ""); }, []);
 
   /* ── Create modal ── */
   const [showCreate, setShowCreate] = useState(false);
-  const [cName, setCName]           = useState("");
-  const [cEmail, setCEmail]         = useState("");
-  const [cPhone, setCPhone]         = useState("");
-  const [cPass, setCPass]           = useState("");
-  const [cRole, setCRole]           = useState<User["role"]>("student");
-  const [cActive, setCActive]       = useState(true);
-  const [creating, setCreating]     = useState(false);
+  const [cName, setCName] = useState("");
+  const [cEmail, setCEmail] = useState("");
+  const [cPhone, setCPhone] = useState("");
+  const [cPass, setCPass] = useState("");
+  const [cRole, setCRole] = useState<User["role"]>("student");
+  const [cActive, setCActive] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
   /* ── Edit modal ── */
-  const [editUser, setEditUser]     = useState<User | null>(null);
-  const [eName, setEName]           = useState("");
-  const [eEmail, setEEmail]         = useState("");
-  const [ePhone, setEPhone]         = useState("");
-  const [eRole, setERole]           = useState<User["role"]>("student");
-  const [eActive, setEActive]       = useState(true);
-  const [ePass, setEPass]           = useState("");
-  const [saving, setSaving]         = useState(false);
-  const [saveError, setSaveError]   = useState("");
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [eName, setEName] = useState("");
+  const [eEmail, setEEmail] = useState("");
+  const [ePhone, setEPhone] = useState("");
+  const [eRole, setERole] = useState<User["role"]>("student");
+  const [eActive, setEActive] = useState(true);
+  const [ePass, setEPass] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   /* ── Delete confirm ── */
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
-  const [deleting, setDeleting]         = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -83,7 +83,7 @@ export default function UsersPage() {
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     const matchSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.phone ?? "").includes(q);
-    const matchRole   = !roleFilter || u.role === roleFilter;
+    const matchRole = !roleFilter || u.role === roleFilter;
     return matchSearch && matchRole;
   });
 
@@ -91,9 +91,9 @@ export default function UsersPage() {
   const resetCreate = () => { setCName(""); setCEmail(""); setCPhone(""); setCPass(""); setCRole("student"); setCActive(true); setCreateError(""); };
 
   const handleCreate = async () => {
-    if (!cName.trim())  { setCreateError("Name is required.");     return; }
-    if (!cEmail.trim()) { setCreateError("Email is required.");    return; }
-    if (!cPass.trim())  { setCreateError("Password is required."); return; }
+    if (!cName.trim()) { setCreateError("Name is required."); return; }
+    if (!cEmail.trim()) { setCreateError("Email is required."); return; }
+    if (!cPass.trim()) { setCreateError("Password is required."); return; }
     setCreating(true); setCreateError("");
     try {
       await usersApi.create({ name: cName, email: cEmail, phone: cPhone || undefined, password: cPass, role: cRole, isActive: cActive });
@@ -151,7 +151,7 @@ export default function UsersPage() {
                   <div className={styles.searchWrap}>
                     <span className={styles.searchIcon}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/>
+                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
                       </svg>
                     </span>
                     <input className={styles.searchInput} placeholder="Search by name, email or phone…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -186,9 +186,15 @@ export default function UsersPage() {
                       <tr key={u._id}>
                         <td>
                           <div className={styles.nameCell}>
-                            <div className={styles.nameAvatar} style={{ background: u.role === "admin" ? "#DC2626" : u.role === "manager" ? "#1D4ED8" : "var(--primary)" }}>
-                              {u.name[0]?.toUpperCase()}
-                            </div>
+                            {
+                              u.avatarUrl ? (
+                                <img src={u.avatarUrl} alt={u.name} className={styles.nameAvatar} />
+                              ) : (
+                                <div className={styles.nameAvatar} style={{ background: u.role === "admin" ? "#DC2626" : u.role === "manager" ? "#1D4ED8" : "var(--primary)" }}>
+                                  {u.name[0]?.toUpperCase()}
+                                </div>
+                              )
+                            }
                             <div>
                               <div className={styles.namePrimary}>{u.name} {u._id === meId && <span style={{ fontSize: 10, color: "#6B7280", fontWeight: 400 }}>(you)</span>}</div>
                               <div className={styles.nameSecondary}>{u.email}</div>
@@ -203,15 +209,15 @@ export default function UsersPage() {
                           <div className={styles.actions}>
                             <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openEdit(u)}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                               Edit
                             </button>
                             {canDelete(u) && (
                               <button className={`${styles.btnGhost} ${styles.btnGhostRed}`} onClick={() => setDeleteTarget(u)}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" strokeLinecap="round"/>
+                                  <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" strokeLinecap="round" />
                                 </svg>
                                 Delete
                               </button>

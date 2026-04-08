@@ -141,7 +141,7 @@ export default function BlogPostPage() {
               <ul className={styles.recentList}>
                 {recent.filter((r) => r.slug !== slug).slice(0, 3).map((b) => (
                   <li key={b._id} className={styles.recentItem}>
-                    <div className={styles.recentThumb} />
+                    <img src={b.imageUrl} alt={b.title} className={styles.recentThumb} />
                     <div className={styles.recentInfo}>
                       <Link href={`/blogs/${b.slug}`} className={styles.recentTitle}>{b.title}</Link>
                       <span className={styles.recentDate}>— {formatDate(b.publishedAt ?? b.createdAt)}</span>
