@@ -1139,7 +1139,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .relatedGrid {
     grid-template-columns: 1fr;
   }
@@ -1152,6 +1152,15 @@
   .pageLayout {
     padding: 20px 0 40px;
     gap: 24px;
+    display: inline-flex;
+    flex-direction: column;
+    flex-flow: column-reverse;
+    width: 100%;
+  }
+
+  .rightCol,
+  .leftCol {
+    width: 100%;
   }
 
   .tabPanel {
