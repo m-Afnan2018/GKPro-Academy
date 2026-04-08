@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import type { Blog } from "@/lib/api";
 import styles from "./post.module.css";
+import Image from "next/image";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
@@ -13,7 +14,7 @@ const STATIC_TAGS = ["CA", "Accounting", "ICAI", "Commerce", "Finance", "Study P
 
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [blog, setBlog]   = useState<Blog | null>(null);
+  const [blog, setBlog] = useState<Blog | null>(null);
   const [recent, setRecent] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,7 +35,7 @@ export default function BlogPostPage() {
       .then((json) => {
         if (json.success) setRecent(json.data.blogs ?? []);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [slug]);
 
   const authorName = (b: Blog) => {
@@ -80,7 +81,16 @@ export default function BlogPostPage() {
           ) : (
             <article className={styles.article}>
               {/* Image */}
-              <div className={styles.articleImage} />
+              {/* <div className={styles.articleImage} /> */}
+              {blog.imageUrl && (
+                <div className={styles.articleImage}>
+                  <Image
+                    src={blog.imageUrl}
+                    alt={blog.title}
+                    fill
+                  />
+                </div>
+              )}
 
               <div className={styles.articleBody}>
                 {/* Meta */}

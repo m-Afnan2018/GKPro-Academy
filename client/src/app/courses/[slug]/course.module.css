@@ -400,6 +400,90 @@
   line-height: 1.65;
 }
 
+/* Testimonials */
+.testimonialGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.testimonialCard {
+  background: #F9FAFB;
+  border: 1.5px solid #E8E8F0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.testimonialCard:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.testimonialTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.testimonialAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.testimonialAvatarImg {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+}
+
+.testimonialAvatarInitial {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  line-height: 1;
+}
+
+.testimonialName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-heading);
+}
+
+.testimonialCourse {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.testimonialText {
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.7;
+  flex: 1;
+  margin: 0;
+}
+
+.testimonialStars {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
 /* FAQ */
 .faqList {
   display: flex;
@@ -1055,7 +1139,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .relatedGrid {
     grid-template-columns: 1fr;
   }
@@ -1068,6 +1152,15 @@
   .pageLayout {
     padding: 20px 0 40px;
     gap: 24px;
+    display: inline-flex;
+    flex-direction: column;
+    flex-flow: column-reverse;
+    width: 100%;
+  }
+
+  .rightCol,
+  .leftCol {
+    width: 100%;
   }
 
   .tabPanel {

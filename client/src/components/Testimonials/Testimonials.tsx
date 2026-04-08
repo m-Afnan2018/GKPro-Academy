@@ -100,11 +100,11 @@ export default function Testimonials() {
                       <img src={t.photoUrl} alt={t.studentName} className={styles.avatar} />
                     ) : (
                       <div className={styles.avatar} style={{ background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18 }}>
-                        {t.studentName.charAt(0)}
+                        {t.studentName.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <div className={styles.personName}>{t.studentName}</div>
+                      <div className={styles.personName}>{t.studentName.split("")[0].toUpperCase() + t.studentName.slice(1).toLowerCase()}</div>
                       <div className={styles.personLocation}>
                         {typeof t.courseId === "object" && t.courseId?.title ? t.courseId.title : t.courseName ?? ""}
                       </div>

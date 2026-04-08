@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
-import { enrollmentsApi, type Enrollment, type Course, type Payment } from "@/lib/api";
+import { studentEnrollmentsApi, type Enrollment, type Course, type Payment } from "@/lib/api";
 import styles from "./purchases.module.css";
 
 const BOOK_LABELS: Record<string, string> = {
@@ -20,7 +20,7 @@ export default function PurchasesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await enrollmentsApi.list(1, 200);
+      const res = await studentEnrollmentsApi.list(1, 200);
       setEnrollments(res.data.enrollments ?? []);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }

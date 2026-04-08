@@ -20,6 +20,8 @@ export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcats, setSubcats] = useState<SubCategory[]>([]);
   const [coursesOpen, setCoursesOpen] = useState(false);
@@ -35,6 +37,7 @@ export default function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setUser(getStudentUser());
@@ -47,12 +50,15 @@ export default function Navbar() {
     }).catch(() => { });
   }, []);
 
-  /* close search on outside click */
+  /* close search and mobile menu on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchOpen(false);
         setQuickResults(null);
+      }
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -133,11 +139,11 @@ export default function Navbar() {
   const close = () => { setCoursesOpen(false); setHoveredCat(null); };
 
   return (
-    <nav className={styles.navbar}>
+    <nav className={styles.navbar} ref={navRef}>
       <div className={`container ${styles.inner}`}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <Image src={commonImages.logo} width={100} height={100} alt="GKPro Academy"/>
+          <Image src={commonImages.logo} width={100} height={100} alt="GKPro Academy" />
         </Link>
 
         {/* Nav Links */}
@@ -348,10 +354,91 @@ export default function Navbar() {
           )}
         </div>
 
-        <button className={styles.hamburger} aria-label="Menu">
-          <span /><span /><span />
+        <button
+          className={styles.hamburger}
+          aria-label="Menu"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <>
+              <span /><span /><span />
+            </>
+          )}
         </button>
       </div>
+
+      {mobileMenuOpen && (
+        <div className={styles.mobileMenu}>
+          <ul className={styles.mobileNavLinks}>
+            <li className={styles.mobileNavItem}>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            </li>
+            <li className={styles.mobileNavItem}>
+              <div className={styles.mobileNavHeading}>Courses</div>
+              <ul className={styles.mobileSubList}>
+                <li className={styles.mobileSubItem}>
+                  <Link href="/courses" onClick={() => setMobileMenuOpen(false)}>All Courses</Link>
+                </li>
+                {categories.map((cat) => {
+                  const subs = subcatsFor(cat._id);
+                  const isExpanded = expandedCat === cat._id;
+                  return (
+                  <li key={cat._id} className={styles.mobileSubItem}>
+                    <div className={styles.mobileCatRow}>
+                      <Link href={`/category/${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className={styles.mobileCatLink}>
+                        {cat.name}
+                      </Link>
+                      {subs.length > 0 && (
+                        <button className={styles.mobileCatToggle} onClick={(e) => { e.preventDefault(); setExpandedCat(isExpanded ? null : cat._id); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {subs.length > 0 && (
+                      <div className={`${styles.mobileNestedWrap} ${isExpanded ? styles.expanded : ""}`}>
+                        <div className={styles.mobileNestedInner}>
+                          <ul className={styles.mobileNestedList}>
+                            {subs.map(sub => (
+                              <li key={sub._id} className={styles.mobileNestedItem}>
+                                <Link href={`/category/${cat.slug}?sub=${sub.slug}`} onClick={() => setMobileMenuOpen(false)}>
+                                  {sub.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                )})}
+              </ul>
+            </li>
+            <li className={styles.mobileNavItem}>
+              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About us</Link>
+            </li>
+            <li className={styles.mobileNavItem}>
+              <Link href="/blogs" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
+            </li>
+            <li className={styles.mobileNavItem}>
+              <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>Contact Us</Link>
+            </li>
+            {!user && (
+              <li className={styles.mobileNavItem}>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ color: "var(--primary)" }}>
+                  Log In
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </nav>
   );
 }

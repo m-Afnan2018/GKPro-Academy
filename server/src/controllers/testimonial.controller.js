@@ -12,8 +12,18 @@ const getTestimonials = asyncHandler(async (req, res) => {
   const isPublic = !req.user || req.user.role === "student";
   const filter = isPublic ? { isActive: true, approvalStatus: "approved" } : {};
 
+  // Filter by isGeneral (for homepage)
+  if (req.query.general === "true") {
+    filter.isGeneral = true;
+  }
+
+  // Filter by courseId (for course page)
+  if (req.query.courseId) {
+    filter.courseId = req.query.courseId;
+  }
+
   const [testimonials, total] = await Promise.all([
-    Testimonial.find(filter).skip(skip).limit(limit),
+    Testimonial.find(filter).populate("courseId", "title slug").skip(skip).limit(limit),
     Testimonial.countDocuments(filter),
   ]);
 

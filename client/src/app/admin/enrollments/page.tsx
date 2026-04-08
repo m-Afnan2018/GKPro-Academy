@@ -12,13 +12,13 @@ const LIMIT = 15;
 
 export default function EnrollmentsPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [total, setTotal]     = useState(0);
-  const [page, setPage]       = useState(1);
-  const [search, setSearch]   = useState("");
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
 
-  const [viewItem, setViewItem]     = useState<Enrollment | null>(null);
+  const [viewItem, setViewItem] = useState<Enrollment | null>(null);
   const [cancelItem, setCancelItem] = useState<Enrollment | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
@@ -43,7 +43,7 @@ export default function EnrollmentsPage() {
   };
 
   const getStudent = (e: Enrollment) => typeof e.studentId === "object" ? e.studentId as User : null;
-  const getCourse  = (e: Enrollment) => typeof e.courseId === "object" ? e.courseId as Course : null;
+  const getCourse = (e: Enrollment) => typeof e.courseId === "object" ? e.courseId as Course : null;
   const getPayment = (e: Enrollment) => typeof e.paymentId === "object" ? e.paymentId as Payment : null;
 
   const filtered = enrollments.filter((e) => {
@@ -73,7 +73,7 @@ export default function EnrollmentsPage() {
               <div className={styles.toolbar}>
                 <div className={styles.toolbarLeft}>
                   <div className={styles.searchWrap}>
-                    <span className={styles.searchIcon}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/></svg></span>
+                    <span className={styles.searchIcon}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" /></svg></span>
                     <input className={styles.searchInput} placeholder="Search student or course…" value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
                 </div>
@@ -82,59 +82,59 @@ export default function EnrollmentsPage() {
 
               {loading ? <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>Loading…</div>
                 : !filtered.length ? <div className={styles.empty}><div className={styles.emptyIcon}>🎓</div><div className={styles.emptyText}>No enrollments yet</div></div>
-                : (
-                  <table className={styles.table}>
-                    <thead>
-                      <tr><th>Student</th><th>Course</th><th>Mode</th><th>Order ID</th><th>Payment</th><th>Enrolled</th><th>Status</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((e) => {
-                        const student = getStudent(e);
-                        const course  = getCourse(e);
-                        const payment = getPayment(e);
-                        return (
-                          <tr key={e._id}>
-                            <td>
-                              <div className={styles.nameCell}>
-                                <div className={styles.nameAvatar}>{student?.name?.[0]?.toUpperCase() ?? "?"}</div>
-                                <div>
-                                  <div className={styles.namePrimary}>{student?.name ?? "—"}</div>
-                                  <div className={styles.nameSecondary}>{student?.email ?? ""}</div>
-                                  {(student as any)?.phone && <div className={styles.nameSecondary}>{(student as any).phone}</div>}
+                  : (
+                    <table className={styles.table}>
+                      <thead>
+                        <tr><th>Student</th><th>Course</th><th>Mode</th><th>Order ID</th><th>Payment</th><th>Enrolled</th><th>Status</th><th>Actions</th></tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((e) => {
+                          const student = getStudent(e);
+                          const course = getCourse(e);
+                          const payment = getPayment(e);
+                          return (
+                            <tr key={e._id}>
+                              <td>
+                                <div className={styles.nameCell}>
+                                  <div className={styles.nameAvatar}>{student?.name?.[0]?.toUpperCase() ?? "?"}</div>
+                                  <div>
+                                    <div className={styles.namePrimary}>{student?.name ?? "—"}</div>
+                                    <div className={styles.nameSecondary}>{student?.email ?? ""}</div>
+                                    {(student as any)?.phone && <div className={styles.nameSecondary}>{(student as any).phone}</div>}
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td style={{ fontSize: 13 }}>{course?.title ?? "—"}</td>
-                            <td style={{ fontSize: 12, color: "#6B7280" }}>{e.mode === "online" ? "Online" : "Recorded"}</td>
-                            <td>
-                              {payment?.orderId ? (
-                                <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: "#374151", background: "#F3F4F6", padding: "3px 8px", borderRadius: 5 }}>{payment.orderId}</span>
-                              ) : <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>}
-                            </td>
-                            <td>
-                              {payment ? (
-                                <div>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>₹{payment.amount?.toLocaleString("en-IN")}</div>
-                                  <div style={{ fontSize: 11, color: "#6B7280", textTransform: "capitalize" }}>{payment.method}</div>
+                              </td>
+                              <td style={{ fontSize: 13 }}>{course?.title ?? "—"}</td>
+                              <td style={{ fontSize: 12, color: "#6B7280" }}>{e.mode === "online" ? "Online" : "Recorded"}</td>
+                              <td>
+                                {payment?.orderId ? (
+                                  <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: "#374151", background: "#F3F4F6", padding: "3px 8px", borderRadius: 5 }}>{payment.orderId}</span>
+                                ) : <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>}
+                              </td>
+                              <td>
+                                {payment ? (
+                                  <div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>₹{payment.amount?.toLocaleString("en-IN")}</div>
+                                    <div style={{ fontSize: 11, color: "#6B7280", textTransform: "capitalize" }}>{payment.method}</div>
+                                  </div>
+                                ) : <span style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>Free</span>}
+                              </td>
+                              <td style={{ fontSize: 12 }}>{new Date(e.enrolledAt).toLocaleDateString("en-IN")}</td>
+                              <td><Badge variant={statusBadge(e.status) as any}>{e.status}</Badge></td>
+                              <td>
+                                <div className={styles.actions}>
+                                  <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => setViewItem(e)}>View</button>
+                                  {e.status === "active" && (
+                                    <button className={`${styles.btnGhost} ${styles.btnGhostRed}`} onClick={() => setCancelItem(e)}>Cancel</button>
+                                  )}
                                 </div>
-                              ) : <span style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>Free</span>}
-                            </td>
-                            <td style={{ fontSize: 12 }}>{new Date(e.enrolledAt).toLocaleDateString("en-IN")}</td>
-                            <td><Badge variant={statusBadge(e.status) as any}>{e.status}</Badge></td>
-                            <td>
-                              <div className={styles.actions}>
-                                <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => setViewItem(e)}>View</button>
-                                {e.status === "active" && (
-                                  <button className={`${styles.btnGhost} ${styles.btnGhostRed}`} onClick={() => setCancelItem(e)}>Cancel</button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
 
               {totalPages > 1 && (
                 <div className={styles.pagination}>
@@ -158,7 +158,7 @@ export default function EnrollmentsPage() {
       <Modal open={!!viewItem} onClose={() => setViewItem(null)} title="Enrollment Details" width={520}>
         {viewItem && (() => {
           const student = getStudent(viewItem);
-          const course  = getCourse(viewItem);
+          const course = getCourse(viewItem);
           const payment = getPayment(viewItem);
           return (
             <div className={styles.form}>

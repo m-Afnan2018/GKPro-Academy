@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
-import { enrollmentsApi, type Enrollment, type Course, type Payment } from "@/lib/api";
+import { studentEnrollmentsApi, type Enrollment, type Course, type Payment } from "@/lib/api";
 import { getStudentUser } from "@/lib/studentAuth";
 import styles from "./dashboard.module.css";
 
@@ -31,7 +31,7 @@ export default function StudentDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await enrollmentsApi.list(1, 100);
+      const res = await studentEnrollmentsApi.list(1, 100);
       setEnrollments(res.data.enrollments ?? []);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
