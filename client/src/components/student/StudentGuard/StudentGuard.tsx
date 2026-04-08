@@ -9,7 +9,7 @@ export default function StudentGuard({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const token = getStudentToken();
-    const user  = getStudentUser();
+    const user = getStudentUser();
     if (!token || !user || user.role !== "student") {
       router.replace("/login");
     } else {

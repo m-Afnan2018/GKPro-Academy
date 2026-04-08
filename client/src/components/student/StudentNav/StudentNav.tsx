@@ -6,9 +6,9 @@ import { getStudentUser, clearStudentSession } from "@/lib/studentAuth";
 import styles from "./StudentNav.module.css";
 
 export default function StudentNav() {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
-  const user     = getStudentUser();
+  const user = getStudentUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -21,10 +21,10 @@ export default function StudentNav() {
     : "S";
 
   const navLinks = [
-    { label: "Dashboard",  href: "/student/dashboard" },
+    { label: "Dashboard", href: "/student/dashboard" },
     { label: "My Courses", href: "/student/courses" },
-    { label: "Purchases",  href: "/student/purchases" },
-    { label: "Profile",    href: "/student/profile" },
+    { label: "Purchases", href: "/student/purchases" },
+    { label: "Profile", href: "/student/profile" },
   ];
 
   return (

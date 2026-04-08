@@ -11,23 +11,23 @@ import styles from "../admin.module.css";
 const LIMIT = 15;
 
 export default function StudentsPage() {
-  const [users, setUsers]           = useState<User[]>([]);
-  const [total, setTotal]           = useState(0);
-  const [page, setPage]             = useState(1);
-  const [search, setSearch]         = useState("");
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
-  const [enrollMap, setEnrollMap]   = useState<Record<string, Enrollment[]>>({});
-  const [viewUser, setViewUser]     = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [enrollMap, setEnrollMap] = useState<Record<string, Enrollment[]>>({});
+  const [viewUser, setViewUser] = useState<User | null>(null);
   const [viewEnrolls, setViewEnrolls] = useState<Enrollment[]>([]);
 
   // Enroll modal state
   const [enrollTarget, setEnrollTarget] = useState<User | null>(null);
-  const [allCourses, setAllCourses]     = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [enrollCourse, setEnrollCourse] = useState("");
-  const [enrollMode, setEnrollMode]     = useState<"online" | "recorded">("online");
-  const [enrolling, setEnrolling]       = useState(false);
-  const [enrollError, setEnrollError]   = useState("");
+  const [enrollMode, setEnrollMode] = useState<"online" | "recorded">("online");
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState("");
   const [enrollSuccess, setEnrollSuccess] = useState("");
 
   const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -65,11 +65,11 @@ export default function StudentsPage() {
         }
         setEnrollMap(map);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [users]);
 
   useEffect(() => {
-    coursesApi.list(1, 200).then((r) => setAllCourses(r.data.courses ?? [])).catch(() => {});
+    coursesApi.list(1, 200).then((r) => setAllCourses(r.data.courses ?? [])).catch(() => { });
   }, []);
 
   const openView = (u: User) => {
@@ -142,7 +142,7 @@ export default function StudentsPage() {
               <div className={styles.toolbar}>
                 <div className={styles.toolbarLeft}>
                   <div className={styles.searchWrap}>
-                    <span className={styles.searchIcon}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/></svg></span>
+                    <span className={styles.searchIcon}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" /></svg></span>
                     <input className={styles.searchInput} placeholder="Search by name, email or phone…" value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
                 </div>
@@ -151,49 +151,55 @@ export default function StudentsPage() {
 
               {loading ? <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>Loading…</div>
                 : !filtered.length ? <div className={styles.empty}><div className={styles.emptyIcon}>👨‍🎓</div><div className={styles.emptyText}>No students yet</div></div>
-                : (
-                  <table className={styles.table}>
-                    <thead>
-                      <tr><th>Student</th><th>Phone</th><th>Enrolled Courses</th><th>Active</th><th>Joined</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((u) => {
-                        const enrolls = enrollMap[u._id] ?? [];
-                        const active  = enrolls.filter((e) => e.status === "active").length;
-                        return (
-                          <tr key={u._id}>
-                            <td>
-                              <div className={styles.nameCell}>
-                                <div className={styles.nameAvatar}>{u.name[0]?.toUpperCase()}</div>
-                                <div>
-                                  <div className={styles.namePrimary}>{u.name}</div>
-                                  <div className={styles.nameSecondary}>{u.email}</div>
+                  : (
+                    <table className={styles.table}>
+                      <thead>
+                        <tr><th>Student</th><th>Phone</th><th>Enrolled Courses</th><th>Active</th><th>Joined</th><th>Actions</th></tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((u) => {
+                          const enrolls = enrollMap[u._id] ?? [];
+                          const active = enrolls.filter((e) => e.status === "active").length;
+                          return (
+                            <tr key={u._id}>
+                              <td>
+                                <div className={styles.nameCell}>
+                                  {
+                                    u.avatarUrl ? (
+                                      <img src={u.avatarUrl} alt={u.name} className={styles.nameAvatar} />
+                                    ) : (
+                                      <div className={styles.nameAvatar}>{u.name[0]?.toUpperCase()}</div>
+                                    )
+                                  }
+                                  <div>
+                                    <div className={styles.namePrimary}>{u.name}</div>
+                                    <div className={styles.nameSecondary}>{u.email}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td style={{ fontSize: 13, color: "#6B7280" }}>{u.phone || "—"}</td>
-                            <td style={{ fontSize: 13 }}>{enrolls.length}</td>
-                            <td>
-                              {active > 0
-                                ? <Badge variant="green">{active} Active</Badge>
-                                : <Badge variant="gray">None</Badge>}
-                            </td>
-                            <td style={{ fontSize: 12, color: "#6B7280" }}>{new Date(u.createdAt).toLocaleDateString()}</td>
-                            <td>
-                              <div className={styles.actions}>
-                                <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openView(u)}>View Details</button>
-                                <button className={`${styles.btnGhost} ${styles.btnGhostGreen}`} onClick={() => openEnroll(u)}>
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                                  Enroll
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
+                              </td>
+                              <td style={{ fontSize: 13, color: "#6B7280" }}>{u.phone || "—"}</td>
+                              <td style={{ fontSize: 13 }}>{enrolls.length}</td>
+                              <td>
+                                {active > 0
+                                  ? <Badge variant="green">{active} Active</Badge>
+                                  : <Badge variant="gray">None</Badge>}
+                              </td>
+                              <td style={{ fontSize: 12, color: "#6B7280" }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                              <td>
+                                <div className={styles.actions}>
+                                  <button className={`${styles.btnGhost} ${styles.btnGhostBlue}`} onClick={() => openView(u)}>View Details</button>
+                                  <button className={`${styles.btnGhost} ${styles.btnGhostGreen}`} onClick={() => openEnroll(u)}>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+                                    Enroll
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
 
               {totalPages > 1 && (
                 <div className={styles.pagination}>

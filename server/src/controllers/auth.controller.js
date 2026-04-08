@@ -69,11 +69,11 @@ const updateAvatar = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, "User not found.");
 
   user.avatarUrl = `${SERVER_BASE}/uploads/${req.file.filename}`;
-  await user.save();
+  const updatedUser = await user.save();
 
-  const userObj = user.toObject();
+  const userObj = updatedUser.toObject();
   delete userObj.passwordHash;
-  res.json(new ApiResponse(200, { user: userObj, avatarUrl: user.avatarUrl }, "Avatar updated."));
+  res.json(new ApiResponse(200, { user: userObj, avatarUrl: updatedUser.avatarUrl }, "Avatar updated."));
 });
 
 module.exports = { register, login, getMe, updateMe, updateAvatar };
