@@ -96,15 +96,15 @@ export const formToPayload = (f: CF) => ({
   faculty: f.facultyIds,
   availableModes: f.availableModes,
   thumbnailUrl: f.thumbnailUrl || undefined,
-  onlinePrice:         f.onlinePrice         ? Number(f.onlinePrice)         : null,
+  onlinePrice: f.onlinePrice ? Number(f.onlinePrice) : null,
   onlineOriginalPrice: f.onlineOriginalPrice ? Number(f.onlineOriginalPrice) : null,
-  recordedPrice:         f.recordedPrice         ? Number(f.recordedPrice)         : null,
+  recordedPrice: f.recordedPrice ? Number(f.recordedPrice) : null,
   recordedOriginalPrice: f.recordedOriginalPrice ? Number(f.recordedOriginalPrice) : null,
   bookEnabled: f.bookEnabled,
-  eBookPrice:    f.bookEnabled && f.eBookPrice    ? Number(f.eBookPrice)    : null,
-  eBookUrl:      f.bookEnabled && f.eBookUrl      ? f.eBookUrl              : null,
+  eBookPrice: f.bookEnabled && f.eBookPrice ? Number(f.eBookPrice) : null,
+  eBookUrl: f.bookEnabled && f.eBookUrl ? f.eBookUrl : null,
   handbookPrice: f.bookEnabled && f.handbookPrice ? Number(f.handbookPrice) : null,
-  handbookUrl:   f.bookEnabled && f.handbookUrl   ? f.handbookUrl           : null,
+  handbookUrl: f.bookEnabled && f.handbookUrl ? f.handbookUrl : null,
 });
 
 /* ────────────────────────────────────────────
@@ -237,12 +237,12 @@ function SectionHead({ icon, title, subtitle }: { icon: React.ReactNode; title: 
 type FormTab = "basic" | "content" | "requirements" | "teacher" | "pricing" | "media";
 
 const TABS: { key: FormTab; label: string }[] = [
-  { key: "basic",        label: "Basic Info" },
-  { key: "content",      label: "Content" },
+  { key: "basic", label: "Basic Info" },
+  { key: "content", label: "Content" },
   { key: "requirements", label: "Requirements" },
-  { key: "teacher",      label: "Teacher" },
-  { key: "pricing",      label: "Pricing" },
-  { key: "media",        label: "Media" },
+  { key: "teacher", label: "Teacher" },
+  { key: "pricing", label: "Pricing" },
+  { key: "media", label: "Media" },
 ];
 
 /* ────────────────────────────────────────────
@@ -293,7 +293,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "basic" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="3" y1="9" x2="21" y2="9" /></svg>}
             title="Basic Information"
             subtitle="Core identifiers and categorization"
           />
@@ -347,21 +347,21 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                     sub: "Live + Recorded",
                     color: "#7C3AED",
                     bg: "#F5F3FF",
-                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
                   },
                   online: {
                     label: "Live Only",
                     sub: "Online / Live classes",
                     color: "#1D4ED8",
                     bg: "#EFF6FF",
-                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
                   },
                   recorded: {
                     label: "Recorded Only",
                     sub: "Pre-recorded videos",
                     color: "#16A34A",
                     bg: "#F0FDF4",
-                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
+                    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>,
                   },
                 };
                 const meta = labels[mode];
@@ -396,7 +396,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                     </div>
                     {active && (
                       <div style={{ marginLeft: "auto", width: 18, height: 18, borderRadius: "50%", background: meta.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3"/></svg>
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3" /></svg>
                       </div>
                     )}
                   </button>
@@ -424,7 +424,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
 
           {editSlug && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#F0FDF4", borderRadius: 8, fontSize: 12 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
               <span style={{ color: "#15803D", fontWeight: 600 }}>Public URL:</span>
               <a href={`/courses/${editSlug}`} target="_blank" rel="noopener noreferrer" style={{ color: "#16A34A", textDecoration: "underline" }}>
                 /courses/{editSlug}
@@ -438,7 +438,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "content" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>}
             title="Course Content"
             subtitle="Overview, who it's for, and key highlights"
           />
@@ -463,7 +463,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "requirements" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>}
             title="Prerequisites & Requirements"
             subtitle="What students need before enrolling, and technical/device requirements"
           />
@@ -484,7 +484,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "teacher" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
             title="Faculty"
             subtitle="Assign one or more faculty members — manage them in Admin › Faculty"
           />
@@ -509,7 +509,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                         : [...f.facultyIds, fac._id]
                       )}
                       style={{
-                        display: "flex", alignItems: "center", gap: 10,
+                        display: fac.isActive || selected ? "flex" : "none", alignItems: "center", gap: 10,
                         padding: "10px 12px", borderRadius: 10, textAlign: "left",
                         border: `2px solid ${selected ? "#D42B3A" : "#E5E7EB"}`,
                         background: selected ? "#FFF1F2" : "#FAFAFA",
@@ -520,7 +520,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                       <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#E5E7EB", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {fac.avatar
                           ? <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                         }
                       </div>
                       {/* Info */}
@@ -530,7 +530,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                       </div>
                       {/* Checkmark */}
                       <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${selected ? "#D42B3A" : "#D1D5DB"}`, background: selected ? "#D42B3A" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
-                        {selected && <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3"/></svg>}
+                        {selected && <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="2 6 5 9 10 3" /></svg>}
                       </div>
                     </button>
                   );
@@ -549,7 +549,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#E5E7EB", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {fac.avatar
                             ? <img src={fac.avatar} alt={fac.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                           }
                         </div>
                         <div>
@@ -571,7 +571,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "pricing" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
             title="Pricing"
             subtitle="Course fees and optional book add-ons"
           />
@@ -579,7 +579,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
             {/* Online pricing */}
             <div style={{ border: "1.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden", marginBottom: 14 }}>
               <div style={{ padding: "9px 14px", background: "#F8FAFF", borderBottom: "1px solid #EEF0F8", fontSize: 12, fontWeight: 700, color: "#1D4ED8", display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                 Online / Live Mode
               </div>
               <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -608,7 +608,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
             {/* Recorded pricing */}
             <div style={{ border: "1.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
               <div style={{ padding: "9px 14px", background: "#F8FFF8", borderBottom: "1px solid #EEFAEE", fontSize: 12, fontWeight: 700, color: "#16A34A", display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
                 Recorded Mode
               </div>
               <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -650,7 +650,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <BookCard
                   color="#2563EB" label="eBook" badge="Digital PDF"
-                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>}
                   price={f.eBookPrice} setPrice={v => set("eBookPrice", v)}
                   pdfUrl={f.eBookUrl} setPdfUrl={v => set("eBookUrl", v)}
                   pdfLabel="eBook PDF File"
@@ -658,7 +658,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                 />
                 <BookCard
                   color="#16A34A" label="Handbook" badge="Physical + Digital"
-                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>}
                   price={f.handbookPrice} setPrice={v => set("handbookPrice", v)}
                   pdfUrl={f.handbookUrl} setPdfUrl={v => set("handbookUrl", v)}
                   pdfLabel="Handbook PDF (optional)"
@@ -674,7 +674,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
       {tab === "media" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <SectionHead
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>}
             title="Media"
             subtitle="Course thumbnail shown on listings and the course detail page"
           />
