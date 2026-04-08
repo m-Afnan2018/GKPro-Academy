@@ -10,11 +10,18 @@ function token(): string | null {
   );
 }
 
+/** Always uses the student token only — safe for student-facing pages */
+function studentToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("gkpro_student_token");
+}
+
 async function request<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  authToken?: string | null
 ): Promise<T> {
-  const tk = token();
+  const tk = authToken !== undefined ? authToken : token();
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
@@ -39,6 +46,9 @@ const patch = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
 const del = <T>(path: string) =>
   request<T>(path, { method: "DELETE" });
+
+/** Student-scoped GET — always sends gkpro_student_token */
+const studentGet = <T>(path: string) => request<T>(path, {}, studentToken());
 
 /* ── auth ────────────────────────────────────────── */
 
@@ -156,6 +166,12 @@ export const enrollmentsApi = {
     patch<{ data: Enrollment }>(`/enrollments/${id}`, body),
   cancel: (id: string) =>
     patch<{ data: Enrollment }>(`/enrollments/${id}/cancel`, {}),
+};
+
+/** Use this on student-facing pages — always sends gkpro_student_token */
+export const studentEnrollmentsApi = {
+  list: (page = 1, limit = 100) =>
+    studentGet<{ data: { enrollments: Enrollment[]; total: number } }>(`/enrollments?page=${page}&limit=${limit}`),
 };
 
 /* ── payments ────────────────────────────────────── */
