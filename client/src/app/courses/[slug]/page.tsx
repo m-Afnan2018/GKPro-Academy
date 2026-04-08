@@ -12,40 +12,44 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
 interface CourseDetail { course: Course; faqs: Faq[]; }
 
-type Tab = "about" | "description" | "requirements" | "faculty" | "faq";
+type Tab = "about" | "description" | "requirements" | "faculty" | "testimonials" | "faq";
 type Mode = "online" | "recorded";
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: "about",        label: "About"        },
-  { key: "description",  label: "Description"  },
+  { key: "about", label: "About" },
+  { key: "description", label: "Description" },
   { key: "requirements", label: "Requirements" },
-  { key: "faculty",      label: "Faculty"      },
-  { key: "faq",          label: "FAQ"          },
+  { key: "faculty", label: "Faculty" },
+  { key: "testimonials", label: "Testimonials" },
+  { key: "faq", label: "FAQ" },
 ];
 
 export default function CourseDetailPage() {
-  const { slug }  = useParams<{ slug: string }>();
-  const router    = useRouter();
+  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
 
-  const [data, setData]         = useState<CourseDetail | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
-  const [related, setRelated]   = useState<Course[]>([]);
+  const [data, setData] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [related, setRelated] = useState<Course[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("about");
-  const [openFaq, setOpenFaq]   = useState<string | null>(null);
-  const tabsBarRef              = useRef<HTMLDivElement>(null);
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const tabsBarRef = useRef<HTMLDivElement>(null);
+
+  interface CourseTestimonial { _id: string; studentName: string; courseId?: { title: string } | null; courseName?: string; content: string; rating: number; photoUrl?: string; }
+  const [testimonials, setTestimonials] = useState<CourseTestimonial[]>([]);
 
   const [selectedMode, setSelectedMode] = useState<Mode>("online");
 
   type BookType = "none" | "ebook" | "handbook";
-  const [selectedBook, setSelectedBook]         = useState<BookType>("none");
-  const [deliveryAddress, setDeliveryAddress]   = useState("");
-  const [addressError, setAddressError]         = useState("");
+  const [selectedBook, setSelectedBook] = useState<BookType>("none");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [addressError, setAddressError] = useState("");
 
-  const [enrolling, setEnrolling]     = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState("");
-  const [enrollDone, setEnrollDone]   = useState(false);
-  const [showModal, setShowModal]     = useState(false);
+  const [enrollDone, setEnrollDone] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const [courseEnrollments, setCourseEnrollments] = useState<{ _id: string; mode: Mode }[]>([]);
 
@@ -78,8 +82,14 @@ export default function CourseDetailPage() {
               });
               if (active.length) setCourseEnrollments(active.map((en: any) => ({ _id: en._id, mode: en.mode })));
             })
-            .catch(() => {});
+            .catch(() => { });
         }
+
+        // Fetch course-specific testimonials
+        fetch(`${BASE}/testimonials?courseId=${d.course._id}&limit=20`)
+          .then(r => r.json())
+          .then(tj => { if (tj?.data?.testimonials?.length) setTestimonials(tj.data.testimonials); })
+          .catch(() => { });
 
         const catId = typeof d.course.categoryId === "object"
           ? (d.course.categoryId as any)._id
@@ -90,7 +100,7 @@ export default function CourseDetailPage() {
             const all: Course[] = rj.data?.courses ?? [];
             setRelated(all.filter(c => c._id !== d.course._id).slice(0, 3));
           })
-          .catch(() => {});
+          .catch(() => { });
       })
       .catch(() => setError("Failed to load course."))
       .finally(() => setLoading(false));
@@ -100,8 +110,8 @@ export default function CourseDetailPage() {
   useEffect(() => {
     if (!data) return;
     const navbarH = 70;
-    const tabsH   = 52;
-    const offset  = navbarH + tabsH + 16;
+    const tabsH = 52;
+    const offset = navbarH + tabsH + 16;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -124,9 +134,9 @@ export default function CourseDetailPage() {
   const scrollToSection = (key: Tab) => {
     const el = document.getElementById(key);
     if (!el) return;
-    const tabsH  = tabsBarRef.current?.offsetHeight ?? 52;
+    const tabsH = tabsBarRef.current?.offsetHeight ?? 52;
     const offset = 70 + tabsH + 8;
-    const top    = el.getBoundingClientRect().top + window.scrollY - offset;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: "smooth" });
   };
 
@@ -203,8 +213,8 @@ export default function CourseDetailPage() {
             },
             modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
             prefill: {
-              name:    getStudentUser()?.name  ?? "",
-              email:   getStudentUser()?.email ?? "",
+              name: getStudentUser()?.name ?? "",
+              email: getStudentUser()?.email ?? "",
               contact: getStudentUser()?.phone ?? "",
             },
             theme: { color: "#D42B3A" },
@@ -236,9 +246,9 @@ export default function CourseDetailPage() {
     : null;
 
   const bookAddon = data?.course.bookEnabled
-    ? (selectedBook === "ebook"    ? (data.course.eBookPrice    ?? 0)
-     : selectedBook === "handbook" ? (data.course.handbookPrice ?? 0)
-     : 0)
+    ? (selectedBook === "ebook" ? (data.course.eBookPrice ?? 0)
+      : selectedBook === "handbook" ? (data.course.handbookPrice ?? 0)
+        : 0)
     : 0;
 
   const totalPrice = coursePrice != null ? coursePrice + bookAddon : null;
@@ -251,16 +261,17 @@ export default function CourseDetailPage() {
     : 0;
 
   const availableModes = data?.course.availableModes ?? "both";
-  const hasBoth        = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
-  const hasOnlineOnly  = availableModes === "online"   || (!hasBoth && !!data?.course.onlinePrice   && !data?.course.recordedPrice);
+  const hasBoth = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
+  const hasOnlineOnly = availableModes === "online" || (!hasBoth && !!data?.course.onlinePrice && !data?.course.recordedPrice);
   const hasRecordedOnly = availableModes === "recorded" || (!hasBoth && !!data?.course.recordedPrice && !data?.course.onlinePrice);
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "about",        label: "About"        },
-    { key: "description",  label: "Description"  },
+    { key: "about", label: "About" },
+    { key: "description", label: "Description" },
     { key: "requirements", label: "Requirements" },
-    { key: "faculty",      label: "Faculty"      },
-    { key: "faq",          label: "FAQ"          },
+    { key: "faculty", label: "Faculty" },
+    { key: "testimonials", label: "Testimonials" },
+    { key: "faq", label: "FAQ" },
   ];
 
   if (loading) return (
@@ -315,8 +326,8 @@ export default function CourseDetailPage() {
               {course.targetAudience && (
                 <div className={styles.metaItem}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                   For {course.targetAudience}
                 </div>
@@ -324,7 +335,7 @@ export default function CourseDetailPage() {
               {course.startDate && (
                 <div className={styles.metaItem}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                   Live Classes from: <strong>{new Date(course.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</strong>
                   {course.validityMonths && <> | Valid till: <strong>{new Date(new Date(course.startDate).setMonth(new Date(course.startDate).getMonth() + course.validityMonths)).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</strong></>}
@@ -357,7 +368,7 @@ export default function CourseDetailPage() {
                       <li key={i} className={styles.highlightItem}>
                         <span className={styles.highlightIcon}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <polyline points="20 6 9 17 4 12"/>
+                            <polyline points="20 6 9 17 4 12" />
                           </svg>
                         </span>
                         <span>{h}</span>
@@ -373,7 +384,7 @@ export default function CourseDetailPage() {
                     ].map((text, i) => (
                       <li key={i} className={styles.highlightItem}>
                         <span className={styles.highlightIcon}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                         </span>
                         <span>{text}</span>
                       </li>
@@ -506,7 +517,7 @@ export default function CourseDetailPage() {
                           ) : (
                             <div className={styles.facultyAvatar}>
                               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                               </svg>
                             </div>
                           )}
@@ -524,7 +535,7 @@ export default function CourseDetailPage() {
                       <div className={styles.facultyAvatarWrap}>
                         <div className={styles.facultyAvatar}>
                           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                           </svg>
                         </div>
                         <p className={styles.facultyDesig}>Co-Founder &amp; Managing Director</p>
@@ -537,6 +548,45 @@ export default function CourseDetailPage() {
                     </div>
                   )}
                 </div>
+              </section>
+
+              {/* Testimonials */}
+              <section id="testimonials" className={styles.tabPanel}>
+                <h2 className={styles.panelTitle}>Student Testimonials</h2>
+                {testimonials.length > 0 ? (
+                  <div className={styles.testimonialGrid}>
+                    {testimonials.map(t => (
+                      <div key={t._id} className={styles.testimonialCard}>
+                        <div className={styles.testimonialTop}>
+                          <div className={styles.testimonialAvatar}>
+                            {t.photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={t.photoUrl} alt={t.studentName} className={styles.testimonialAvatarImg} />
+                            ) : (
+                              <span className={styles.testimonialAvatarInitial}>{t.studentName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div>
+                            <div className={styles.testimonialName}>{t.studentName.split("")[0].toUpperCase() + t.studentName.toLowerCase().slice(1)}</div>
+                          </div>
+                        </div>
+                        <p className={styles.testimonialText}>{t.content}</p>
+                        <div className={styles.testimonialStars}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <svg key={i} width="14" height="14" viewBox="0 0 24 24"
+                              fill={i < t.rating ? "var(--primary)" : "none"}
+                              stroke={i < t.rating ? "var(--primary)" : "#D1D5DB"}
+                              strokeWidth="2">
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={styles.emptyTab}>No testimonials yet for this course.</p>
+                )}
               </section>
 
               {/* FAQ */}
@@ -574,13 +624,13 @@ export default function CourseDetailPage() {
                       "linear-gradient(135deg,#0f3460 0%,#16213e 100%)",
                       "linear-gradient(135deg,#1c3a4a 0%,#0f4c75 100%)",
                     ];
-                    const onlineP   = c.onlinePrice   ?? 0;
+                    const onlineP = c.onlinePrice ?? 0;
                     const recordedP = c.recordedPrice ?? 0;
                     const leadPrice = onlineP && recordedP ? Math.min(onlineP, recordedP) : onlineP || recordedP;
-                    const origP     = onlineP && recordedP
+                    const origP = onlineP && recordedP
                       ? null
                       : (onlineP ? (c.onlineOriginalPrice ?? null) : (c.recordedOriginalPrice ?? null));
-                    const relPct    = leadPrice && origP && origP > leadPrice
+                    const relPct = leadPrice && origP && origP > leadPrice
                       ? Math.round((1 - leadPrice / origP) * 100) : 0;
                     return (
                       <Link href={`/courses/${c.slug}`} key={c._id} className={styles.relCard}>
@@ -640,11 +690,11 @@ export default function CourseDetailPage() {
                 <div className={styles.cardNameRow}>
                   {/*<h3 className={styles.cardCourseName}>{course.title}</h3>*/}
                   <div className={styles.cardBadges}>
-                    {course.isNew      && <span className={styles.badge} style={{ background: "#EEF2FF", color: "#4F46E5" }}>New</span>}
-                    {course.language   && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>{course.language}</span>}
-                    {hasBoth           && <span className={styles.badge} style={{ background: "#F0FDF4", color: "#166534" }}>Live + Recorded</span>}
-                    {hasOnlineOnly     && <span className={styles.badge} style={{ background: "#EFF6FF", color: "#1D4ED8" }}>Live Only</span>}
-                    {hasRecordedOnly   && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>Recorded Only</span>}
+                    {course.isNew && <span className={styles.badge} style={{ background: "#EEF2FF", color: "#4F46E5" }}>New</span>}
+                    {course.language && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>{course.language}</span>}
+                    {hasBoth && <span className={styles.badge} style={{ background: "#F0FDF4", color: "#166534" }}>Live + Recorded</span>}
+                    {hasOnlineOnly && <span className={styles.badge} style={{ background: "#EFF6FF", color: "#1D4ED8" }}>Live Only</span>}
+                    {hasRecordedOnly && <span className={styles.badge} style={{ background: "#FFF7ED", color: "#C2410C" }}>Recorded Only</span>}
                   </div>
                 </div>
 
@@ -652,7 +702,7 @@ export default function CourseDetailPage() {
                 {course.validityMonths && (
                   <p className={styles.cardValidity}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                     </svg>
                     Validity: {course.validityMonths} Months Access
                   </p>
@@ -755,10 +805,10 @@ export default function CourseDetailPage() {
 
                 {/* Enrolled / Buy */}
                 {courseEnrollments.length > 0 ? (() => {
-                  const enrolledModes     = courseEnrollments.map(e => e.mode);
+                  const enrolledModes = courseEnrollments.map(e => e.mode);
                   const alreadyHasSelected = enrolledModes.includes(selectedMode);
-                  const linkEnrollment    = courseEnrollments.find(e => e.mode === selectedMode) ?? courseEnrollments[0];
-                  const enrolledLabel     = enrolledModes.map(m => m === "online" ? "Online" : "Recorded").join(" & ");
+                  const linkEnrollment = courseEnrollments.find(e => e.mode === selectedMode) ?? courseEnrollments[0];
+                  const enrolledLabel = enrolledModes.map(m => m === "online" ? "Online" : "Recorded").join(" & ");
                   return (
                     <div>
                       <div className={styles.enrolledBadge}>
@@ -812,7 +862,7 @@ export default function CourseDetailPage() {
             {enrollDone ? (
               <div className={styles.modalSuccess}>
                 <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+                  <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
                 </svg>
                 <h3>Enrolled Successfully!</h3>
                 <p>You are now enrolled in <strong>{course.title}</strong> ({selectedMode === "online" ? "Online" : "Recorded"}{selectedBook !== "none" ? ` + ${selectedBook === "ebook" ? "eBook" : "Handbook"}` : ""}).</p>
@@ -826,7 +876,7 @@ export default function CourseDetailPage() {
                   <h3>Confirm Enrollment</h3>
                   <button className={styles.modalClose} onClick={closeModal}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
