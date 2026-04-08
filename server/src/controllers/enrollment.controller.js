@@ -7,7 +7,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const populateEnrollment = (query) =>
   query
     .populate("studentId", "name email phone avatarUrl")
-    .populate("courseId", "title slug thumbnailUrl onlinePrice recordedPrice", { strictPopulate: false })
+    .populate({ path: "courseId", select: "title slug thumbnailUrl onlinePrice recordedPrice", strictPopulate: false })
     .populate("paymentId");
 
 const getEnrollments = asyncHandler(async (req, res) => {
@@ -31,7 +31,7 @@ const getEnrollments = asyncHandler(async (req, res) => {
 const getEnrollment = asyncHandler(async (req, res) => {
   const enrollment = await Enrollment.findById(req.params.id)
     .populate("studentId", "name email phone avatarUrl")
-    .populate("courseId", "title slug description thumbnailUrl onlinePrice recordedPrice eBookUrl", { strictPopulate: false })
+    .populate({ path: "courseId", select: "title slug description thumbnailUrl onlinePrice recordedPrice eBookUrl", strictPopulate: false })
     .populate("paymentId");
 
   if (!enrollment) throw new ApiError(404, "Enrollment not found.");
