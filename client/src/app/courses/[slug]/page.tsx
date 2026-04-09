@@ -9,6 +9,7 @@ import { getStudentToken, getStudentUser } from "@/lib/studentAuth";
 import styles from "./course.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const PLACEHOLDER_IMG = "https://placehold.co/600x400";
 
 interface CourseDetail { course: Course; faqs: Faq[]; }
 
@@ -680,7 +681,13 @@ export default function CourseDetailPage() {
               <div className={styles.cardThumb}>
                 {course.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.thumbnailUrl} alt={course.title} className={styles.cardThumbImg} />
+                  <img
+                    src={course.thumbnailUrl}
+                    onError={(e) => {
+                      e.currentTarget.src = PLACEHOLDER_IMG;
+                    }}
+                    alt={course.title}
+                    className={styles.cardThumbImg} />
                 ) : (
                   <div className={styles.cardThumbFallback} />
                 )}
