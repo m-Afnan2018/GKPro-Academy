@@ -1,9 +1,6 @@
 .hero {
   position: relative;
   height: 500px;
-  background:
-    linear-gradient(rgba(15, 15, 30, 0.68), rgba(15, 15, 30, 0.203)),
-    url('/images/AboutBanner.webp') center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;

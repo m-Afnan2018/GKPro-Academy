@@ -12,10 +12,54 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  animation: fadeIn 0.5s ease-in-out;
+  font-weight: 600;
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  animation: blink 1.5s infinite;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
 }
 
 .arrow {
   font-size: 15px;
   font-weight: 700;
   color: var(--primary);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+    color: #ff243e;
+    scale: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+    color: #3d0702;
+    scale: 1.05;
+  }
 }

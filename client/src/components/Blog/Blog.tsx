@@ -20,7 +20,7 @@ export default function Blog() {
     fetch(`${BASE}/blogs?limit=3`)
       .then((r) => r.json())
       .then((json) => { if (json?.data?.blogs?.length) setPosts(json.data.blogs); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const display = posts.length > 0 ? posts : [
@@ -42,7 +42,7 @@ export default function Blog() {
             </span>
             <span className={styles.labelText}>BLOG</span>
           </div>
-          
+
           <div className={styles.headingWrapper}>
             <h2 className={styles.heading}>Latest News From our Blog</h2>
             <svg width="240" height="15" viewBox="0 0 240 15" fill="none" className={styles.brushCurve}>

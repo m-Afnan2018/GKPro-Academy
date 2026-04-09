@@ -40,8 +40,8 @@ function ModeBadge({ course }: { course: Course }) {
         (course.onlinePrice && course.recordedPrice
             ? "both"
             : course.onlinePrice
-              ? "online"
-              : "recorded");
+                ? "online"
+                : "recorded");
     if (modes === "both")
         return (
             <span className={`${styles.modeBadge} ${styles.badgeBoth}`}>
@@ -106,7 +106,7 @@ export default function CategoryPage() {
             .then((j) => {
                 if (j.success) setSubcats(j.data.subcategories ?? []);
             })
-            .catch(() => {});
+            .catch(() => { });
     }, [category]);
 
     /* auto-select subcategory from ?sub= query param */

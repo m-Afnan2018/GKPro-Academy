@@ -451,6 +451,7 @@ export interface Announcement {
   title: string;
   content: string;
   type: "discount" | "upcoming_batch" | "ongoing_batch" | "general";
+  link?: string;
   validUntil?: string;
   isActive: boolean;
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
@@ -487,6 +488,7 @@ export interface Blog {
   content: string;
   authorId: Partial<User> | string;
   isPublished: boolean;
+  tags?: string[];
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   publishedAt?: string;
   createdAt: string;

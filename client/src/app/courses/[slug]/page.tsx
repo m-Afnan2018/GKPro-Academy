@@ -9,6 +9,7 @@ import { getStudentToken, getStudentUser } from "@/lib/studentAuth";
 import styles from "./course.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const PLACEHOLDER_IMG = "https://placehold.co/600x400";
 
 interface CourseDetail { course: Course; faqs: Faq[]; }
 
@@ -68,6 +69,11 @@ export default function CourseDetailPage() {
         else if (modes === "recorded") setSelectedMode("recorded");
         else if (d.course.onlinePrice) setSelectedMode("online");
         else if (d.course.recordedPrice) setSelectedMode("recorded");
+
+        if (d.course.bookEnabled) {
+          if (d.course.handbookPrice) setSelectedBook("handbook");
+          else if (d.course.eBookPrice) setSelectedBook("ebook");
+        }
 
         const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
         if (tk) {
@@ -675,7 +681,13 @@ export default function CourseDetailPage() {
               <div className={styles.cardThumb}>
                 {course.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.thumbnailUrl} alt={course.title} className={styles.cardThumbImg} />
+                  <img
+                    src={course.thumbnailUrl}
+                    onError={(e) => {
+                      e.currentTarget.src = PLACEHOLDER_IMG;
+                    }}
+                    alt={course.title}
+                    className={styles.cardThumbImg} />
                 ) : (
                   <div className={styles.cardThumbFallback} />
                 )}
@@ -744,11 +756,6 @@ export default function CourseDetailPage() {
                   <div className={styles.bookSection}>
                     <p className={styles.modeSectionLabel}>Choose Your Mode:</p>
                     <div className={styles.bookOptions}>
-                      <label className={`${styles.bookOption} ${selectedBook === "none" ? styles.bookOptionActive : ""}`}>
-                        <input type="radio" name="bookType" value="none" checked={selectedBook === "none"}
-                          onChange={() => { setSelectedBook("none"); setAddressError(""); }} />
-                        <span>No Book</span>
-                      </label>
                       {data.course.eBookPrice ? (
                         <label className={`${styles.bookOption} ${selectedBook === "ebook" ? styles.bookOptionActive : ""}`}>
                           <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"}

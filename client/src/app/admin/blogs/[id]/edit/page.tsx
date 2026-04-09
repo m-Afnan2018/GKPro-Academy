@@ -11,16 +11,17 @@ import styles from "../../../admin.module.css";
 import editorStyles from "../../editor.module.css";
 
 export default function EditBlogPage() {
-  const router   = useRouter();
-  const { id }   = useParams<{ id: string }>();
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
 
-  const [title, setTitle]           = useState("");
-  const [content, setContent]       = useState("");
-  const [imageUrl, setImageUrl]     = useState("");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isPublished, setPublished] = useState(false);
-  const [loaded, setLoaded]         = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [error, setError]           = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -34,6 +35,7 @@ export default function EditBlogPage() {
           setTitle(b.title ?? "");
           setContent(b.content ?? "");
           setImageUrl((b as any).imageUrl ?? "");
+          setTagsInput((b as any).tags?.join(", ") ?? "");
           setPublished(b.isPublished ?? false);
           setLoaded(true);
         } else {
@@ -49,7 +51,10 @@ export default function EditBlogPage() {
     setError(""); setSaving(true);
     try {
       const pub = publish ?? isPublished;
-      await blogsApi.update(id, { title, content, imageUrl: imageUrl || undefined, isPublished: pub } as any);
+      const tags = tagsInput.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+      await blogsApi.update(id, { title, content, imageUrl: imageUrl || undefined, isPublished: pub, tags } as any);
+
+      console.log(tags)
       router.push("/admin/blogs");
     } catch (e: any) {
       setError(e.message ?? "Save failed.");
@@ -67,7 +72,7 @@ export default function EditBlogPage() {
           {/* ── Top bar ── */}
           <div className={editorStyles.editorTopbar}>
             <Link href="/admin/blogs" className={editorStyles.backBtn}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
               Blogs
             </Link>
             <div className={editorStyles.topbarTitle}>Edit Post</div>
@@ -110,8 +115,8 @@ export default function EditBlogPage() {
                         className={editorStyles.statusBtn}
                         style={{
                           background: (s === "Published") === isPublished ? (isPublished ? "#D1FAE5" : "#F3F4F6") : "transparent",
-                          color:      (s === "Published") === isPublished ? (isPublished ? "#065F46" : "#374151") : "#9CA3AF",
-                          border:     `1.5px solid ${(s === "Published") === isPublished ? (isPublished ? "#6EE7B7" : "#D1D5DB") : "#E5E7EB"}`,
+                          color: (s === "Published") === isPublished ? (isPublished ? "#065F46" : "#374151") : "#9CA3AF",
+                          border: `1.5px solid ${(s === "Published") === isPublished ? (isPublished ? "#6EE7B7" : "#D1D5DB") : "#E5E7EB"}`,
                         }}
                       >
                         {s}
@@ -123,6 +128,30 @@ export default function EditBlogPage() {
                 <div className={editorStyles.metaSection}>
                   <div className={editorStyles.metaLabel}>Cover Image</div>
                   <ImageUpload value={imageUrl} onChange={setImageUrl} />
+                </div>
+
+                <div className={editorStyles.metaSection}>
+                  <div className={editorStyles.metaLabel}>Tags (comma separated)</div>
+                  <input
+                    className={editorStyles.tagsInput}
+                    placeholder="e.g. Next.js, React"
+                    value={tagsInput}
+                    onChange={(e) => setTagsInput(e.target.value)}
+                  />
+                </div>
+
+                <div className="tag-container">
+                  {tagsInput.split(",").map((tag, index) => (
+                    <span key={index} className={editorStyles.tag}>
+                      {tag}
+                      {tag.trim().length > 0 && <button onClick={() => setTagsInput(tagsInput.split(",").filter((_, i) => i !== index).join(","))}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={editorStyles.tagClose}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+
+                      </button>}
+                    </span>
+                  ))}
                 </div>
               </div>
 
