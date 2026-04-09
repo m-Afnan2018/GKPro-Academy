@@ -9,7 +9,7 @@ import { announcementsApi, type Announcement } from "@/lib/api";
 import styles from "../admin.module.css";
 
 const LIMIT = 10;
-const blank = () => ({ title: "", content: "", type: "general" as Announcement["type"], validUntil: "", isActive: true });
+const blank = () => ({ title: "", content: "", type: "general" as Announcement["type"], link: "", validUntil: "", isActive: true });
 
 type AnnFormData = ReturnType<typeof blank>;
 function AnnForm({ f, setF, err }: { f: AnnFormData; setF: (v: AnnFormData) => void; err: string }) {
@@ -23,6 +23,10 @@ function AnnForm({ f, setF, err }: { f: AnnFormData; setF: (v: AnnFormData) => v
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>Content *</label>
         <textarea className={styles.formTextarea} rows={3} value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Link (optional)</label>
+        <input className={styles.formInput} value={f.link ?? ""} onChange={(e) => setF({ ...f, link: e.target.value })} />
       </div>
       <div className={styles.formRow}>
         <div className={styles.formGroup}>
@@ -81,7 +85,7 @@ export default function AnnouncementsPage() {
 
   const openEdit = (a: Announcement) => {
     setEditItem(a);
-    setEForm({ title: a.title, content: a.content, type: a.type, validUntil: a.validUntil ? a.validUntil.slice(0, 10) : "", isActive: a.isActive });
+    setEForm({ title: a.title, content: a.content, type: a.type, link: a.link ?? "", validUntil: a.validUntil ? a.validUntil.slice(0, 10) : "", isActive: a.isActive });
     setSaveError("");
   };
 

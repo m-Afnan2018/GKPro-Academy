@@ -451,6 +451,7 @@ export interface Announcement {
   title: string;
   content: string;
   type: "discount" | "upcoming_batch" | "ongoing_batch" | "general";
+  link?: string;
   validUntil?: string;
   isActive: boolean;
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
