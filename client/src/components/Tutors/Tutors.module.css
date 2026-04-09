@@ -59,15 +59,16 @@
 /* Inner layout */
 .inner {
   display: grid;
-  grid-template-columns: 310px 1fr;
+  grid-template-columns: 410px 1fr;
   gap: 60px;
   align-items: start;
 }
 
 /* Profile card */
 .profileCard {
-  width: 100%;
+  width: 70%;
   height: 100%;
+  margin: auto;
   overflow: hidden;
   position: relative;
   background: white;
@@ -144,6 +145,7 @@
 /* Bio col */
 .bioCol {
   padding-top: 10px;
+  text-align: justify;
 }
 
 .tutorName {
