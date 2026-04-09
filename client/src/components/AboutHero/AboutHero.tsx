@@ -3,15 +3,17 @@ import styles from "./AboutHero.module.css";
 
 export default function AboutHero() {
   return (
-    <section className={styles.hero}>
+    <section className={styles.hero} style={{
+      background: `linear-gradient(rgb(15 15 30 / 12%), rgb(15 15 30 / 1%)), url('/images/AboutBanner.webp') center/cover no-repeat`,
+    }}>
       <div className={styles.overlay} />
 
       {/* Decorative hexagons */}
-      <div className={styles.hexGroup}>
+      {/* <div className={styles.hexGroup}>
         <div className={`${styles.hex} ${styles.hexGreen}`} />
         <div className={`${styles.hex} ${styles.hexOutline}`} />
-        <div className={`${styles.hex} $s{styles.hexOutlineSm}`} />
-      </div>
+        <div className={`${styles.hex} ${styles.hexOutlineSm}`} />
+      </div> */}
 
       {/* Scroll indicator */}
       <div className={styles.scrollHint}>
