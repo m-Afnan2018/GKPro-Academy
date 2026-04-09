@@ -69,6 +69,11 @@ export default function CourseDetailPage() {
         else if (d.course.onlinePrice) setSelectedMode("online");
         else if (d.course.recordedPrice) setSelectedMode("recorded");
 
+        if (d.course.bookEnabled) {
+          if (d.course.handbookPrice) setSelectedBook("handbook");
+          else if (d.course.eBookPrice) setSelectedBook("ebook");
+        }
+
         const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
         if (tk) {
           fetch(`${BASE}/enrollments?limit=100`, { headers: { Authorization: `Bearer ${tk}` } })
@@ -744,11 +749,6 @@ export default function CourseDetailPage() {
                   <div className={styles.bookSection}>
                     <p className={styles.modeSectionLabel}>Choose Your Mode:</p>
                     <div className={styles.bookOptions}>
-                      <label className={`${styles.bookOption} ${selectedBook === "none" ? styles.bookOptionActive : ""}`}>
-                        <input type="radio" name="bookType" value="none" checked={selectedBook === "none"}
-                          onChange={() => { setSelectedBook("none"); setAddressError(""); }} />
-                        <span>No Book</span>
-                      </label>
                       {data.course.eBookPrice ? (
                         <label className={`${styles.bookOption} ${selectedBook === "ebook" ? styles.bookOptionActive : ""}`}>
                           <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"}
