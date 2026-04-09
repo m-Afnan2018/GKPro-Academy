@@ -8,6 +8,7 @@ const blogSchema = new mongoose.Schema({
   imageUrl: { type: String },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   courseTags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+  tags: [{ type: String, trim: true }],
   isPublished: { type: Boolean, default: false },
   approvalStatus: { type: String, enum: ["draft", "pending", "approved", "rejected"], default: "draft" },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

@@ -488,6 +488,7 @@ export interface Blog {
   content: string;
   authorId: Partial<User> | string;
   isPublished: boolean;
+  tags?: string[];
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   publishedAt?: string;
   createdAt: string;

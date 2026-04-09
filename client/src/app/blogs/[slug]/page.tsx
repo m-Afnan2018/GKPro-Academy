@@ -120,11 +120,11 @@ export default function BlogPostPage() {
                 />
 
                 {/* Tags */}
-                <div className={styles.postTags}>
+                {/* <div className={styles.postTags}>
                   {STATIC_TAGS.slice(0, 3).map((t) => (
                     <span key={t} className={styles.postTag}>{t}</span>
                   ))}
-                </div>
+                </div> */}
 
                 <Link href="/blogs" className={styles.backBtn}>← Back to Blog</Link>
               </div>
@@ -156,7 +156,7 @@ export default function BlogPostPage() {
           <div className={styles.sideCard}>
             <h3 className={styles.sideTitle}>Tags</h3>
             <div className={styles.tagCloud}>
-              {STATIC_TAGS.map((t) => (
+              {blog?.tags?.map((t) => (
                 <span key={t} className={styles.tag}>{t}</span>
               ))}
             </div>
