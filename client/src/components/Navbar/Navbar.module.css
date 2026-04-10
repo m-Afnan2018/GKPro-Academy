@@ -451,7 +451,7 @@
   color: var(--white);
   font-size: 13px;
   font-weight: 300;
-  font-family: 'Inter';
+  font-family: var(--font-heading);
   border-radius: 50px;
   transition: background 0.2s;
   white-space: nowrap;
@@ -467,7 +467,7 @@
   color: var(--text-main);
   font-size: 13px;
   font-weight: 300;
-  font-family: 'Inter';
+  font-family: var(--font-heading);
   border-radius: 50px;
   border: 1.5px solid var(--border);
   transition: all 0.2s;

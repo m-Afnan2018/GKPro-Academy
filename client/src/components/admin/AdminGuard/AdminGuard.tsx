@@ -12,7 +12,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     const token = getToken();
     const user  = getUser();
     if (!token || !user || user.role !== "admin") {
-      router.replace("/admin/login");
+      router.replace("/login");
     } else {
       setReady(true);
     }

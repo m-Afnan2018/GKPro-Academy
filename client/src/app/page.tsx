@@ -19,7 +19,7 @@ export default function Home() {
       <Navbar />
       <main style={{ overflow: 'hidden' }}>
         <Hero />
-        <Categories />
+        {/*<Categories />*/}
         <Features />
         <About />
         <Stats />

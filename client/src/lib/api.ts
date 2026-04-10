@@ -206,6 +206,8 @@ export const leadsApi = {
 export const demoBookingsApi = {
   list: (page = 1, limit = 10) =>
     get<{ data: { bookings: DemoBooking[]; total: number } }>(`/demo-bookings?page=${page}&limit=${limit}`),
+  create: (body: Partial<DemoBooking>) =>
+    post<{ data: DemoBooking }>("/demo-bookings", body),
   update: (id: string, body: Partial<DemoBooking>) =>
     patch<{ data: DemoBooking }>(`/demo-bookings/${id}`, body),
   remove: (id: string) => del(`/demo-bookings/${id}`),
@@ -438,10 +440,15 @@ export interface Lead {
 export interface DemoBooking {
   _id: string;
   name: string;
+  email: string;
   phone: string;
+  course?: string;
   courseId?: Partial<Course> | string;
-  slotTime: string;
+  preferredDate?: string;
+  preferredTime?: string;
+  message?: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
+  adminNote?: string;
   handledBy?: Partial<User> | string;
   createdAt: string;
 }

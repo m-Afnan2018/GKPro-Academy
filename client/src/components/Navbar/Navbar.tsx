@@ -348,7 +348,7 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <Link href="/contact" className={styles.btnExpert}>Call to Expert</Link>
+              <Link href="/demo-booking" className={styles.btnExpert}>Demo Booking</Link>
               <Link href="/login" className={styles.btnLogin}>Log In</Link>
             </>
           )}

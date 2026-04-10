@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Features() {
   return (
-    <section className={styles.section}>
+    <section style={{marginTop: '100px'}} className={styles.section}>
       <div className="container">
         <div className={styles.grid}>
           {/* Card 1 — Live Interactive Learning */}
@@ -23,10 +23,10 @@ export default function Features() {
             </p>
             <a href="/courses" className={styles.applyBtn}>Apply Now</a>
             <Image
-              alt="redHat"
-              src={'/images/1-5.png.png'}
-              width={100}
-              height={100}
+              alt="live"
+              src={'/images/112.png'}
+              width={1000}
+              height={1000}
             />
           </div>
 
@@ -47,10 +47,10 @@ export default function Features() {
             </p>
             <a href="/courses" className={styles.applyBtn}>Apply Now</a>
             <Image
-              alt="redHat"
-              src={'/images/2-3.png.png'}
-              width={100}
-              height={100}
+              alt="recorded"
+              src={'/images/2.png'}
+              width={1000}
+              height={1000}
             />
           </div>
         </div>

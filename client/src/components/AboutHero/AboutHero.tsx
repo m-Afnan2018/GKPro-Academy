@@ -1,10 +1,11 @@
 import Link from "next/link";
 import styles from "./AboutHero.module.css";
+import aboutImage from '@/assets/images/core/about/Aboutbanner.webp'
 
 export default function AboutHero() {
   return (
     <section className={styles.hero} style={{
-      background: `linear-gradient(rgb(15 15 30 / 12%), rgb(15 15 30 / 1%)), url('/images/AboutBanner.webp') center/cover no-repeat`,
+      background: `linear-gradient(rgb(15 15 30 / 12%), rgb(15 15 30 / 1%)), url('${aboutImage.src}') center/cover no-repeat`,
     }}>
       <div className={styles.overlay} />
 
