@@ -13,9 +13,21 @@ import Features from "@/components/Features/Features";
 import Footer from "@/components/Footer/Footer";
 
 export const metadata: Metadata = {
-  title: "About Us — GKPro Academy",
+  title: "About Us",
   description:
-    "Learn about GKPro Academy — our mission, vision, expert faculty, and commitment to shaping successful CA and accounting careers.",
+    "Learn about GKPro Academy — our mission, expert faculty, and commitment to shaping successful careers in CA, IELTS, PTE, Spoken English, and professional skills. Based in Ludhiana, Punjab.",
+  keywords: [
+    "about GKPro Academy",
+    "GKPro Academy faculty",
+    "CA coaching institute Ludhiana",
+    "professional skills institute Punjab",
+  ],
+  openGraph: {
+    title: "About GKPro Academy",
+    description:
+      "Meet the team behind GKPro Academy — expert faculty delivering CA, IELTS, PTE, Spoken English, and professional skill courses in Ludhiana, Punjab.",
+    url: "https://gkproacademy.com/about",
+  },
 };
 
 export default function AboutPage() {
