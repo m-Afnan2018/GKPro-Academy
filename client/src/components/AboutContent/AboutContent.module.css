@@ -115,6 +115,7 @@
   line-height: 1.8;
   color: var(--text-body);
   margin-bottom: 14px;
+  text-align: justify;
 }
 
 /* Mission / Vision */
@@ -154,6 +155,7 @@
   font-size: 12px;
   line-height: 1.7;
   color: var(--text-body);
+  text-align: justify;
 }
 
 /* ── Responsive ── */
