@@ -153,10 +153,10 @@ export default function CoursesPage() {
                     <tr>
                       <th>Title</th>
                       <th>Category</th>
-                      <th>Teacher</th>
+                      {/*<th>Teacher</th>*/}
                       <th>Pricing</th>
                       <th>Status</th>
-                      <th>Approval</th>
+                      {/*<th>Approval</th>*/}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -171,16 +171,16 @@ export default function CoursesPage() {
                           <div className={styles.namePrimary}>{catName(c)}</div>
                           {subcatName(c) && <div className={styles.nameSecondary}>{subcatName(c)}</div>}
                         </td>
-                        <td style={{ fontSize: 12, color: "#374151" }}>
+                        {/*<td style={{ fontSize: 12, color: "#374151" }}>
                           {(c as any).teacherName ?? <span style={{ color: "#9CA3AF" }}>—</span>}
-                        </td>
+                        </td>*/}
                         <td>
                           {c.onlinePrice   && <div className={styles.nameSecondary}>Online: ₹{c.onlinePrice.toLocaleString("en-IN")}</div>}
                           {c.recordedPrice && <div className={styles.nameSecondary}>Recorded: ₹{c.recordedPrice.toLocaleString("en-IN")}</div>}
                           {!c.onlinePrice && !c.recordedPrice && <span style={{ color: "#9CA3AF", fontSize: 12 }}>—</span>}
                         </td>
                         <td><Badge variant={statusBadge(c.status) as any}>{c.status}</Badge></td>
-                        <td><Badge variant={approvalBadge(c.approvalStatus) as any}>{c.approvalStatus}</Badge></td>
+                        {/*<td><Badge variant={approvalBadge(c.approvalStatus) as any}>{c.approvalStatus}</Badge></td>*/}
                         <td>
                           <div className={styles.actions}>
                             <a

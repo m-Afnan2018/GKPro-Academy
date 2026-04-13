@@ -102,7 +102,7 @@ export default function Courses() {
                     style={course.thumbnailUrl ? undefined : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
                   >
                     {course.thumbnailUrl ? (
-                      <Image width={100} height={100} src={course.thumbnailUrl} alt={course.title} className={styles.img} />
+                      <img src={course.thumbnailUrl} alt={course.title} className={styles.img} />
                     ) : (
                       <h3 style={{color: 'white', position: 'absolute', top: '45%', bottom: 0, left: '10%', right: '10%', textAlign: 'center'}}>{course.title}</h3>
                     )}

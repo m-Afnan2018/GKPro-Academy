@@ -171,7 +171,7 @@ export default function EnrollmentsPage() {
               <div style={{ background: "#F9FAFB", borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Student</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  {[["Name", student?.name], ["Email", student?.email], ["Phone", (student as any)?.phone || "—"], ["Role", student?.role]].map(([k, v]) => (
+                  {[["Name", student?.name], ["Email", student?.email], ["Phone", (student as any)?.phone || "—"], ["Role", student?.role || "Student"]].map(([k, v]) => (
                     <div key={k}>
                       <div style={{ fontSize: 11, color: "#9CA3AF" }}>{k}</div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{v || "—"}</div>

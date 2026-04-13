@@ -305,6 +305,14 @@ export default function CourseDetailPage() {
     ? (course.categoryId as any).slug
     : null;
 
+  const subcatName = course.subcategoryId && typeof course.subcategoryId === "object"
+    ? (course.subcategoryId as any).name as string
+    : null;
+
+  const subcatSlug = course.subcategoryId && typeof course.subcategoryId === "object"
+    ? (course.subcategoryId as any).slug as string | null
+    : null;
+
   return (
     <>
       <Navbar />
@@ -319,6 +327,10 @@ export default function CourseDetailPage() {
             <nav className={styles.breadcrumb}>
               <Link href="/">Home</Link><span>›</span>
               {catName && catSlug && <><Link href={`/category/${catSlug}`}>{catName}</Link><span>›</span></>}
+              {subcatName && (subcatSlug
+                ? <><Link href={`/category/${catSlug}/?sub=${subcatSlug}`}>{subcatName}</Link><span>›</span></>
+                : <><span>{subcatName}</span><span>›</span></>
+              )}
               <span>{course.title}</span>
             </nav>
 
@@ -459,6 +471,8 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 )}
+                
+                {course.description && <p className={styles.overviewText}>{course.description}</p>}
               </section>
 
               {/* Requirements */}

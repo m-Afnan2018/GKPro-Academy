@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import { demoBookingsApi } from "@/lib/api";
 import styles from "./demo-booking.module.css";
+import Image from "next/image";
+import commonImages from "@/constants/commonImages";
 
 const TIME_SLOTS = [
   "9:00 AM – 10:00 AM",
@@ -81,12 +83,13 @@ export default function DemoBookingPage() {
             />
             <div className={styles.leftContent}>
               <Link href="/" className={styles.leftLogo}>
-                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                <Image src={commonImages.logo} alt="logo" width={100} height={100} style={{width: '150px', height: 'auto', objectFit: 'cover'}} />
+                {/*<svg width="36" height="36" viewBox="0 0 32 32" fill="none">
                   <circle cx="16" cy="16" r="16" fill="#D42B3A" />
                   <path d="M8 12l8-4 8 4-8 4-8-4z" fill="white" opacity="0.9" />
                   <path d="M8 12v6l8 4 8-4v-6" stroke="white" strokeWidth="1.5" fill="none" opacity="0.7" />
                 </svg>
-                <span>GKPro Academy</span>
+                <span>GKPro Academy</span>*/}
               </Link>
 
               <div className={styles.leftBody}>

@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
+import Image from "next/image";
+import commonImages from "@/constants/commonImages";
 
 type NavItem = { label: string; href: string; icon: React.ReactNode };
 type NavGroup = { heading: string; items: NavItem[] };
@@ -240,7 +242,7 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       {/* Logo */}
       <div className={styles.logoRow}>
-        <div className={styles.logoIcon}>
+        {/*<div className={styles.logoIcon}>
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="16" fill="#D42B3A" />
             <path d="M8 12l8-4 8 4-8 4-8-4z" fill="white" opacity="0.9" />
@@ -250,7 +252,8 @@ export default function Sidebar() {
         <div className={styles.logoText}>
           <span className={styles.logoName}>GKPro</span>
           <span className={styles.logoSub}>Admin Panel</span>
-        </div>
+        </div>*/}
+        <Image src={commonImages.logo} alt="logo" width={150} height={150} style={{width: '100%', height: 'auto', objectFit: 'cover', background: 'white', borderRadius: '1rem', padding: '1rem'}}/>
       </div>
 
       {/* Nav */}

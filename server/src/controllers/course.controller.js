@@ -59,6 +59,7 @@ const getCourses = asyncHandler(async (req, res) => {
 const getCourseBySlug = asyncHandler(async (req, res) => {
   const course = await Course.findOne({ slug: req.params.slug, status: "published" })
     .populate("categoryId")
+    .populate("subcategoryId", "name slug")
     .populate("faculty")
     .populate("createdBy", "name");
 

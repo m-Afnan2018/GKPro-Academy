@@ -482,6 +482,9 @@
 /* Auth avatar */
 .avatarWrap {
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .avatarBtn {
@@ -498,6 +501,16 @@
 
 .avatarBtn:hover {
   border-color: var(--primary);
+}
+
+.avatarImg {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #E5E7EB;
+  display: block;
+  flex-shrink: 0;
 }
 
 .avatarCircle {

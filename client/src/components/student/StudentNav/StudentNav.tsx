@@ -53,7 +53,11 @@ export default function StudentNav() {
           <Link href="/courses" className={styles.browseCta}>Browse Courses</Link>
           <div className={styles.avatarWrap}>
             <button className={styles.avatar} onClick={() => setMenuOpen(v => !v)}>
-              {initials}
+              {user?.avatarUrl
+                /* eslint-disable-next-line @next/next/no-img-element */
+                ? <img src={user.avatarUrl} alt={user.name} className={styles.avatarImg} />
+                : initials
+              }
             </button>
             {menuOpen && (
               <div className={styles.dropdown}>

@@ -1,23 +1,40 @@
 import styles from "./HowItWorks.module.css";
 
 export default function HowItWorks() {
-  return (
-    <section className={styles.section}>
-      <div className="container">
-        <div className={styles.topRow}>
-          <span className={styles.label}>
-            <svg className={styles.labelIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
-            WORKING PROCESS
-          </span>
-          <h2 className={styles.heading}>
-            How It <span className={styles.underline}>Work</span>
-          </h2>
-        </div>
+    return (
+        <section className={styles.section}>
+            <div className="container">
+                <div className={styles.topRow}>
+                    <span className={styles.label}>
+                        <svg
+                            className={styles.labelIcon}
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--primary)"
+                            strokeWidth="1.5"
+                        >
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                        </svg>
+                        WORKING PROCESS
+                    </span>
+                    <h2 className={styles.heading}>
+                        How It <span className={styles.underline}>Work</span>
+                    </h2>
+                </div>
 
-        <div className={styles.videoWrap}>
+                <iframe
+                    src="https://www.youtube.com/embed/vYjnt5jpeQA"
+                    width="100%"
+                    height="450"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    style={{ border: "none", borderRadius: "8px" }}
+                />
+
+                {/*<div className={styles.videoWrap}>
           <img
             src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=500&fit=crop&q=80"
             alt="How it works — intro video"
@@ -34,8 +51,8 @@ export default function HowItWorks() {
             </svg>
           </button>
 
-        </div>
-      </div>
-    </section>
-  );
+        </div>*/}
+            </div>
+        </section>
+    );
 }
