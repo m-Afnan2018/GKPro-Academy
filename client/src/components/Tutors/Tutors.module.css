@@ -60,7 +60,7 @@
 .inner {
   display: grid;
   grid-template-columns: 410px 1fr;
-  gap: 60px;
+  gap: 0px;
   align-items: start;
 }
 
@@ -212,10 +212,12 @@
 @media (max-width: 860px) {
   .inner {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .profileCard {
-    max-width: 350px;
+    /* max-width: 350px; */
+    width: 100%;
     margin: 0 auto;
     height: auto;
   }
