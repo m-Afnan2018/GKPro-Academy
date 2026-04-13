@@ -128,6 +128,11 @@ const adminCreateEnrollment = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, populated, "Enrolled successfully."));
 });
 
+// Shared helper used by payment.controller.js
+const hasActiveCourseEnrollment = async (studentId, courseId) => {
+  return Enrollment.findOne({ studentId, courseId, status: "active" });
+};
+
 module.exports = {
   getEnrollments,
   getEnrollment,
@@ -135,4 +140,5 @@ module.exports = {
   cancelEnrollment,
   createEnrollment,
   adminCreateEnrollment,
+  hasActiveCourseEnrollment,
 };

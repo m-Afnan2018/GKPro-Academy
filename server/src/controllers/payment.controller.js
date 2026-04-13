@@ -1,70 +1,89 @@
-const crypto   = require("crypto");
-const Payment  = require("../models/Payment");
+const crypto     = require("crypto");
+const Payment    = require("../models/Payment");
 const Enrollment = require("../models/Enrollment");
-const Batch    = require("../models/Batch");
-const CoursePlan = require("../models/CoursePlan");
-const ApiError = require("../utils/ApiError");
+const Course     = require("../models/Course");
+const ApiError   = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 const { createOrder, verifySignature } = require("../services/payment.service");
 const { hasActiveCourseEnrollment } = require("./enrollment.controller");
 
+/* ── helpers ─────────────────────────────────────────────── */
+
+/**
+ * Returns the base course price for a given mode.
+ * Throws if the mode is not available on this course.
+ */
+function resolveCoursePrice(course, mode) {
+  const price = mode === "online" ? course.onlinePrice : course.recordedPrice;
+  if (price == null) {
+    throw new ApiError(400, `This course does not have a ${mode} option.`);
+  }
+  return price;
+}
+
+/**
+ * Returns the book add-on price (0 if bookType is "none" or books are disabled).
+ * Throws if the requested book type is not configured on this course.
+ */
+function resolveBookPrice(course, bookType) {
+  if (!bookType || bookType === "none") return 0;
+  if (!course.bookEnabled) throw new ApiError(400, "This course does not have a book add-on.");
+
+  if (bookType === "ebook") {
+    if (!course.eBookPrice) throw new ApiError(400, "eBook is not available for this course.");
+    return course.eBookPrice;
+  }
+  if (bookType === "handbook") {
+    if (!course.handbookPrice) throw new ApiError(400, "Handbook is not available for this course.");
+    return course.handbookPrice;
+  }
+  throw new ApiError(400, "Invalid book type. Must be none, ebook, or handbook.");
+}
+
+/* ── createRazorpayOrder ─────────────────────────────────── */
+
 const createRazorpayOrder = asyncHandler(async (req, res) => {
-  const { planId, batchId, upgradeEnrollmentId } = req.body;
+  const { courseId, mode, bookType = "none", deliveryAddress } = req.body;
 
-  const [plan, batch] = await Promise.all([
-    CoursePlan.findById(planId),
-    Batch.findById(batchId),
-  ]);
-  if (!plan)  throw new ApiError(404, "Plan not found.");
-  if (!batch) throw new ApiError(404, "Batch not found.");
-
-  if (upgradeEnrollmentId) {
-    // Upgrade flow: validate that the old enrollment belongs to this student
-    const oldEnrollment = await Enrollment.findOne({
-      _id: upgradeEnrollmentId,
-      studentId: req.user._id,
-      status: "active",
-    });
-    if (!oldEnrollment) throw new ApiError(404, "Active enrollment to upgrade not found.");
-
-    // Block if selecting the exact same batch + plan
-    const sameBatch = oldEnrollment.batchId.toString() === batchId;
-    const samePlan  = planId && oldEnrollment.planId && oldEnrollment.planId.toString() === planId;
-    if (sameBatch && samePlan) {
-      throw new ApiError(409, "You are already on this plan and batch. Please choose a different plan or batch to switch.");
-    }
-  } else {
-    // Normal flow: block if already enrolled
-    const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
-    if (existing) {
-      throw new ApiError(
-        409,
-        "You are already enrolled in this course. Use the upgrade option to switch plans or batches."
-      );
-    }
+  if (!courseId) throw new ApiError(400, "courseId is required.");
+  if (!mode || !["online", "recorded"].includes(mode)) {
+    throw new ApiError(400, "mode must be 'online' or 'recorded'.");
+  }
+  if (bookType === "handbook" && !deliveryAddress?.trim()) {
+    throw new ApiError(400, "Delivery address is required for handbook.");
   }
 
-  const amountInPaise = plan.price * 100;
-  const order = await createOrder(amountInPaise);
+  const course = await Course.findById(courseId);
+  if (!course) throw new ApiError(404, "Course not found.");
+
+  // Block if already enrolled in this course
+  const existing = await hasActiveCourseEnrollment(req.user._id, courseId);
+  if (existing) throw new ApiError(409, "You are already enrolled in this course.");
+
+  const coursePrice = resolveCoursePrice(course, mode);
+  const bookPrice   = resolveBookPrice(course, bookType);
+  const total       = coursePrice + bookPrice;
+
+  const order = await createOrder(total * 100); // paise
 
   const payment = await Payment.create({
-    studentId: req.user._id,
-    amount: plan.price,
-    currency: "INR",
-    method: "razorpay",
+    studentId:       req.user._id,
+    amount:          total,
+    currency:        "INR",
+    method:          "razorpay",
     razorpayOrderId: order.id,
-    status: "pending",
+    status:          "pending",
   });
 
   res.json(
     new ApiResponse(
       200,
       {
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        key: process.env.RAZORPAY_KEY_ID,
+        orderId:   order.id,
+        amount:    order.amount,
+        currency:  order.currency,
+        key:       process.env.RAZORPAY_KEY_ID,
         paymentId: payment._id,
       },
       "Razorpay order created."
@@ -72,27 +91,20 @@ const createRazorpayOrder = asyncHandler(async (req, res) => {
   );
 });
 
+/* ── verifyRazorpayPayment ───────────────────────────────── */
+
 const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   const {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    planId,
-    batchId,
-    upgradeEnrollmentId,
+    courseId,
+    mode,
+    bookType = "none",
+    deliveryAddress,
   } = req.body;
 
-  // Log for debugging — remove once confirmed working
-  console.log("[verify] order:", razorpay_order_id, "| payment:", razorpay_payment_id, "| sig_len:", razorpay_signature?.length);
-
-  const isValid = verifySignature(
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  );
-
-  if (!isValid) {
-    // Log expected vs received to diagnose mismatch
+  if (!verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
     const expected = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -101,28 +113,20 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid payment signature.");
   }
 
-  // Find batch to get courseId for duplicate check
-  const batch = await Batch.findById(batchId);
-  if (!batch) throw new ApiError(404, "Batch not found.");
+  const course = await Course.findById(courseId);
+  if (!course) throw new ApiError(404, "Course not found.");
 
-  if (upgradeEnrollmentId) {
-    // Upgrade flow: validate old enrollment still belongs to this student
-    const oldEnrollment = await Enrollment.findOne({
-      _id: upgradeEnrollmentId,
-      studentId: req.user._id,
-      status: "active",
-    });
-    if (!oldEnrollment) throw new ApiError(404, "Active enrollment to upgrade not found.");
-  } else {
-    // Normal flow: safety check against duplicate enrollment
-    const existing = await hasActiveCourseEnrollment(req.user._id, batch.courseId);
-    if (existing) {
-      const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
-      return res.json(
-        new ApiResponse(200, { payment, enrollment: existing }, "Already enrolled. Payment recorded.")
-      );
-    }
+  // Safety check: if somehow already enrolled, record payment but don't double-enroll
+  const existing = await hasActiveCourseEnrollment(req.user._id, courseId);
+  if (existing) {
+    const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+    return res.json(
+      new ApiResponse(200, { payment, enrollment: existing }, "Already enrolled. Payment recorded.")
+    );
   }
+
+  const coursePrice = resolveCoursePrice(course, mode);
+  const bookPrice   = resolveBookPrice(course, bookType);
 
   const payment = await Payment.findOneAndUpdate(
     { razorpayOrderId: razorpay_order_id, status: "pending" },
@@ -136,27 +140,23 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   );
   if (!payment) throw new ApiError(404, "Payment record not found.");
 
-  const plan = await CoursePlan.findById(planId);
-  const expiresAt = plan && plan.validityDays > 0
-    ? new Date(Date.now() + plan.validityDays * 24 * 60 * 60 * 1000)
-    : null;
-
   const enrollment = await Enrollment.create({
-    studentId: req.user._id,
-    batchId,
-    planId,
-    expiresAt,
-    paymentId: payment._id,
-    status: "active",
+    studentId:       req.user._id,
+    courseId,
+    mode,
+    pricePaid:       coursePrice,
+    bookType,
+    deliveryAddress: bookType === "handbook" ? deliveryAddress : null,
+    bookPricePaid:   bookPrice,
+    paymentId:       payment._id,
+    status:          "active",
   });
 
   await Payment.findByIdAndUpdate(payment._id, { enrollmentId: enrollment._id });
-  await Batch.findByIdAndUpdate(batchId, { $inc: { enrolledCount: 1 } });
 
   const populated = await Enrollment.findById(enrollment._id)
     .populate("studentId", "name email phone")
-    .populate({ path: "batchId", populate: { path: "courseId", select: "title slug thumbnailUrl" } })
-    .populate("planId")
+    .populate("courseId",  "title slug thumbnailUrl onlinePrice recordedPrice")
     .populate("paymentId");
 
   console.log("[verify] SUCCESS — enrollment:", enrollment._id.toString());
@@ -166,50 +166,54 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   );
 });
 
+/* ── createManualPayment ─────────────────────────────────── */
+
 const createManualPayment = asyncHandler(async (req, res) => {
-  const { studentId, planId, batchId, amount } = req.body;
+  const { studentId, courseId, mode, amount } = req.body;
 
-  const [plan, batch] = await Promise.all([
-    CoursePlan.findById(planId),
-    Batch.findById(batchId),
-  ]);
-  if (!batch) throw new ApiError(404, "Batch not found.");
+  if (!studentId) throw new ApiError(400, "studentId is required.");
+  if (!courseId)  throw new ApiError(400, "courseId is required.");
+  if (!mode || !["online", "recorded"].includes(mode)) {
+    throw new ApiError(400, "mode must be 'online' or 'recorded'.");
+  }
 
-  // Block if student already enrolled at course level
-  const existing = await hasActiveCourseEnrollment(studentId, batch.courseId);
+  const course = await Course.findById(courseId);
+  if (!course) throw new ApiError(404, "Course not found.");
+
+  const existing = await hasActiveCourseEnrollment(studentId, courseId);
   if (existing) throw new ApiError(409, "Student is already enrolled in this course.");
 
-  const expiresAt = plan && plan.validityDays > 0
-    ? new Date(Date.now() + plan.validityDays * 24 * 60 * 60 * 1000)
-    : null;
+  const coursePrice = amount ?? resolveCoursePrice(course, mode);
 
   const payment = await Payment.create({
     studentId,
-    amount,
-    currency: "INR",
-    method: "manual",
-    isManual: true,
-    recordedBy: req.user._id,
-    status: "captured",
-    paidAt: new Date(),
+    amount:      coursePrice,
+    currency:    "INR",
+    method:      "manual",
+    isManual:    true,
+    recordedBy:  req.user._id,
+    status:      "captured",
+    paidAt:      new Date(),
   });
 
   const enrollment = await Enrollment.create({
     studentId,
-    batchId,
-    planId,
-    expiresAt,
-    paymentId: payment._id,
-    status: "active",
+    courseId,
+    mode,
+    pricePaid:  coursePrice,
+    bookType:   "none",
+    paymentId:  payment._id,
+    status:     "active",
   });
 
   await Payment.findByIdAndUpdate(payment._id, { enrollmentId: enrollment._id });
-  await Batch.findByIdAndUpdate(batchId, { $inc: { enrolledCount: 1 } });
 
   res.status(201).json(
     new ApiResponse(201, { payment, enrollment }, "Manual payment recorded.")
   );
 });
+
+/* ── getPayments ─────────────────────────────────────────── */
 
 const getPayments = asyncHandler(async (req, res) => {
   const page  = parseInt(req.query.page)  || 1;
@@ -233,13 +237,15 @@ const getPayments = asyncHandler(async (req, res) => {
   );
 });
 
+/* ── razorpayWebhook ─────────────────────────────────────── */
+
 // Registered in index.js BEFORE express.json() so req.body is a raw Buffer
 const razorpayWebhook = async (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
   if (webhookSecret) {
     const signature = req.headers["x-razorpay-signature"];
-    const expected = crypto
+    const expected  = crypto
       .createHmac("sha256", webhookSecret)
       .update(req.body)
       .digest("hex");
@@ -256,8 +262,8 @@ const razorpayWebhook = async (req, res) => {
   }
 
   if (event.event === "payment.captured") {
-    const payload = event.payload?.payment?.entity ?? {};
-    const orderId   = payload.order_id;
+    const payload  = event.payload?.payment?.entity ?? {};
+    const orderId  = payload.order_id;
     const paymentId = payload.id;
     if (orderId) {
       await Payment.findOneAndUpdate(

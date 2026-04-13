@@ -101,10 +101,10 @@ export default function Team() {
                             <div className={styles.socials}>
                                 {m.socials.map((s) => (
                                     <a
-                                        key={s}
+                                        key={s.name}
                                         href={s.link}
                                         className={styles.socialBtn}
-                                        aria-label={s}
+                                        aria-label={s.name}
                                     >
                                         <SocialIcon type={s.name} />
                                     </a>
