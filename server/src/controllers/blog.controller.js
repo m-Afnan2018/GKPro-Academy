@@ -12,9 +12,13 @@ const getBlogs = asyncHandler(async (req, res) => {
   const isPublic = !req.user || req.user.role === "student";
   const filter = isPublic ? { isPublished: true, approvalStatus: "approved" } : {};
 
+  if (req.query.category) filter.categoryId = req.query.category;
+
   let blogQuery = Blog.find(filter)
     .populate("authorId", "name")
+    .populate("categoryId", "name slug")
     .populate("courseTags", "title slug")
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
   // if (isPublic) blogQuery = blogQuery.select("-content");
@@ -30,6 +34,7 @@ const getBlogs = asyncHandler(async (req, res) => {
 const getBlogById = asyncHandler(async (req, res) => {
   const blog = await Blog.findById(req.params.id)
     .populate("authorId", "name")
+    .populate("categoryId", "name slug")
     .populate("courseTags", "title slug");
   if (!blog) throw new ApiError(404, "Blog not found.");
 
@@ -48,6 +53,7 @@ const getBlogBySlug = asyncHandler(async (req, res) => {
 
   const blog = await Blog.findOne(filter)
     .populate("authorId", "name")
+    .populate("categoryId", "name slug")
     .populate("courseTags", "title slug");
   if (!blog) throw new ApiError(404, "Blog not found.");
   res.json(new ApiResponse(200, blog, "Blog retrieved."));

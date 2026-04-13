@@ -6,6 +6,8 @@ import { authApi } from "@/lib/api";
 import { saveStudentSession, getStudentToken } from "@/lib/studentAuth";
 import { saveSession, getToken } from "@/lib/auth";
 import styles from "./login.module.css";
+import Image from "next/image";
+import commonImages from "@/constants/commonImages";
 
 function AuthPage() {
   const router       = useRouter();
@@ -101,7 +103,7 @@ function AuthPage() {
       <div className={styles.panel}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+          {/*<svg width="40" height="40" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="16" fill="#D42B3A"/>
             <path d="M8 12l8-4 8 4-8 4-8-4z" fill="white" opacity="0.9"/>
             <path d="M8 12v6l8 4 8-4v-6" stroke="white" strokeWidth="1.5" fill="none" opacity="0.7"/>
@@ -109,7 +111,8 @@ function AuthPage() {
           <div>
             <div className={styles.logoName}>GKPro</div>
             <div className={styles.logoSub}>Academy</div>
-          </div>
+          </div>*/}
+          <Image src={commonImages.logo} width={150} height={150} alt="logo" style={{width: '150px', height: 'auto', objectFit: 'cover'}}/>
         </Link>
 
         {/* Tab switcher */}

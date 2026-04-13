@@ -5,15 +5,16 @@ import Topbar from "@/components/admin/Topbar/Topbar";
 import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Badge from "@/components/admin/Badge/Badge";
 import Modal from "@/components/admin/Modal/Modal";
-import { bannersApi, type Banner } from "@/lib/api";
+import { bannersApi, coursesApi, type Banner, type Course } from "@/lib/api";
 import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import styles from "../admin.module.css";
 
 const LIMIT = 10;
-const blank = () => ({ imageUrl: "", linkUrl: "", altText: "", sortOrder: 0, isActive: true });
+const blank = () => ({ imageUrl: "", linkUrl: "", altText: "", sortOrder: 0, isActive: true, featuredCourseId: "" });
 
 type BannerFormData = ReturnType<typeof blank>;
-function BannerForm({ f, setF, err }: { f: BannerFormData; setF: (v: BannerFormData) => void; err: string }) {
+
+function BannerForm({ f, setF, err, courses }: { f: BannerFormData; setF: (v: BannerFormData) => void; err: string; courses: Course[] }) {
   return (
     <div className={styles.form}>
       {err && <div className={styles.errorBanner}>{err}</div>}
@@ -21,7 +22,14 @@ function BannerForm({ f, setF, err }: { f: BannerFormData; setF: (v: BannerFormD
         <ImageUpload label="Banner Image *" value={f.imageUrl} onChange={(url) => setF({ ...f, imageUrl: url })} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.formLabel}>Link URL</label>
+        <label className={styles.formLabel}>Featured Course <span style={{ color: "#9CA3AF", fontWeight: 400, textTransform: "none" }}>(shown as card on hero)</span></label>
+        <select className={styles.formSelect} value={f.featuredCourseId} onChange={(e) => setF({ ...f, featuredCourseId: e.target.value })}>
+          <option value="">— No featured course —</option>
+          {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Link URL <span style={{ color: "#9CA3AF", fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
         <input className={styles.formInput} placeholder="https://…" value={f.linkUrl} onChange={(e) => setF({ ...f, linkUrl: e.target.value })} />
       </div>
       <div className={styles.formGroup}>
@@ -50,6 +58,7 @@ export default function BannersPage() {
   const [page, setPage]       = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
+  const [courses, setCourses] = useState<Course[]>([]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState(blank());
@@ -76,13 +85,25 @@ export default function BannersPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    coursesApi.list(1, 200).then(r => setCourses(r.data.courses ?? [])).catch(() => {});
+  }, []);
+
   const openEdit = (b: Banner) => {
     setEditItem(b);
-    setEForm({ imageUrl: b.imageUrl, linkUrl: b.linkUrl ?? "", altText: b.altText ?? "", sortOrder: b.sortOrder, isActive: b.isActive });
+    const fcId = b.featuredCourseId
+      ? (typeof b.featuredCourseId === "object" ? (b.featuredCourseId as Course)._id : b.featuredCourseId)
+      : "";
+    setEForm({ imageUrl: b.imageUrl, linkUrl: b.linkUrl ?? "", altText: b.altText ?? "", sortOrder: b.sortOrder, isActive: b.isActive, featuredCourseId: fcId });
     setSaveError("");
   };
 
-  const buildBody = (f: typeof form) => ({ ...f, linkUrl: f.linkUrl || undefined, altText: f.altText || undefined });
+  const buildBody = (f: typeof form) => ({
+    ...f,
+    linkUrl: f.linkUrl || undefined,
+    altText: f.altText || undefined,
+    featuredCourseId: f.featuredCourseId || null,
+  });
 
   const handleCreate = async () => {
     setCreating(true); setCreateError("");
@@ -176,7 +197,7 @@ export default function BannersPage() {
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="New Banner">
-        <BannerForm f={form} setF={setForm} err={createError} />
+        <BannerForm f={form} setF={setForm} err={createError} courses={courses} />
         <div className={styles.formActions} style={{ marginTop: 4 }}>
           <button className={styles.btnOutline} onClick={() => setShowCreate(false)}>Cancel</button>
           <button className={styles.btnPrimary} onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create"}</button>
@@ -185,7 +206,7 @@ export default function BannersPage() {
 
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit Banner">
         {editItem && <>
-          <BannerForm f={eForm} setF={setEForm} err={saveError} />
+          <BannerForm f={eForm} setF={setEForm} err={saveError} courses={courses} />
           <div className={styles.formActions} style={{ marginTop: 4 }}>
             <button className={styles.btnOutline} onClick={() => setEditItem(null)}>Cancel</button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>

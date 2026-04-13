@@ -840,11 +840,13 @@ export default function CourseDetailPage() {
                           style={{ flex: 1, textAlign: "center", textDecoration: "none" }}>
                           Continue Learning
                         </Link>
+                        {/* Also Buy other mode — commented out for now
                         {!alreadyHasSelected && coursePrice && (
                           <button className={styles.buyBtn} style={{ flex: 1, background: "#1D4ED8" }} onClick={handleBuyNow}>
                             Also Buy {selectedMode === "online" ? "Online" : "Recorded"}
                           </button>
                         )}
+                        */}
                       </div>
                     </div>
                   );

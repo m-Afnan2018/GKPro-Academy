@@ -4,6 +4,7 @@ const bannerSchema = new mongoose.Schema({
   imageUrl: { type: String, required: true },
   linkUrl: { type: String },
   altText: { type: String },
+  featuredCourseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
   sortOrder: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

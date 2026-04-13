@@ -1,6 +1,5 @@
 const Resource   = require("../models/Resource");
 const Enrollment = require("../models/Enrollment");
-const Batch      = require("../models/Batch");
 const ApiError   = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
@@ -8,18 +7,11 @@ const { submitForApproval } = require("../services/approval.service");
 
 /* ── helpers ─────────────────────────────────────────── */
 async function isEnrolledInCourse(userId, courseId) {
-  const batches = await Batch.find({ courseId }).select("_id");
-  if (!batches.length) return false;
   const enrollment = await Enrollment.findOne({
     studentId: userId,
-    batchId:   { $in: batches.map((b) => b._id) },
-    status:    "active",
+    courseId,
+    status: "active",
   });
-  return !!enrollment;
-}
-
-async function isEnrolledInBatch(userId, batchId) {
-  const enrollment = await Enrollment.findOne({ studentId: userId, batchId, status: "active" });
   return !!enrollment;
 }
 
@@ -60,6 +52,11 @@ const getResources = asyncHandler(async (req, res) => {
   } else if (!isAdmin) {
     filter.isPublic = true;
     filter.approvalStatus = "approved";
+  }
+
+  // Filter by enrollment mode when provided (student portal)
+  if (req.query.mode && (req.query.mode === "online" || req.query.mode === "recorded")) {
+    filter.$or = [{ targetMode: "both" }, { targetMode: req.query.mode }];
   }
 
   const [resources, total] = await Promise.all([

@@ -18,15 +18,15 @@ export default function HowItWorks() {
                             <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                             <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
-                        WORKING PROCESS
+                        Watch Demo Lecture
                     </span>
                     <h2 className={styles.heading}>
-                        How It <span className={styles.underline}>Work</span>
+                        Experience Our Teaching Style <span className={styles.underline}>Before Joining</span>
                     </h2>
                 </div>
 
                 <iframe
-                    src="https://www.youtube.com/embed/vYjnt5jpeQA"
+                    src="https://www.youtube.com/embed/rBytI-rDIXM"
                     width="100%"
                     height="450"
                     allowFullScreen

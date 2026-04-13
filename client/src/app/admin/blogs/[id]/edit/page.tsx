@@ -6,7 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard/AdminGuard";
 import Sidebar from "@/components/admin/Sidebar/Sidebar";
 import ImageUpload from "@/components/admin/ImageUpload/ImageUpload";
 import RichEditor from "@/components/admin/RichEditor/RichEditor";
-import { blogsApi } from "@/lib/api";
+import { blogsApi, coursesApi, type Category } from "@/lib/api";
 import styles from "../../../admin.module.css";
 import editorStyles from "../../editor.module.css";
 
@@ -17,11 +17,17 @@ export default function EditBlogPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [isPublished, setPublished] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    coursesApi.categories().then(r => setCategories(r.data.categories ?? [])).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +43,8 @@ export default function EditBlogPage() {
           setImageUrl((b as any).imageUrl ?? "");
           setTagsInput((b as any).tags?.join(", ") ?? "");
           setPublished(b.isPublished ?? false);
+          const cat = (b as any).categoryId;
+          setCategoryId(cat ? (typeof cat === "object" ? cat._id : cat) : "");
           setLoaded(true);
         } else {
           setError(json.message ?? "Failed to load post.");
@@ -52,7 +60,7 @@ export default function EditBlogPage() {
     try {
       const pub = publish ?? isPublished;
       const tags = tagsInput.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0);
-      await blogsApi.update(id, { title, content, imageUrl: imageUrl || undefined, isPublished: pub, tags } as any);
+      await blogsApi.update(id, { title, content, imageUrl: imageUrl || undefined, isPublished: pub, tags, categoryId: categoryId || null } as any);
 
       console.log(tags)
       router.push("/admin/blogs");
@@ -123,6 +131,19 @@ export default function EditBlogPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className={editorStyles.metaSection}>
+                  <div className={editorStyles.metaLabel}>Category</div>
+                  <select
+                    className={editorStyles.tagsInput}
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <option value="">— No category —</option>
+                    {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
                 </div>
 
                 <div className={editorStyles.metaSection}>

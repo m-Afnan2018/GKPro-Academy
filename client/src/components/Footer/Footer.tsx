@@ -1,6 +1,12 @@
+"use client";
+import { useEffect, useState } from "react";
 import commonImages from "@/constants/commonImages";
 import styles from "./Footer.module.css";
 import Link from "next/link";
+
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+
+interface Category { _id: string; name: string; slug: string; }
 
 const companyLinks = [
     { name: "Home", href: "/" },
@@ -9,12 +15,17 @@ const companyLinks = [
     { name: "Blog", href: "/blogs" },
     { name: "Contact Us", href: "/contact" },
 ];
-const usefulLinks = ["CA Courses", "Skill Course"];
-
-const MAP_EMBED_URL =
-    "https://www.google.com/maps?q=30.7333,76.7794&output=embed";
 
 export default function Footer() {
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    useEffect(() => {
+        fetch(`${BASE}/categories?limit=20`)
+            .then(r => r.json())
+            .then(j => { if (j.success) setCategories(j.data.categories ?? []); })
+            .catch(() => {});
+    }, []);
+
     return (
         <footer className={styles.footer}>
             <div className={`container ${styles.inner}`}>
@@ -91,13 +102,20 @@ export default function Footer() {
                         />
                     </svg>
                     <ul className={styles.linkList}>
-                        {usefulLinks.map((l) => (
-                            <li key={l}>
-                                <Link href="#" className={styles.link}>
-                                    {l}
-                                </Link>
-                            </li>
-                        ))}
+                        {categories.length > 0
+                            ? categories.map((cat) => (
+                                <li key={cat._id}>
+                                    <Link href={`/category/${cat.slug}`} className={styles.link}>
+                                        {cat.name}
+                                    </Link>
+                                </li>
+                            ))
+                            : (
+                                <>
+                                    <li><Link href="/courses" className={styles.link}>All Courses</Link></li>
+                                </>
+                            )
+                        }
                     </ul>
                 </div>
 
@@ -239,7 +257,7 @@ export default function Footer() {
                             </div>
                         </div>
 
-                        <div className={styles.mapContainer}>
+                        {/*<div className={styles.mapContainer}>
                             <iframe
                                 src={MAP_EMBED_URL}
                                 width="100%"
@@ -250,7 +268,7 @@ export default function Footer() {
                                 title="GKPro Academy Location"
                                 referrerPolicy="no-referrer-when-downgrade"
                             ></iframe>
-                        </div>
+                        </div>*/}
                     </div>
                 </div>
             </div>

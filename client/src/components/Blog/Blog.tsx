@@ -13,7 +13,7 @@ const CARD_GRADIENTS = [
 
 interface BlogPost { _id: string; title: string; slug: string; imageUrl?: string; authorId?: { name?: string } | string; createdAt: string; courseTags?: { title: string }[]; }
 
-export default function Blog() {
+export default function   Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
@@ -63,12 +63,12 @@ export default function Blog() {
                   className={styles.imgWrap}
                   style={post.imageUrl ? { background: `url(${post.imageUrl}) center/cover no-repeat` } : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
                 >
-                  <span className={styles.categoryBadge}>
+                  {/*<span className={styles.categoryBadge}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                     </svg>
                     {tag}
-                  </span>
+                  </span>*/}
                 </div>
                 <div className={styles.body}>
                   <div className={styles.meta}>

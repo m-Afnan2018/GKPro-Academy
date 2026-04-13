@@ -470,6 +470,7 @@ export interface Banner {
   imageUrl: string;
   linkUrl?: string;
   altText?: string;
+  featuredCourseId?: Course | string | null;
   sortOrder: number;
   isActive: boolean;
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
@@ -494,6 +495,7 @@ export interface Blog {
   slug: string;
   content: string;
   authorId: Partial<User> | string;
+  categoryId?: Category | string | null;
   isPublished: boolean;
   tags?: string[];
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
@@ -550,5 +552,6 @@ export interface Resource {
   sortOrder: number;
   duration?: string;
   isPublic: boolean;
+  targetMode: "both" | "online" | "recorded";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
 }

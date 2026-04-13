@@ -210,7 +210,7 @@ export default function ContactPage() {
       </div>
 
       {/* Map */}
-      <div className={styles.mapSection}>
+      {/*<div className={styles.mapSection}>
         <iframe
           className={styles.mapFrame}
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3424.6!2d76.0!3d30.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDU0JzAwLjAiTiA3NsKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1234567890"
@@ -219,7 +219,7 @@ export default function ContactPage() {
           referrerPolicy="no-referrer-when-downgrade"
           title="GKPro Academy Location"
         />
-      </div>
+      </div>*/}
 
       <Footer />
     </>

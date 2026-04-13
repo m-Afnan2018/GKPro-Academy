@@ -15,7 +15,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
 const blank = (): Partial<Resource> => ({
   title: "", description: "", type: "video", url: "",
-  section: "General", sortOrder: 0, duration: "", isPublic: false,
+  section: "General", sortOrder: 0, duration: "", isPublic: false, targetMode: "both",
 });
 
 const TYPE_COLORS: Record<string, string> = {
@@ -130,6 +130,19 @@ function ResourceForm({ f, setF, err }: FormProps) {
           </select>
         </div>
       </div>
+
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>Available For</label>
+        <select
+          className={styles.formSelect}
+          value={f.targetMode ?? "both"}
+          onChange={e => setF({ ...f, targetMode: e.target.value as Resource["targetMode"] })}
+        >
+          <option value="both">Both (Online & Recorded)</option>
+          <option value="online">Online (Live) only</option>
+          <option value="recorded">Recorded only</option>
+        </select>
+      </div>
     </div>
   );
 }
@@ -209,6 +222,7 @@ export default function CourseMaterialsPage() {
       title: r.title, description: r.description ?? "", type: r.type,
       url: r.url, section: r.section ?? "General",
       sortOrder: r.sortOrder, duration: r.duration ?? "", isPublic: r.isPublic,
+      targetMode: r.targetMode ?? "both",
     });
     setSaveError("");
   };
@@ -411,6 +425,16 @@ export default function CourseMaterialsPage() {
                                 {r.isPublic && (
                                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#059669", background: "#D1FAE5", padding: "2px 7px", borderRadius: 4, letterSpacing: "0.5px" }}>
                                     Public
+                                  </span>
+                                )}
+                                {r.targetMode === "online" && (
+                                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#0369A1", background: "#E0F2FE", padding: "2px 7px", borderRadius: 4, letterSpacing: "0.5px" }}>
+                                    Live only
+                                  </span>
+                                )}
+                                {r.targetMode === "recorded" && (
+                                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#7C3AED", background: "#EDE9FE", padding: "2px 7px", borderRadius: 4, letterSpacing: "0.5px" }}>
+                                    Recorded only
                                   </span>
                                 )}
                               </div>

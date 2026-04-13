@@ -13,7 +13,12 @@ const getBanners = asyncHandler(async (req, res) => {
   const filter = isPublic ? { isActive: true, approvalStatus: "approved" } : {};
 
   const [banners, total] = await Promise.all([
-    Banner.find(filter).sort({ sortOrder: 1 }).populate("createdBy", "name").skip(skip).limit(limit),
+    Banner.find(filter)
+      .sort({ sortOrder: 1 })
+      .populate("createdBy", "name")
+      .populate("featuredCourseId", "title slug description thumbnailUrl onlinePrice recordedPrice onlineOriginalPrice recordedOriginalPrice")
+      .skip(skip)
+      .limit(limit),
     Banner.countDocuments(filter),
   ]);
   res.json(new ApiResponse(200, { banners, total, page, limit }, "Banners retrieved."));

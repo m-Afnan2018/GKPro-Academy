@@ -11,6 +11,7 @@ const resourceSchema = new mongoose.Schema({
   sortOrder:   { type: Number, default: 0 },
   duration:    { type: String, trim: true },   // e.g. "45 min"
   isPublic:    { type: Boolean, default: false },
+  targetMode:  { type: String, enum: ["both", "online", "recorded"], default: "both" },
   leadCaptureRequired: { type: Boolean, default: false },
   createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   approvalStatus: {

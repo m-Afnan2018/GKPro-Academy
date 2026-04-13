@@ -7,6 +7,7 @@ const blogSchema = new mongoose.Schema({
   content: { type: String, required: true },
   imageUrl: { type: String },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "CourseCategory", default: null },
   courseTags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
   tags: [{ type: String, trim: true }],
   isPublished: { type: Boolean, default: false },

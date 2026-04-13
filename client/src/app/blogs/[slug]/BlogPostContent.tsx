@@ -95,7 +95,7 @@ export default function BlogPostPage() {
               <div className={styles.articleBody}>
                 {/* Meta */}
                 <div className={styles.meta}>
-                  <span className={styles.metaTag}>Software</span>
+                  {/*<span className={styles.metaTag}>Software</span>*/}
                   <span className={styles.metaItem}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />

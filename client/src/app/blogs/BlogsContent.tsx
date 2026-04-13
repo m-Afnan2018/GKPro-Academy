@@ -31,6 +31,7 @@ export default function BlogListPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [popular, setPopular] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -42,7 +43,8 @@ export default function BlogListPage() {
     setLoading(true);
     try {
       const q = search ? `&search=${encodeURIComponent(search)}` : "";
-      const res = await fetch(`${BASE}/blogs?isPublished=true&page=${page}&limit=${limit}${q}`);
+      const cat = activeCategory ? `&category=${activeCategory}` : "";
+      const res = await fetch(`${BASE}/blogs?isPublished=true&page=${page}&limit=${limit}${q}${cat}`);
       const json = await res.json();
       if (json.success) {
         setBlogs(json.data.blogs ?? []);
@@ -50,7 +52,14 @@ export default function BlogListPage() {
       }
     } catch { }
     finally { setLoading(false); }
-  }, [page, search]);
+  }, [page, search, activeCategory]);
+
+  const handleCategoryClick = (id: string) => {
+    setActiveCategory(id);
+    setPage(1);
+    setSearch("");
+    setSearchInput("");
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -97,7 +106,11 @@ export default function BlogListPage() {
     return pages;
   };
 
-  console.log(blogs);
+  const blogCatName = (b: Blog) => {
+    if (!b.categoryId) return null;
+    if (typeof b.categoryId === "object" && "name" in b.categoryId) return (b.categoryId as Category).name;
+    return null;
+  };
 
   return (
     <>
@@ -163,6 +176,9 @@ export default function BlogListPage() {
                       </svg>
                       {formatDate(b.publishedAt ?? b.createdAt)}
                     </span>
+                    {blogCatName(b) && (
+                      <span className={styles.catBadge}>{blogCatName(b)}</span>
+                    )}
                   </div>
 
                   <Link href={`/blogs/${b.slug}`} className={styles.cardTitle}>{b.title}</Link>
@@ -232,10 +248,24 @@ export default function BlogListPage() {
           <div className={styles.sideCard}>
             <h3 className={styles.sideTitle}>Category</h3>
             <ul className={styles.catList}>
-              {(categories.length > 0 ? categories.slice(0, 6) : [{ _id: "ca", name: "CA" }, { _id: "sc", name: "Skill Course" }] as any[]).map((c: any) => (
-                <li key={c._id} className={styles.catItem}>
+              <li key="all" className={styles.catItem}>
+                <button
+                  className={`${styles.catBtn} ${activeCategory === "" ? styles.catBtnActive : ""}`}
+                  onClick={() => handleCategoryClick("")}
+                >
                   <BookIcon />
-                  <span>{c.name}</span>
+                  <span>All Posts</span>
+                </button>
+              </li>
+              {categories.map((c) => (
+                <li key={c._id} className={styles.catItem}>
+                  <button
+                    className={`${styles.catBtn} ${activeCategory === c._id ? styles.catBtnActive : ""}`}
+                    onClick={() => handleCategoryClick(c._id)}
+                  >
+                    <BookIcon />
+                    <span>{c.name}</span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -261,14 +291,14 @@ export default function BlogListPage() {
           )}
 
           {/* Tags */}
-          <div className={styles.sideCard}>
+          {/*<div className={styles.sideCard}>
             <h3 className={styles.sideTitle}>Tags</h3>
             <div className={styles.tagCloud}>
               {STATIC_TAGS.map((t) => (
                 <button key={t} className={styles.tag}>{t}</button>
               ))}
             </div>
-          </div>
+          </div>*/}
         </aside>
       </div>
 

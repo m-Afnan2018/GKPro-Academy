@@ -54,13 +54,8 @@ interface BatchCourse {
 interface EnrollmentDetail {
   _id: string;
   studentId: any;
-  batchId: {
-    _id: string;
-    name: string;
-    mode: "live" | "recorded" | "one_on_one";
-    courseId: BatchCourse;
-  };
-  planId: any;
+  courseId: BatchCourse | string;
+  mode: "online" | "recorded";
   status: string;
   enrolledAt: string;
   expiresAt?: string;
@@ -89,18 +84,12 @@ export default function LearnPage() {
         const e = json.data as EnrollmentDetail;
         setEnrollment(e);
 
-        const courseId = e.batchId?.courseId?._id;
-        const batchId  = e.batchId?._id;
+        const courseId = typeof e.courseId === "object" ? e.courseId._id : e.courseId;
 
         if (courseId) {
-          // Fetch batch-specific materials first, then course-wide materials
-          const [batchRj, courseRj] = await Promise.all([
-            batchId ? fetchJson(`${BASE}/resources?batchId=${batchId}&limit=200`) : Promise.resolve(null),
-            fetchJson(`${BASE}/resources?courseId=${courseId}&limit=200`),
-          ]);
-          const batchRes: Resource[]  = batchRj?.data?.resources  ?? [];
-          const courseRes: Resource[] = courseRj?.data?.resources ?? [];
-          const all = [...batchRes, ...courseRes];
+          const modeParam = e.mode ? `&mode=${e.mode}` : "";
+          const courseRj = await fetchJson(`${BASE}/resources?courseId=${courseId}&limit=200${modeParam}`);
+          const all: Resource[] = courseRj?.data?.resources ?? [];
           setResources(all);
           if (all.length) setActiveResource(all[0]);
         }
@@ -122,8 +111,8 @@ export default function LearnPage() {
     return acc;
   }, {});
 
-  const course = enrollment?.batchId?.courseId;
-  const batchMode = enrollment?.batchId?.mode;
+  const course = typeof enrollment?.courseId === "object" ? enrollment.courseId as BatchCourse : null;
+  const batchMode = enrollment?.mode;
 
   const renderContent = (r: Resource) => {
     if (r.type === "video") {
@@ -217,9 +206,8 @@ export default function LearnPage() {
                   <h1 className={styles.courseTitle}>{course?.title ?? "Course"}</h1>
                   <div className={styles.metaRow}>
                     <span className={styles.metaBadge}>
-                      {batchMode === "recorded" ? "Recorded" : batchMode === "one_on_one" ? "One-on-One" : "Online (Live)"}
+                      {batchMode === "recorded" ? "Recorded" : "Online (Live)"}
                     </span>
-                    <span className={styles.metaText}>{enrollment.batchId?.name}</span>
                     {enrollment.expiresAt && (
                       <span className={styles.metaText}>· Expires {new Date(enrollment.expiresAt).toLocaleDateString()}</span>
                     )}
