@@ -2,8 +2,8 @@ const nodemailer = require("nodemailer");
 
 /* ── Transporter ────────────────────────────────────── */
 const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST   || "smtp.gmail.com",
-  port:   parseInt(process.env.SMTP_PORT || "587"),
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
   secure: process.env.SMTP_SECURE === "true",   // true = 465, false = STARTTLS
   auth: {
     user: process.env.SMTP_USER,
@@ -18,13 +18,16 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
     .map(
       (d) =>
         `<td style="padding:0 5px;">
-          <div style="
-            width:52px; height:62px; background:#fff; border:2px solid #E5E7EB;
-            border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
-            font-size:28px; font-weight:800; color:#111827;
-            display:inline-flex; align-items:center; justify-content:center;
-            line-height:62px; text-align:center;
-          ">${d}</div>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="
+                width:62px; height:62px; background:#fff; border:2px solid #E5E7EB;
+                border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
+                font-size:28px; font-weight:800; color:#111827;
+                text-align:center; vertical-align:middle;
+              ">${d}</td>
+            </tr>
+          </table>
         </td>`
     )
     .join("");
@@ -57,11 +60,14 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
                   GKPro Academy
                 </span>
               </div>
-              <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;
-                          margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
-                          line-height:56px;text-align:center;">
-                <span style="font-size:26px;line-height:56px;">🔐</span>
-              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 10px;">
+                <tr>
+                  <td style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;
+                            text-align:center;vertical-align:middle;font-size:26px;">
+                    🔐
+                  </td>
+                </tr>
+              </table>
               <h1 style="margin:0;font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.3px;">
                 Password Reset Request
               </h1>
@@ -143,17 +149,29 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
 /* ── Signup Welcome OTP Template ────────────────────── */
 function buildSignupOtpHtml({ name, otp, expiryMinutes = 10 }) {
   const digits = String(otp).split("");
+  // `<td style="padding:0 5px;">
+  //   <div style="
+  //     width:52px; height:62px; margin: auto; background:#fff; border:2px solid #E5E7EB;
+  //     border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
+  //     font-size:28px; font-weight:800; color:#111827;
+  //     display:inline-flex; align-items:center; justify-content:center;
+  //     line-height:62px; text-align:center;
+  //   ">${d}</div>
+  // </td>`
   const digitBoxes = digits
     .map(
       (d) =>
         `<td style="padding:0 5px;">
-          <div style="
-            width:52px; height:62px; background:#fff; border:2px solid #E5E7EB;
-            border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
-            font-size:28px; font-weight:800; color:#111827;
-            display:inline-flex; align-items:center; justify-content:center;
-            line-height:62px; text-align:center;
-          ">${d}</div>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="
+                width:62px; height:62px; background:#fff; border:2px solid #E5E7EB;
+                border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
+                font-size:28px; font-weight:800; color:#111827;
+                text-align:center; vertical-align:middle;
+              ">${d}</td>
+            </tr>
+          </table>
         </td>`
     )
     .join("");
@@ -267,7 +285,7 @@ async function sendOtpEmail({ to, name, otp }) {
 
 async function sendSignupOtpEmail({ to, name, otp }) {
   const html = buildSignupOtpHtml({ name, otp });
-  const temp  = await transporter.sendMail({
+  const temp = await transporter.sendMail({
     from: `"GKPro Academy" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
     to,
     subject: `${otp} – Verify your GKPro Academy account`,
