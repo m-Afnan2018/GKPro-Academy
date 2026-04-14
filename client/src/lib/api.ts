@@ -467,10 +467,10 @@ export interface Announcement {
 
 export interface Banner {
   _id: string;
-  imageUrl: string;
-  linkUrl?: string;
-  altText?: string;
-  featuredCourseId?: Course | string | null;
+  desktopImageUrl: string;
+  mobileImageUrl?: string | null;
+  linkUrl?: string | null;
+  altText?: string | null;
   sortOrder: number;
   isActive: boolean;
   approvalStatus: "draft" | "pending" | "approved" | "rejected";

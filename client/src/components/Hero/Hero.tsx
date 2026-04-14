@@ -1,239 +1,180 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useEffect, useState, useRef, useCallback } from "react";
 import styles from "./Hero.module.css";
-import homeImage from "@/constants/images";
-import icons from "@/constants/icons";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
-
-interface FeaturedCourse {
-  _id: string;
-  title: string;
-  slug: string;
-  description?: string;
-  thumbnailUrl?: string;
-  onlinePrice?: number | null;
-  recordedPrice?: number | null;
-  onlineOriginalPrice?: number | null;
-  recordedOriginalPrice?: number | null;
-}
+const BASE     = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const INTERVAL = 5000;   // auto-advance ms
+const DURATION = 520;    // must match CSS animation duration
 
 interface BannerItem {
   _id: string;
-  imageUrl: string;
-  linkUrl?: string;
-  altText?: string;
-  featuredCourseId?: FeaturedCourse | null;
+  desktopImageUrl: string;
+  mobileImageUrl?: string | null;
+  linkUrl?: string | null;
+  altText?: string | null;
 }
 
 export default function Hero() {
-    const [banners, setBanners] = useState<BannerItem[]>([]);
-    const [current, setCurrent] = useState(0);
-    const [tick, setTick] = useState(0); // bumping this resets the auto-advance timer
+  const [banners, setBanners] = useState<BannerItem[]>([]);
+  const [current, setCurrent] = useState(0);
+  // entering = index of slide currently animating in
+  const [entering, setEntering]   = useState<number | null>(null);
+  const [dir, setDir]             = useState<"next" | "prev">("next");
+  const [paused, setPaused]       = useState(false);
+  const [animKey, setAnimKey]     = useState(0);  // resets progress bar
 
-    useEffect(() => {
-        fetch(`${BASE}/banners?limit=20`)
-            .then(r => r.json())
-            .then(j => { if (j.success && j.data.banners?.length) setBanners(j.data.banners); })
-            .catch(() => {});
-    }, []);
+  const busyRef    = useRef(false);
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const count = banners.length;
+  useEffect(() => {
+    fetch(`${BASE}/banners?limit=20`)
+      .then(r => r.json())
+      .then(j => { if (j.success) setBanners(j.data.banners ?? []); })
+      .catch(() => {});
+  }, []);
 
-    // Auto-advance every 5 s; resets when user interacts (tick changes)
-    useEffect(() => {
-        if (count < 2) return;
-        const id = setInterval(() => setCurrent(c => (c + 1) % count), 7000);
-        return () => clearInterval(id);
-    }, [count, tick]);
+  const count = banners.length;
 
-    const handlePrev = () => {
-        setCurrent(c => (c - 1 + count) % count);
-        setTick(t => t + 1);
-    };
-    const handleNext = () => {
-        setCurrent(c => (c + 1) % count);
-        setTick(t => t + 1);
-    };
+  /* navigate to a specific index with direction */
+  const navigate = useCallback((toIndex: number, direction: "next" | "prev") => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setDir(direction);
+    setEntering(toIndex);
+    setAnimKey(k => k + 1);
 
+    setTimeout(() => {
+      setCurrent(toIndex);
+      setEntering(null);
+      busyRef.current = false;
+    }, DURATION);
+  }, []);
+
+  const goNext = useCallback(() => navigate((current + 1) % count, "next"), [current, count, navigate]);
+  const goPrev = useCallback(() => navigate((current - 1 + count) % count, "prev"), [current, count, navigate]);
+  const goTo   = useCallback((i: number) => navigate(i, i > current ? "next" : "prev"), [current, navigate]);
+
+  /* auto-advance timer */
+  const stopTimer  = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  const startTimer = useCallback(() => {
+    stopTimer();
+    if (count > 1 && !paused) timerRef.current = setInterval(goNext, INTERVAL);
+  }, [count, paused, goNext]);
+
+  useEffect(() => { startTimer(); return stopTimer; }, [startTimer]);
+
+  if (!count) return null;
+
+  /* Determine classes for each slide */
+  const getSlideClass = (i: number) => {
+    if (i === entering) {
+      // This slide is sliding IN
+      return `${styles.slide} ${dir === "next" ? styles.enterFromRight : styles.enterFromLeft}`;
+    }
+    if (i === current) {
+      // This slide is the background (being replaced) — only when a transition is active
+      return `${styles.slide} ${entering !== null ? styles.slideBehind : styles.slideFront}`;
+    }
+    return `${styles.slide} ${styles.slideHidden}`;
+  };
+
+  const activeBanner = banners[entering ?? current];
+
+  return (
+    <section
+      className={styles.hero}
+      onMouseEnter={() => { setPaused(true);  stopTimer();  }}
+      onMouseLeave={() => { setPaused(false); startTimer(); }}
+    >
+      {/* Slide stack */}
+      <div className={styles.slides}>
+        {banners.map((b, i) => (
+          <div key={b._id} className={getSlideClass(i)} aria-hidden={i !== current && i !== entering}>
+            <SlideContent banner={b} />
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation arrows */}
+      {count > 1 && (
+        <>
+          <button className={`${styles.arrow} ${styles.arrowLeft}`} onClick={() => { goPrev(); startTimer(); }} aria-label="Previous">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button className={`${styles.arrow} ${styles.arrowRight}`} onClick={() => { goNext(); startTimer(); }} aria-label="Next">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </>
+      )}
+
+      {/* Dot indicators */}
+      {count > 1 && (
+        <div className={styles.dots}>
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              className={`${styles.dot} ${i === (entering ?? current) ? styles.dotActive : ""}`}
+              onClick={() => { goTo(i); startTimer(); }}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {count > 1 && !paused && (
+        <div className={styles.progressTrack}>
+          <div className={styles.progressBar} key={animKey} />
+        </div>
+      )}
+
+      {/* Clickable badge */}
+      {activeBanner?.linkUrl && (
+        <div className={styles.linkBadge} aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          Click to visit
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SlideContent({ banner }: { banner: BannerItem }) {
+  const inner = (
+    <picture className={styles.picture}>
+      {banner.mobileImageUrl && (
+        <source media="(max-width: 768px)" srcSet={banner.mobileImageUrl} />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={banner.desktopImageUrl}
+        alt={banner.altText ?? "Banner"}
+        className={styles.img}
+        draggable={false}
+      />
+    </picture>
+  );
+
+  if (banner.linkUrl) {
+    const isExternal = banner.linkUrl.startsWith("http");
     return (
-        <section className={styles.hero}>
-
-            {/* ── Background slides ── */}
-            <div className={styles.bgSlides}>
-                {count > 0
-                    ? banners.map((b, i) => (
-                        <div
-                            key={b._id}
-                            className={styles.bgSlide}
-                            style={{
-                                backgroundImage: `url(${b.imageUrl})`,
-                                opacity: i === current ? 1 : 0,
-                            }}
-                        />
-                    ))
-                    : (
-                        <div
-                            className={styles.bgSlide}
-                            style={{ backgroundImage: `url(${homeImage.banner.src})`, opacity: 1 }}
-                        />
-                    )
-                }
-            </div>
-
-            {/* Dark gradient overlay */}
-            <div className={styles.overlay} />
-
-            {/* Nav arrows — only shown when there are multiple banners */}
-            {count > 1 && (
-                <>
-                    <button
-                        className={`${styles.arrow} ${styles.arrowLeft}`}
-                        aria-label="Previous"
-                        onClick={handlePrev}
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </button>
-                    <button
-                        className={`${styles.arrow} ${styles.arrowRight}`}
-                        aria-label="Next"
-                        onClick={handleNext}
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </button>
-
-                    {/* Dot indicators */}
-                    <div className={styles.dots}>
-                        {banners.map((_, i) => (
-                            <button
-                                key={i}
-                                className={`${styles.dot} ${i === current ? styles.dotActive : ""}`}
-                                aria-label={`Slide ${i + 1}`}
-                                onClick={() => { setCurrent(i); setTick(t => t + 1); }}
-                            />
-                        ))}
-                    </div>
-                </>
-            )}
-
-            <div className={`container ${styles.inner}`}>
-                {/* Left: Text content */}
-                <div className={styles.content}>
-                    <div className={styles.tag}>
-                        <span className={styles.tagIcon}>⚡</span>
-                        Start Your CA &amp; Accounting Career Today
-                    </div>
-
-                    <h1 className={styles.heading}>
-                        Master CA Preparation &amp;
-                        <br />
-                        In-Demand Accounting
-                        <br />
-                        Skills — Learn Smart,
-                        <br />
-                        Grow Fast
-                    </h1>
-
-                    <p className={styles.subtext}>
-                        Join GKPro and get expert-led CA coaching and practical
-                        skill courses. Build strong concepts, gain industry
-                        tools expertise, and move closer to a successful finance
-                        career.
-                    </p>
-
-                    <div className={styles.ctas}>
-                        <Link href="/courses" className={styles.btnFind}>
-                            Find Courses
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </Link>
-                        <a href="/about" className={styles.btnLearn}>
-                            Learn More
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                {/* Right: Floating cards */}
-                <div className={styles.cards}>
-                    <div className={styles.statColumn}>
-                        <div className={styles.statCard}>
-                            <div className={styles.statIcon}>
-                                <Image alt="redHat" src={icons.redHat} width={54} height={44} style={{ width: "54px", height: "44px", objectFit: "contain" }} />
-                            </div>
-                            <div className={styles.statNum}>5000+</div>
-                            <div className={styles.statLabel}>Successful Learners</div>
-                        </div>
-                        <div className={`${styles.statCard} ${styles.statCardRed}`}>
-                            <div className={styles.statIcon}>
-                                <Image alt="apple" src={icons.apple} width={54} height={44} style={{ width: "54px", height: "44px", objectFit: "contain" }} />
-                            </div>
-                            <div className={styles.statNum}>120+</div>
-                            <div className={styles.statLabel}>Live &amp; Recorded Classes</div>
-                        </div>
-                    </div>
-
-                    {(() => {
-                        const fc = banners[current]?.featuredCourseId ?? null;
-                        if (!fc) return null;
-                        const price = fc.onlinePrice ?? fc.recordedPrice ?? null;
-                        const originalPrice = fc.onlineOriginalPrice ?? fc.recordedOriginalPrice ?? null;
-                        const discount = price && originalPrice && originalPrice > price
-                            ? Math.round((1 - price / originalPrice) * 100)
-                            : null;
-                        const mode = fc.onlinePrice ? "Online" : "Recorded";
-                        return (
-                            <Link href={`/courses/${fc.slug}`} className={styles.imageCard} style={{ textDecoration: "none" }}>
-                                <div className={styles.onlineBadge}>{mode}</div>
-                                <div className={styles.cardImageWrap}>
-                                    {fc.thumbnailUrl ? (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img
-                                            src={fc.thumbnailUrl}
-                                            alt={fc.title}
-                                            className={styles.cardImg}
-                                        />
-                                    ) : (
-                                        <div className={styles.cardImgPlaceholder}>
-                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
-                                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles.cardInfo}>
-                                    <div className={styles.cardTitle}>{fc.title}</div>
-                                    {fc.description && (
-                                        <p className={styles.cardDesc}>
-                                            {fc.description.length > 90 ? fc.description.slice(0, 90) + "…" : fc.description}
-                                        </p>
-                                    )}
-                                    {price != null && (
-                                        <div className={styles.cardPriceRow}>
-                                            <div className={styles.cardPricing}>
-                                                {originalPrice && originalPrice > price && (
-                                                    <span className={styles.originalPrice}>₹{originalPrice.toLocaleString("en-IN")}</span>
-                                                )}
-                                                <span className={styles.currentPrice}>₹{price.toLocaleString("en-IN")}</span>
-                                            </div>
-                                            {discount && <div className={styles.discountBadge}>{discount}% Off</div>}
-                                        </div>
-                                    )}
-                                </div>
-                            </Link>
-                        );
-                    })()}
-                </div>
-            </div>
-        </section>
+      <a
+        href={banner.linkUrl}
+        className={styles.link}
+        target={isExternal ? "_blank" : "_self"}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        aria-label={banner.altText ?? "View more"}
+      >
+        {inner}
+      </a>
     );
+  }
+  return <div className={styles.link}>{inner}</div>;
 }

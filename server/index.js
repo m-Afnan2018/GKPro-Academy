@@ -9,7 +9,7 @@ const app = express();
 
 // Security & parsing
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL || process.env.CLIENT_URL_WWW || "http://localhost:3000", credentials: true }));
 
 // Razorpay webhook MUST be registered before express.json() — needs raw body for HMAC verification
 const { razorpayWebhook } = require("./src/controllers/payment.controller");

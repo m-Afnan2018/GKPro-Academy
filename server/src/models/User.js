@@ -8,8 +8,13 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: ["student", "manager", "admin"], default: "student" },
   avatarUrl: { type: String, default: null },
-  isActive: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now },
+  isActive:   { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: true },   // false only during signup OTP flow
+  createdAt:  { type: Date, default: Date.now },
+  resetOtp:        { type: String, select: false, default: null },
+  resetOtpExpiry:  { type: Date,   select: false, default: null },
+  signupOtp:       { type: String, select: false, default: null },
+  signupOtpExpiry: { type: Date,   select: false, default: null },
 });
 
 userSchema.pre("save", async function (next) {

@@ -16,7 +16,6 @@ const getBanners = asyncHandler(async (req, res) => {
     Banner.find(filter)
       .sort({ sortOrder: 1 })
       .populate("createdBy", "name")
-      .populate("featuredCourseId", "title slug description thumbnailUrl onlinePrice recordedPrice onlineOriginalPrice recordedOriginalPrice")
       .skip(skip)
       .limit(limit),
     Banner.countDocuments(filter),

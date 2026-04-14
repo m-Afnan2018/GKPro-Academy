@@ -1,391 +1,222 @@
+/* ── Container ── */
 .hero {
   position: relative;
-  min-height: 560px;
-  display: flex;
-  align-items: center;
+  width: 100%;
   overflow: hidden;
   background: #0f0f1e;
-  /* fallback while images load */
+  line-height: 0;
 }
 
-/* ── Background slide layers ── */
-.bgSlides {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+/* ── Slide stack (all absolutely positioned) ── */
+.slides {
+  position: relative;
+  width: 100%;
+  /* height driven by .slideFront which is position:relative */
 }
 
-.bgSlide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: opacity 0.9s ease;
+.slide {
+  width: 100%;
 }
 
-.overlay {
+/* The current (visible) slide — sits in normal flow and sets container height */
+.slideFront {
+  position: relative;
+  z-index: 1;
+}
+
+/* The slide being pushed behind during a transition */
+.slideBehind {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(120deg,
-      rgba(10, 10, 30, 0.72) 0%,
-      rgba(10, 10, 30, 0.45) 55%,
-      rgba(10, 10, 30, 0.25) 100%);
-  pointer-events: none;
 }
+
+/* Slides not involved in the current transition */
+.slideHidden {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  visibility: hidden;
+}
+
+/* ── Enter animations ── */
+
+/* Next: new slide enters from the RIGHT → moves left to center */
+.enterFromRight {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: enterFromRight 0.52s cubic-bezier(0.42, 0, 0.18, 1) forwards;
+}
+
+/* Prev: new slide enters from the LEFT → moves right to center */
+.enterFromLeft {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: enterFromLeft 0.52s cubic-bezier(0.42, 0, 0.18, 1) forwards;
+}
+
+@keyframes enterFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes enterFromLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Image / link wrapper ── */
+.link {
+  display: block;
+  width: 100%;
+  line-height: 0;
+  cursor: default;
+}
+
+a.link {
+  cursor: pointer;
+}
+
+a.link:hover .img {
+  transform: scale(1.015);
+}
+
+.picture {
+  display: block;
+  width: 100%;
+  line-height: 0;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+/* ── Navigation arrows ── */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.arrow:hover {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.85);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.arrowLeft  { left: 16px; }
+.arrowRight { right: 16px; }
 
 /* ── Dot indicators ── */
 .dots {
   position: absolute;
-  bottom: 20px;
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 20;
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 8px;
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: none;
   background: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
+  border: none;
   padding: 0;
-  transition: all 0.25s;
+  cursor: pointer;
+  transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .dotActive {
-  width: 24px;
+  width: 28px;
   border-radius: 4px;
   background: #fff;
 }
 
-/* Nav arrows */
-.arrow {
+/* ── Progress bar ── */
+.progressTrack {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
-  transition: background 0.2s;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  z-index: 20;
+  overflow: hidden;
 }
 
-.arrow:hover {
-  background: rgba(255, 255, 255, 0.28);
+.progressBar {
+  height: 100%;
+  background: #D42B3A;
+  animation: progress 5s linear forwards;
 }
 
-.arrowLeft {
-  left: 16px;
+@keyframes progress {
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 
-.arrowRight {
+/* ── Link badge ── */
+.linkBadge {
+  position: absolute;
+  bottom: 18px;
   right: 16px;
-}
-
-.inner {
-  position: relative;
-  z-index: 3;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: center;
-  padding-top: 60px;
-  padding-bottom: 60px;
-}
-
-/* Left content */
-.content {
-  color: white;
-  text-align: justify;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(212, 43, 57, 0.844);
-  border: 1px solid rgba(212, 43, 58, 0.5);
-  color: #FFB3BB;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 16px;
-  border-radius: 50px;
-  margin-bottom: 20px;
-  letter-spacing: 0.3px;
-}
-
-.tagIcon {
-  font-size: 14px;
-}
-
-.heading {
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: 800;
-  color: white;
-  line-height: 1.15;
-  margin-bottom: 18px;
-  letter-spacing: -0.5px;
-  text-align: justify;
-}
-
-.subtext {
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.78);
-  max-width: 440px;
-  margin-bottom: 32px;
-  text-align: justify;
-}
-
-.ctas {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.btnFind {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px 28px;
-  background: var(--primary);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 50px;
-  border: 2px solid var(--primary);
-  transition: all 0.25s;
-}
-
-.btnFind:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
-}
-
-.btnLearn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px 28px;
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 50px;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  transition: all 0.25s;
-}
-
-.btnLearn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: white;
-}
-
-/* Right cards */
-.cards {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 14px;
-}
-
-/* Left column: stacked stat cards */
-.statColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  flex-shrink: 0;
-}
-
-/* Stat card */
-.statCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background-color: white;
-  color: #1a1a1a;
-  padding: 28px 24px;
-  border-radius: var(--radius);
-  width: 180px;
-  box-shadow: var(--shadow-md);
-  text-align: center;
-}
-
-.statCardRed {
-  background: var(--primary);
-  color: white;
-}
-
-.statCardRed .statLabel {
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.statCardRed .statNum {
-  color: white;
-}
-
-.statIcon {
+  z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-.statNum {
-  font-family: var(--font-heading);
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.statLabel {
-  font-size: 12px;
-  color: #666;
-  font-weight: 400;
-  line-height: 1.4;
-}
-
-/* Course image card (right column) */
-.imageCard {
-  background: white;
-  border-radius: var(--radius);
-  overflow: hidden;
-  width: 290px;
-  box-shadow: var(--shadow-md);
-  position: relative;
-  flex-shrink: 0;
-}
-
-.onlineBadge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: #1E7B5E;
-  color: white;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 11px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 50px;
-  z-index: 2;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   letter-spacing: 0.3px;
+  pointer-events: none;
 }
 
-.cardImageWrap {
-  height: 195px;
-  overflow: hidden;
-}
-
-.cardImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cardImgPlaceholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1a1a2e, #3a3a5c);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cardInfo {
-  padding: 14px 16px 18px;
-}
-
-.cardTitle {
-  font-family: var(--font-heading);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 6px;
-  line-height: 1.3;
-}
-
-.cardDesc {
-  font-size: 12.5px;
-  color: var(--text-body);
-  line-height: 1.55;
-  text-align: justify;
-  margin-bottom: 12px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  /* number of lines */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Price row */
-.cardPriceRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.cardPricing {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.originalPrice {
-  font-size: 13px;
-  color: #999;
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-.currentPrice {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--primary);
-  letter-spacing: -0.3px;
-}
-
-.discountBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #22C55E;
-  color: white;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 7px 18px;
-  border-radius: 50px;
-  white-space: nowrap;
-  letter-spacing: 0.2px;
-}
-
-@media (max-width: 860px) {
-  .inner {
-    grid-template-columns: 1fr;
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .img {
+    max-height: 420px;
   }
-
-  .cards {
-    display: none;
+  .arrow {
+    width: 36px;
+    height: 36px;
   }
+  .arrowLeft  { left: 10px; }
+  .arrowRight { right: 10px; }
+  .linkBadge  { display: none; }
+}
 
-  .hero {
-    min-height: 480px;
-  }
+@media (max-width: 480px) {
+  .img { max-height: 280px; }
 }

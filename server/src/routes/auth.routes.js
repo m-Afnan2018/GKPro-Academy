@@ -3,7 +3,7 @@ const multer   = require("multer");
 const path     = require("path");
 const fs       = require("fs");
 const router   = express.Router();
-const { register, login, getMe, updateMe, updateAvatar } = require("../controllers/auth.controller");
+const { register, login, getMe, updateMe, updateAvatar, forgotPassword, resetPassword, verifySignup } = require("../controllers/auth.controller");
 const { protect } = require("../middleware/auth");
 const ApiError    = require("../utils/ApiError");
 
@@ -25,8 +25,11 @@ const avatarUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register",       register);
+router.post("/verify-signup",  verifySignup);
+router.post("/login",          login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password",  resetPassword);
 router.get("/me", protect, getMe);
 router.patch("/me", protect, updateMe);
 

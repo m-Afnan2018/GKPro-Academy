@@ -8,26 +8,46 @@ import styles from "./profile.module.css";
 
 const SERVER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api").replace(/\/api$/, "");
 
+const EyeIcon = ({ open }: { open: boolean }) => open ? (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+) : (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
 export default function StudentProfilePage() {
   const user = getStudentUser();
 
-  const [name, setName] = useState(user?.name ?? "");
-  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [name, setName]       = useState(user?.name ?? "");
+  const [phone, setPhone]     = useState(user?.phone ?? "");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [avatar, setAvatar] = useState(user?.avatarUrl ?? "");
+  const [confirm, setConfirm]   = useState("");
+  const [avatar, setAvatar]     = useState(user?.avatarUrl ?? "");
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // password visibility
+  const [showPw, setShowPw]         = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // confirmation popup
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccess, setShowSuccess]           = useState(false);
 
   const initials = user?.name
     ? user.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
     : "S";
 
   const handleAvatarUpload = async (file: File) => {
-    setUploading(true); setError(""); setSuccess("");
+    setUploading(true); setError("");
     try {
       const tk = getStudentToken();
       const fd = new FormData();
@@ -38,11 +58,8 @@ export default function StudentProfilePage() {
         body: fd,
       }).then((r) => r.json());
       if (!res.success) throw new Error(res.message ?? "Upload failed");
-      const newUrl = res.data.avatarUrl;
-      setAvatar(newUrl);
-      // Persist updated user to session so navbar/other pages reflect the new avatar
+      setAvatar(res.data.avatarUrl);
       saveStudentSession(tk!, res.data.user);
-      setSuccess("Profile photo updated.");
     } catch (e: any) {
       setError(e.message ?? "Upload failed");
     } finally {
@@ -50,25 +67,32 @@ export default function StudentProfilePage() {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(""); setSuccess("");
-    if (password && password !== confirm) { setError("Passwords do not match."); return; }
-    if (password && password.length < 6) { setError("Password must be at least 6 characters."); return; }
-    setSaving(true);
+  /* Called after user confirms in the popup */
+  const doSave = async () => {
+    setShowConfirmModal(false);
+    setError(""); setSaving(true);
     try {
       const body: Record<string, any> = { name, phone, avatarUrl: avatar || null };
       if (password) body.password = password;
       const res = await authApi.updateMe(body);
-      const token = getStudentToken()!;
-      saveStudentSession(token, res.data);
-      setSuccess("Profile updated successfully.");
+      saveStudentSession(getStudentToken()!, res.data);
       setPassword(""); setConfirm("");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3500);
     } catch (err: any) {
       setError(err.message ?? "Update failed.");
     } finally {
       setSaving(false);
     }
+  };
+
+  /* Validate then open confirm popup */
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (password && password !== confirm) { setError("Passwords do not match."); return; }
+    if (password && password.length < 6)  { setError("Password must be at least 6 characters."); return; }
+    setShowConfirmModal(true);
   };
 
   return (
@@ -112,7 +136,6 @@ export default function StudentProfilePage() {
 
             <div className={styles.divider} />
 
-            {success && <div className={styles.successBox}>{success}</div>}
             {error && <div className={styles.errorBox}>{error}</div>}
 
             <form onSubmit={handleSave} className={styles.form}>
@@ -143,13 +166,33 @@ export default function StudentProfilePage() {
               <div className={styles.row}>
                 <div className={styles.group}>
                   <label className={styles.label}>New Password</label>
-                  <input className={styles.input} type="password" value={password}
-                    onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 characters" />
+                  <div className={styles.pwWrap}>
+                    <input
+                      className={styles.input}
+                      type={showPw ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                    />
+                    <button type="button" className={styles.eyeBtn} onClick={() => setShowPw(v => !v)} tabIndex={-1}>
+                      <EyeIcon open={showPw} />
+                    </button>
+                  </div>
                 </div>
                 <div className={styles.group}>
                   <label className={styles.label}>Confirm Password</label>
-                  <input className={styles.input} type="password" value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat new password" />
+                  <div className={styles.pwWrap}>
+                    <input
+                      className={styles.input}
+                      type={showConfirm ? "text" : "password"}
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      placeholder="Repeat new password"
+                    />
+                    <button type="button" className={styles.eyeBtn} onClick={() => setShowConfirm(v => !v)} tabIndex={-1}>
+                      <EyeIcon open={showConfirm} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -179,6 +222,42 @@ export default function StudentProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Confirmation Modal ── */}
+      {showConfirmModal && (
+        <div className={styles.overlay} onClick={() => setShowConfirmModal(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalIcon}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D42B3A" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 className={styles.modalTitle}>Save Changes?</h3>
+            <p className={styles.modalText}>
+              Are you sure you want to update your profile
+              {password ? " and change your password" : ""}?
+            </p>
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel} onClick={() => setShowConfirmModal(false)}>
+                Cancel
+              </button>
+              <button className={styles.modalConfirm} onClick={doSave}>
+                Yes, Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Success Toast ── */}
+      {showSuccess && (
+        <div className={styles.toast}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+          </svg>
+          Profile updated successfully!
+        </div>
+      )}
     </StudentGuard>
   );
 }
