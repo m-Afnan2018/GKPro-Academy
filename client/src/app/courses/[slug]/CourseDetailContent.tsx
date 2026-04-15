@@ -814,7 +814,8 @@ export default function CourseDetailPage() {
                       {originalCoursePrice && originalCoursePrice > coursePrice && (
                         <span className={styles.priceOld}>₹{originalCoursePrice.toLocaleString("en-IN")}</span>
                       )}
-                    </div>
+                      <span className={styles.priceOld} style={{textDecoration: 'none'}}>(Including GST)</span>
+                      </div>
                     {discountPct > 0 && (
                       <div className={styles.discBadge}>Discount of {discountPct}% applied</div>
                     )}
@@ -920,7 +921,7 @@ export default function CourseDetailPage() {
                   {bookAddon > 0 && coursePrice != null && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: "#111827", borderTop: "1px solid #E5E7EB", paddingTop: 8, marginTop: 4 }}>
                       <span>Total</span>
-                      <span>₹{totalPrice!.toLocaleString("en-IN")}</span>
+                      <span>₹{totalPrice!.toLocaleString("en-IN")} (Including GST.)</span>
                     </div>
                   )}
                   {selectedBook === "handbook" && deliveryAddress && (
