@@ -29,12 +29,18 @@ function serveUploads(uploadsDir) {
     }
 
     if (MATERIAL_EXTS.has(ext)) {
+      // Accept token from Authorization header OR ?token= query param
+      // (browsers can't send headers when navigating directly or embedding iframes)
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      const rawToken = (authHeader && authHeader.startsWith("Bearer "))
+        ? authHeader.split(" ")[1]
+        : (req.query.token || null);
+
+      if (!rawToken) {
         return res.status(401).json({ success: false, message: "Authentication required to access this file." });
       }
       try {
-        jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
+        jwt.verify(rawToken, process.env.JWT_SECRET);
       } catch {
         return res.status(401).json({ success: false, message: "Invalid or expired token." });
       }

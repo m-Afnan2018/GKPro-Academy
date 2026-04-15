@@ -9,6 +9,17 @@ import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
+/** Append ?token= to local /uploads/ URLs so the browser can load them directly */
+function authedUrl(url: string): string {
+  if (!url) return url;
+  const isUpload = url.includes("/uploads/");
+  if (!isUpload) return url;
+  const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
+  if (!tk) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}token=${encodeURIComponent(tk)}`;
+}
+
 const TYPE_LABELS: Record<string, string> = {
   video: "Video", pdf: "PDF", link: "Link", doc: "Document", meet: "Live Class",
 };
@@ -115,6 +126,8 @@ export default function LearnPage() {
   const batchMode = enrollment?.mode;
 
   const renderContent = (r: Resource) => {
+    const resourceUrl = authedUrl(r.url);
+
     if (r.type === "video") {
       // YouTube embed
       const ytMatch = r.url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
@@ -144,7 +157,38 @@ export default function LearnPage() {
           </div>
         );
       }
+      // Local uploaded video — embed directly with token
+      if (r.url.includes("/uploads/")) {
+        return (
+          <div style={{ borderRadius: 12, overflow: "hidden", background: "#000" }}>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video controls style={{ width: "100%", maxHeight: 480 }} src={resourceUrl}>
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      }
     }
+
+    if (r.type === "pdf" && r.url.includes("/uploads/")) {
+      // Embedded PDF viewer for local files
+      return (
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+          <iframe
+            src={resourceUrl}
+            style={{ width: "100%", height: 600, border: "none" }}
+            title={r.title}
+          />
+          <div style={{ padding: "10px 16px", background: "#F9FAFB", borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "flex-end" }}>
+            <a href={resourceUrl} target="_blank" rel="noreferrer" download
+              style={{ fontSize: 13, color: "#D42B3A", fontWeight: 600, textDecoration: "none" }}>
+              Download PDF ↗
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     if (r.type === "meet") {
       return (
         <div style={{ background: "linear-gradient(135deg,#1a1a2e,#3a3a5c)", borderRadius: 12, padding: "40px 32px", textAlign: "center" }}>
@@ -165,7 +209,8 @@ export default function LearnPage() {
         </div>
       );
     }
-    // PDF / link / doc — open in new tab
+
+    // PDF (external) / link / doc — open in new tab
     return (
       <div style={{ background: "#F9FAFB", borderRadius: 12, padding: "40px 32px", textAlign: "center" }}>
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
@@ -174,7 +219,7 @@ export default function LearnPage() {
         <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 6 }}>{r.title}</div>
         {r.description && <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 20 }}>{r.description}</div>}
         {r.duration && <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>Duration: {r.duration}</div>}
-        <a href={r.url} target="_blank" rel="noreferrer"
+        <a href={resourceUrl} target="_blank" rel="noreferrer"
           style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#D42B3A", color: "#fff", padding: "12px 28px", borderRadius: 50, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
           Open {TYPE_LABELS[r.type] ?? r.type}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -251,7 +296,7 @@ export default function LearnPage() {
                       <div className={styles.sectionTitle}>Your Books</div>
                       {course.eBookUrl && (
                         <a
-                          href={course.eBookUrl}
+                          href={authedUrl(course.eBookUrl)}
                           target="_blank"
                           rel="noreferrer"
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, textDecoration: "none", transition: "background 0.15s" }}
@@ -269,7 +314,7 @@ export default function LearnPage() {
                       )}
                       {course.handbookUrl && (
                         <a
-                          href={course.handbookUrl}
+                          href={authedUrl(course.handbookUrl)}
                           target="_blank"
                           rel="noreferrer"
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, textDecoration: "none", transition: "background 0.15s" }}

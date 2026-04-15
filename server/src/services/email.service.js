@@ -56,9 +56,12 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
           <tr>
             <td style="background:linear-gradient(135deg,#C0202F 0%,#D42B3A 100%);padding:32px 40px;text-align:center;">
               <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
-                <span style="font-family:'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:0.5px;">
-                  GKPro Academy
-                </span>
+                <img
+                  src="https://gkproacademy.com/logo.svg"
+                  alt="GKPro Academy"
+                  width="140"
+                  style="display:block;height:auto;border:0;"
+                />
               </div>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 10px;">
                 <tr>
@@ -149,15 +152,6 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
 /* ── Signup Welcome OTP Template ────────────────────── */
 function buildSignupOtpHtml({ name, otp, expiryMinutes = 10 }) {
   const digits = String(otp).split("");
-  // `<td style="padding:0 5px;">
-  //   <div style="
-  //     width:52px; height:62px; margin: auto; background:#fff; border:2px solid #E5E7EB;
-  //     border-radius:10px; font-family:'Segoe UI',Arial,sans-serif;
-  //     font-size:28px; font-weight:800; color:#111827;
-  //     display:inline-flex; align-items:center; justify-content:center;
-  //     line-height:62px; text-align:center;
-  //   ">${d}</div>
-  // </td>`
   const digitBoxes = digits
     .map(
       (d) =>
@@ -195,9 +189,12 @@ function buildSignupOtpHtml({ name, otp, expiryMinutes = 10 }) {
           <tr>
             <td style="background:linear-gradient(135deg,#C0202F 0%,#D42B3A 100%);padding:32px 40px;text-align:center;">
               <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
-                <span style="font-family:'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:0.5px;">
-                  GKPro Academy
-                </span>
+                <img
+                  src="https://gkproacademy.com/logo.svg"
+                  alt="GKPro Academy"
+                  width="140"
+                  style="display:block;height:auto;border:0;"
+                />
               </div>
               <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;
                           margin:0 auto 10px;text-align:center;line-height:56px;">
@@ -285,15 +282,13 @@ async function sendOtpEmail({ to, name, otp }) {
 
 async function sendSignupOtpEmail({ to, name, otp }) {
   const html = buildSignupOtpHtml({ name, otp });
-  const temp = await transporter.sendMail({
+  await transporter.sendMail({
     from: `"GKPro Academy" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
     to,
     subject: `${otp} – Verify your GKPro Academy account`,
     text: `Hi ${name},\n\nYour email verification OTP is: ${otp}\n\nThis code expires in 10 minutes.\n\nGKPro Academy`,
     html,
   });
-
-  console.log(temp);
 }
 
 module.exports = { sendOtpEmail, sendSignupOtpEmail };
