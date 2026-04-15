@@ -55,7 +55,7 @@ function buildOtpHtml({ name, otp, expiryMinutes = 10 }) {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#C0202F 0%,#D42B3A 100%);padding:32px 40px;text-align:center;">
-              <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
+              <div style="display:inline-block;background:rgba(255,255,255,1);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
                 <img
                   src="https://gkproacademy.com/logo.svg"
                   alt="GKPro Academy"
@@ -188,7 +188,7 @@ function buildSignupOtpHtml({ name, otp, expiryMinutes = 10 }) {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#C0202F 0%,#D42B3A 100%);padding:32px 40px;text-align:center;">
-              <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
+              <div style="display:inline-block;background:rgba(255,255,255,1);border-radius:12px;padding:10px 20px;margin-bottom:14px;">
                 <img
                   src="https://gkproacademy.com/logo.svg"
                   alt="GKPro Academy"

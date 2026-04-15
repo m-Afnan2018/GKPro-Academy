@@ -10,6 +10,8 @@ import styles from "./course.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 const PLACEHOLDER_IMG = "https://placehold.co/600x400";
+// Base64-embedded logo so Razorpay can display it even on localhost
+const RAZORPAY_LOGO = "https://gkproacademy.com/logo.png";
 
 interface CourseDetail { course: Course; faqs: Faq[]; }
 
@@ -223,6 +225,7 @@ export default function CourseDetailPage() {
               email: getStudentUser()?.email ?? "",
               contact: getStudentUser()?.phone ?? "",
             },
+            image: RAZORPAY_LOGO,
             theme: { color: "#D42B3A" },
           };
           const rz = new (window as any).Razorpay(options);

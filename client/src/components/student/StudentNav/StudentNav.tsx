@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getStudentUser, clearStudentSession } from "@/lib/studentAuth";
 import styles from "./StudentNav.module.css";
+import Image from "next/image";
+import commonImages from "@/constants/commonImages";
 
 export default function StudentNav() {
   const router = useRouter();
@@ -31,12 +33,13 @@ export default function StudentNav() {
     <nav className={styles.nav}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+          {/*<svg width="30" height="30" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="16" fill="#D42B3A" />
             <path d="M8 12l8-4 8 4-8 4-8-4z" fill="white" opacity="0.9" />
             <path d="M8 12v6l8 4 8-4v-6" stroke="white" strokeWidth="1.5" fill="none" opacity="0.7" />
           </svg>
-          <span className={styles.logoText}>GKPro</span>
+          <span className={styles.logoText}>GKPro</span>*/}
+          <Image src={commonImages.logo} width={150} height={150} alt="logo" style={{width: '120px', height: 'auto', objectFit: 'cover'}}/>
         </Link>
 
         <ul className={styles.links}>

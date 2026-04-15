@@ -485,6 +485,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .avatarBtn {
@@ -494,7 +495,7 @@
   background: none;
   border: 1.5px solid var(--border);
   border-radius: 50px;
-  padding: 5px 12px 5px 5px;
+  padding: 5px 5px 5px 5px;
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -773,6 +774,10 @@
 
   .mobileNestedItem > a:hover {
     color: var(--primary);
+  }
+
+  .avatarName{
+    display: none;
   }
 }
 
