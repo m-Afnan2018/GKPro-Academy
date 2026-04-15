@@ -84,11 +84,12 @@ export default function BlogPostPage() {
               {/* <div className={styles.articleImage} /> */}
               {blog.imageUrl && (
                 <div className={styles.articleImage}>
-                  <Image
+                  {/*<Image
                     src={blog.imageUrl}
                     alt={blog.title}
                     fill
-                  />
+                  />*/}
+                  <img src={blog.imageUrl} alt={blog.title} />
                 </div>
               )}
 
