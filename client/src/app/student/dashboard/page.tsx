@@ -39,8 +39,16 @@ export default function StudentDashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  const active    = enrollments.filter(e => e.status === "active");
-  const completed = enrollments.filter(e => e.status === "expired" || e.status === "cancelled");
+  const courseExpiry = (e: Enrollment): string | null =>
+    (typeof e.courseId === "object" && e.courseId ? (e.courseId as any).expiryDate : null) ?? null;
+
+  const isDateExpired = (e: Enrollment) => {
+    const d = courseExpiry(e);
+    return !!(d && new Date(d) < new Date());
+  };
+
+  const active    = enrollments.filter(e => e.status === "active" && !isDateExpired(e));
+  const completed = enrollments.filter(e => e.status === "expired" || e.status === "cancelled" || isDateExpired(e));
   const featured  = active[0] ?? null;
 
   const getCourse  = (e: Enrollment) => typeof e.courseId === "object" && e.courseId ? e.courseId as Partial<Course> : null;
@@ -49,9 +57,10 @@ export default function StudentDashboard() {
   const courseTitle = (e: Enrollment) => getCourse(e)?.title ?? "—";
   const courseThumbnail = (e: Enrollment) => (getCourse(e) as any)?.thumbnailUrl ?? null;
 
-  const daysLeft = (e: Enrollment) => {
-    if (!e.expiresAt) return null;
-    return Math.ceil((new Date(e.expiresAt).getTime() - Date.now()) / 86400000);
+  const expiryLabel = (e: Enrollment): string | null => {
+    const d = courseExpiry(e);
+    if (!d) return null;
+    return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   };
 
   const modeBadge = (mode: string) => {
@@ -145,8 +154,20 @@ export default function StudentDashboard() {
                       </div>
                       <h3 className={styles.featuredTitle}>{courseTitle(featured)}</h3>
                       <p className={styles.featuredMeta}>{featured.mode === "online" ? "Online (Live)" : "Recorded"}</p>
-                      {daysLeft(featured) !== null && (
-                        <p className={styles.featuredExpiry}>{daysLeft(featured)! > 0 ? `${daysLeft(featured)} days remaining` : "Expired"}</p>
+                      {expiryLabel(featured) !== null ? (
+                        <p className={styles.featuredExpiry} style={{ color: isDateExpired(featured) ? "#FCA5A5" : "rgba(255,255,255,0.85)" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "inline", verticalAlign: "middle", marginRight: 4, marginBottom: 1 }}>
+                            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          {isDateExpired(featured) ? "Expired" : "Access until"}: {expiryLabel(featured)}
+                        </p>
+                      ) : (
+                        <p className={styles.featuredExpiry}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: "inline", verticalAlign: "middle", marginRight: 4, marginBottom: 1 }}>
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                          </svg>
+                          Lifetime Access
+                        </p>
                       )}
                       <Link href={`/student/courses/${featured._id}`} className={styles.featuredBtn}>Continue Learning →</Link>
                     </div>
@@ -162,9 +183,10 @@ export default function StudentDashboard() {
                 </div>
                 <div className={styles.cards}>
                   {enrollments.slice(0, 6).map((e, i) => {
-                    const thumb = courseThumbnail(e);
-                    const days  = daysLeft(e);
-                    const mb    = modeBadge(e.mode);
+                    const thumb  = courseThumbnail(e);
+                    const expiry = expiryLabel(e);
+                    const expired = isDateExpired(e);
+                    const mb     = modeBadge(e.mode);
                     return (
                       <div key={e._id} className={styles.enrollCard}>
                         <div className={styles.cardHeader} style={{ background: thumb ? undefined : CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}>
@@ -182,12 +204,27 @@ export default function StudentDashboard() {
                             <span className={styles.planTag}>{e.mode}</span>
                           </div>
                           <h3 className={styles.enrollTitle}>{courseTitle(e)}</h3>
-                          {days !== null && e.status === "active" && (
-                            <p className={`${styles.daysLeft} ${days <= 7 ? styles.daysUrgent : ""}`}>
-                              {days > 0 ? `${days} days left` : "Expired"}
-                            </p>
+                          {expiry ? (
+                            <div style={{
+                              display: "flex", alignItems: "center", gap: 6,
+                              padding: "5px 10px", borderRadius: 6, marginTop: 2,
+                              background: expired ? "#FEF2F2" : "#F0FDF4",
+                              border: `1px solid ${expired ? "#FECACA" : "#BBF7D0"}`,
+                            }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={expired ? "#DC2626" : "#16A34A"} strokeWidth="2.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                              </svg>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: expired ? "#DC2626" : "#16A34A" }}>
+                                {expired ? "Expired" : "Access until"}: {expiry}
+                              </span>
+                            </div>
+                          ) : (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 6, marginTop: 2, background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#16A34A" }}>Lifetime Access</span>
+                            </div>
                           )}
-                          {e.status === "active" && (
+                          {e.status === "active" && !expired && (
                             <Link href={`/student/courses/${e._id}`} className={styles.learnBtn}>Continue →</Link>
                           )}
                         </div>
@@ -255,6 +292,14 @@ export default function StudentDashboard() {
                               </div>
                             )}
                             <div className={styles.receiptMetaItem}>
+                              <span className={styles.metaKey}>Access Until</span>
+                              <span className={styles.metaVal} style={{ color: isDateExpired(e) ? "#DC2626" : courseExpiry(e) ? "#111827" : "#16A34A" }}>
+                                {courseExpiry(e)
+                                  ? new Date(courseExpiry(e)!).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+                                  : "Lifetime"}
+                              </span>
+                            </div>
+                            <div className={styles.receiptMetaItem}>
                               <span className={styles.metaKey}>Payment</span>
                               <span className={styles.metaVal} style={{ textTransform: "capitalize" }}>
                                 {payment ? (payment.isManual ? "Manual" : "Razorpay") : "Free"}
@@ -297,7 +342,7 @@ export default function StudentDashboard() {
                               <span style={{ color: "#16A34A" }}>Free</span>
                             </div>
                           )}
-                          {e.status === "active" && (
+                          {e.status === "active" && !isDateExpired(e) && (
                             <Link href={`/student/courses/${e._id}`} className={styles.receiptLearnBtn}>
                               Go to Course →
                             </Link>

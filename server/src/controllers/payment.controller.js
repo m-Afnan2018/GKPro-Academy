@@ -140,6 +140,8 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   );
   if (!payment) throw new ApiError(404, "Payment record not found.");
 
+  const expiresAt = course.expiryDate ? new Date(course.expiryDate) : null;
+
   const enrollment = await Enrollment.create({
     studentId:       req.user._id,
     courseId,
@@ -150,13 +152,14 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     bookPricePaid:   bookPrice,
     paymentId:       payment._id,
     status:          "active",
+    ...(expiresAt && { expiresAt }),
   });
 
   await Payment.findByIdAndUpdate(payment._id, { enrollmentId: enrollment._id });
 
   const populated = await Enrollment.findById(enrollment._id)
     .populate("studentId", "name email phone")
-    .populate("courseId",  "title slug thumbnailUrl onlinePrice recordedPrice")
+    .populate("courseId",  "title slug thumbnailUrl onlinePrice recordedPrice expiryDate")
     .populate("paymentId");
 
   console.log("[verify] SUCCESS — enrollment:", enrollment._id.toString());
@@ -185,6 +188,8 @@ const createManualPayment = asyncHandler(async (req, res) => {
 
   const coursePrice = amount ?? resolveCoursePrice(course, mode);
 
+  const expiresAt = course.expiryDate ? new Date(course.expiryDate) : null;
+
   const payment = await Payment.create({
     studentId,
     amount:      coursePrice,
@@ -204,6 +209,7 @@ const createManualPayment = asyncHandler(async (req, res) => {
     bookType:   "none",
     paymentId:  payment._id,
     status:     "active",
+    ...(expiresAt && { expiresAt }),
   });
 
   await Payment.findByIdAndUpdate(payment._id, { enrollmentId: enrollment._id });

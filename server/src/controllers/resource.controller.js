@@ -1,5 +1,6 @@
 const Resource   = require("../models/Resource");
 const Enrollment = require("../models/Enrollment");
+const Course     = require("../models/Course");
 const ApiError   = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
@@ -7,12 +8,11 @@ const { submitForApproval } = require("../services/approval.service");
 
 /* ── helpers ─────────────────────────────────────────── */
 async function isEnrolledInCourse(userId, courseId) {
-  const enrollment = await Enrollment.findOne({
-    studentId: userId,
-    courseId,
-    status: "active",
-  });
-  return !!enrollment;
+  const enrollment = await Enrollment.findOne({ studentId: userId, courseId, status: "active" });
+  if (!enrollment) return false;
+  const course = await Course.findById(courseId).select("expiryDate");
+  if (course?.expiryDate && new Date(course.expiryDate) < new Date()) return false;
+  return true;
 }
 
 /* ── controllers ─────────────────────────────────────── */

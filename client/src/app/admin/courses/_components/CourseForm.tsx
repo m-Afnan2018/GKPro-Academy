@@ -28,6 +28,7 @@ export interface CF {
   onlineOriginalPrice: string;
   recordedPrice: string;
   recordedOriginalPrice: string;
+  expiryDate: string;
   bookEnabled: boolean;
   eBookPrice: string;
   eBookUrl: string;
@@ -43,6 +44,7 @@ export const blankCF = (): CF => ({
   facultyIds: [],
   availableModes: "both",
   onlinePrice: "", onlineOriginalPrice: "", recordedPrice: "", recordedOriginalPrice: "",
+  expiryDate: "",
   bookEnabled: false, eBookPrice: "", eBookUrl: "", handbookPrice: "", handbookUrl: "",
   thumbnailUrl: "",
 });
@@ -76,6 +78,7 @@ export const courseToForm = (c: Course): CF => ({
   eBookUrl: c.eBookUrl ?? "",
   handbookPrice: c.handbookPrice != null ? String(c.handbookPrice) : "",
   handbookUrl: c.handbookUrl ?? "",
+  expiryDate: c.expiryDate ? c.expiryDate.slice(0, 10) : "",
   thumbnailUrl: (c as any).thumbnailUrl ?? "",
 });
 
@@ -100,6 +103,7 @@ export const formToPayload = (f: CF) => ({
   onlineOriginalPrice: f.onlineOriginalPrice ? Number(f.onlineOriginalPrice) : null,
   recordedPrice: f.recordedPrice ? Number(f.recordedPrice) : null,
   recordedOriginalPrice: f.recordedOriginalPrice ? Number(f.recordedOriginalPrice) : null,
+  expiryDate: f.expiryDate ? new Date(f.expiryDate).toISOString() : null,
   bookEnabled: f.bookEnabled,
   eBookPrice: f.bookEnabled && f.eBookPrice ? Number(f.eBookPrice) : null,
   eBookUrl: f.bookEnabled && f.eBookUrl ? f.eBookUrl : null,
@@ -634,6 +638,38 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
               </div>
             </div>
             <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8 }}>Leave Sale Price blank to disable that mode. MRP is optional — when set, discount % is shown to students.</p>
+          </div>
+
+          {/* Access Expiry Date */}
+          <div style={{ border: "1.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ padding: "9px 14px", background: "#FFFBF0", borderBottom: "1px solid #FEF3C7", fontSize: 12, fontWeight: 700, color: "#B45309", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Course Expiry Date
+              <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, color: "#92400E", background: "#FDE68A", padding: "1px 7px", borderRadius: 20 }}>Optional</span>
+            </div>
+            <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <FL>Expiry Date</FL>
+                <input
+                  className={styles.formInput}
+                  type="date"
+                  value={f.expiryDate}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={e => set("expiryDate", e.target.value)}
+                />
+              </div>
+              {f.expiryDate && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "#FEF3C7", borderRadius: 8 }}>
+                  <span style={{ fontSize: 12, color: "#92400E", fontWeight: 600 }}>
+                    Students lose access after {new Date(f.expiryDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                  <button type="button" onClick={() => set("expiryDate", "")} style={{ background: "none", border: "none", cursor: "pointer", color: "#B45309", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>×</button>
+                </div>
+              )}
+              <p style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
+                All students enrolled in this course lose access on this date. Leave blank for unlimited access.
+              </p>
+            </div>
           </div>
 
           <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 20 }}>

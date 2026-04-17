@@ -388,6 +388,7 @@ export interface Course {
   eBookUrl?: string | null;
   handbookPrice?: number | null;
   handbookUrl?: string | null;
+  expiryDate?: string | null;
   // Curriculum metadata
   numLectures?: string | null;
   duration?: string | null;

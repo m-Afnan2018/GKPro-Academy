@@ -60,6 +60,7 @@ interface BatchCourse {
   thumbnailUrl?: string;
   eBookUrl?: string | null;
   handbookUrl?: string | null;
+  expiryDate?: string | null;
 }
 
 interface EnrollmentDetail {
@@ -124,6 +125,8 @@ export default function LearnPage() {
 
   const course = typeof enrollment?.courseId === "object" ? enrollment.courseId as BatchCourse : null;
   const batchMode = enrollment?.mode;
+  const courseExpiryDate = course?.expiryDate ?? null;
+  const isExpired = !!(courseExpiryDate && new Date(courseExpiryDate) < new Date());
 
   const renderContent = (r: Resource) => {
     const resourceUrl = authedUrl(r.url);
@@ -253,15 +256,40 @@ export default function LearnPage() {
                     <span className={styles.metaBadge}>
                       {batchMode === "recorded" ? "Recorded" : "Online (Live)"}
                     </span>
-                    {enrollment.expiresAt && (
-                      <span className={styles.metaText}>· Expires {new Date(enrollment.expiresAt).toLocaleDateString()}</span>
+                    {courseExpiryDate && (
+                      <span className={styles.metaText} style={{ color: isExpired ? "#DC2626" : undefined }}>
+                        · {isExpired ? "Expired" : "Access until"} {new Date(courseExpiryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
 
+              {/* Expired gate */}
+              {isExpired ? (
+                <div style={{ textAlign: "center", padding: "60px 24px", background: "#fff", borderRadius: 14, border: "1.5px solid #FECACA", maxWidth: 520, margin: "40px auto" }}>
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.8">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 8 }}>Access Expired</h3>
+                  <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6, marginBottom: 24 }}>
+                    Your access to <strong>{course?.title}</strong> expired on{" "}
+                    <strong>{new Date(courseExpiryDate!).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>.
+                    Please re-enroll or contact support to regain access.
+                  </p>
+                  <Link
+                    href={course?.slug ? `/courses/${course.slug}` : "/courses"}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#D42B3A", color: "#fff", padding: "12px 28px", borderRadius: 50, fontWeight: 700, fontSize: 14, textDecoration: "none" }}
+                  >
+                    Re-enroll in this Course
+                  </Link>
+                </div>
+              ) : null}
+
               {/* Main layout */}
-              <div className={styles.layout}>
+              {!isExpired && <div className={styles.layout}>
                 {/* Sidebar: resource list */}
                 <aside className={styles.sidebar}>
                   <div className={styles.sidebarTitle}>Course Content</div>
@@ -355,7 +383,7 @@ export default function LearnPage() {
                     </div>
                   )}
                 </main>
-              </div>
+              </div>}
             </>
           )}
         </div>

@@ -23,7 +23,20 @@ export default function StudentCoursesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = filter === "all" ? enrollments : enrollments.filter((e) => e.status === filter);
+  const courseExpiry = (e: Enrollment): string | null =>
+    (typeof e.courseId === "object" && e.courseId ? (e.courseId as any).expiryDate : null) ?? null;
+
+  const isDateExpired = (e: Enrollment) => {
+    const d = courseExpiry(e);
+    return !!(d && new Date(d) < new Date());
+  };
+
+  const effectiveStatus = (e: Enrollment) =>
+    isDateExpired(e) ? "expired" : e.status;
+
+  const filtered = filter === "all"
+    ? enrollments
+    : enrollments.filter((e) => effectiveStatus(e) === filter);
 
   const courseTitle = (e: Enrollment): string => {
     const batch = (e as any).batchId;
@@ -55,8 +68,8 @@ export default function StudentCoursesPage() {
 
   const counts = {
     all:     enrollments.length,
-    active:  enrollments.filter((e) => e.status === "active").length,
-    expired: enrollments.filter((e) => e.status === "expired").length,
+    active:  enrollments.filter((e) => effectiveStatus(e) === "active").length,
+    expired: enrollments.filter((e) => effectiveStatus(e) === "expired").length,
   };
 
   return (
@@ -103,25 +116,28 @@ export default function StudentCoursesPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={courseThumbnail(e)} alt={courseTitle(e)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                       )}
-                      <span style={{ position: "absolute", top: 10, right: 10 }} className={`${styles.badge} ${statusColor(e.status)}`}>{e.status}</span>
+                      <span style={{ position: "absolute", top: 10, right: 10 }} className={`${styles.badge} ${statusColor(effectiveStatus(e))}`}>{effectiveStatus(e)}</span>
                     </div>
                     <div style={{ padding: "0 16px" }}>
-                    <h3 className={styles.cardTitle}>{courseTitle(e)}</h3>
-                    <p className={styles.cardBatch}>{enrollmentMode(e)}</p>
-                    <div className={styles.cardDates}>
-                      <span>Enrolled {new Date(e.enrolledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
-                      {e.expiresAt && (
-                        <span>· Expires {new Date(e.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
-                      )}
-                    </div>
-                    <div className={styles.cardActions}>
-                      {e.status === "active" && (
-                        <Link href={`/student/courses/${e._id}`} className={styles.learnBtn}>Continue Learning →</Link>
-                      )}
-                      {slug && (
-                        <Link href={`/courses/${slug}`} className={styles.cardLink}>View Details</Link>
-                      )}
-                    </div>
+                      <h3 className={styles.cardTitle}>{courseTitle(e)}</h3>
+                      <p className={styles.cardBatch}>{enrollmentMode(e)}</p>
+                      <div className={styles.cardDates}>
+                        <span>Enrolled {new Date(e.enrolledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        {courseExpiry(e) && (
+                          <span style={{ color: isDateExpired(e) ? "#DC2626" : undefined, fontWeight: isDateExpired(e) ? 600 : undefined }}>
+                            {" "}· {isDateExpired(e) ? "Expired" : "Expires"}{" "}
+                            {new Date(courseExpiry(e)!).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.cardActions}>
+                        {effectiveStatus(e) === "active" && (
+                          <Link href={`/student/courses/${e._id}`} className={styles.learnBtn}>Continue Learning →</Link>
+                        )}
+                        {slug && (
+                          <Link href={`/courses/${slug}`} className={styles.cardLink}>View Details</Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

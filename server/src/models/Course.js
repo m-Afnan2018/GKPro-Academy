@@ -20,6 +20,7 @@ const courseSchema = new mongoose.Schema({
   eBookUrl:      { type: String, default: null },
   handbookPrice: { type: Number, default: null },
   handbookUrl:   { type: String, default: null },
+  expiryDate:    { type: Date, default: null },
   // Curriculum details
   numLectures: { type: String, default: null },
   duration:    { type: String, default: null },

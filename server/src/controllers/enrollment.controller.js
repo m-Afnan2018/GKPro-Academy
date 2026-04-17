@@ -7,7 +7,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const populateEnrollment = (query) =>
   query
     .populate("studentId", "name email phone avatarUrl")
-    .populate({ path: "courseId", select: "title slug thumbnailUrl onlinePrice recordedPrice", strictPopulate: false })
+    .populate({ path: "courseId", select: "title slug thumbnailUrl onlinePrice recordedPrice expiryDate", strictPopulate: false })
     .populate("paymentId");
 
 const getEnrollments = asyncHandler(async (req, res) => {
@@ -31,7 +31,7 @@ const getEnrollments = asyncHandler(async (req, res) => {
 const getEnrollment = asyncHandler(async (req, res) => {
   const enrollment = await Enrollment.findById(req.params.id)
     .populate("studentId", "name email phone avatarUrl")
-    .populate({ path: "courseId", select: "title slug description thumbnailUrl onlinePrice recordedPrice eBookUrl", strictPopulate: false })
+    .populate({ path: "courseId", select: "title slug description thumbnailUrl onlinePrice recordedPrice eBookUrl expiryDate", strictPopulate: false })
     .populate("paymentId");
 
   if (!enrollment) throw new ApiError(404, "Enrollment not found.");
@@ -82,6 +82,8 @@ const createEnrollment = asyncHandler(async (req, res) => {
 
   const coursePrice = mode === "online" ? (course.onlinePrice ?? 0) : (course.recordedPrice ?? 0);
 
+  const expiresAt = course.expiryDate ? new Date(course.expiryDate) : null;
+
   const enrollment = await Enrollment.create({
     studentId: req.user._id,
     courseId,
@@ -91,6 +93,7 @@ const createEnrollment = asyncHandler(async (req, res) => {
     deliveryAddress: bookType === "handbook" ? deliveryAddress : null,
     bookPricePaid: 0,
     status: "active",
+    ...(expiresAt && { expiresAt }),
   });
 
   const populated = await populateEnrollment(Enrollment.findById(enrollment._id));
@@ -113,6 +116,8 @@ const adminCreateEnrollment = asyncHandler(async (req, res) => {
 
   const coursePrice = mode === "online" ? (course.onlinePrice ?? 0) : (course.recordedPrice ?? 0);
 
+  const expiresAt = course.expiryDate ? new Date(course.expiryDate) : null;
+
   const enrollment = await Enrollment.create({
     studentId,
     courseId,
@@ -122,6 +127,7 @@ const adminCreateEnrollment = asyncHandler(async (req, res) => {
     deliveryAddress: bookType === "handbook" ? deliveryAddress : null,
     bookPricePaid: 0,
     status: "active",
+    ...(expiresAt && { expiresAt }),
   });
 
   const populated = await populateEnrollment(Enrollment.findById(enrollment._id));
