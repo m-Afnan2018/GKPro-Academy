@@ -160,6 +160,10 @@
   background: var(--primary);
   color: #fff;
 }
+.resIconExcel {
+  background: #DCFCE7;
+  color: #16A34A;
+}
 
 .resInfo { flex: 1; min-width: 0; }
 .resTitle {

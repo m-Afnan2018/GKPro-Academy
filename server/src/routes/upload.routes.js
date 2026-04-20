@@ -75,9 +75,11 @@ const materialFilter = (_req, file, cb) => {
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ];
   if (allowed.includes(file.mimetype)) cb(null, true);
-  else cb(new ApiError(400, "Allowed types: MP4, MOV, WebM, PDF, DOC, DOCX."));
+  else cb(new ApiError(400, "Allowed types: MP4, MOV, WebM, PDF, DOC, DOCX, XLS, XLSX."));
 };
 const uploadMaterial = multer({ storage, fileFilter: materialFilter, limits: { fileSize: 500 * 1024 * 1024 } });
 

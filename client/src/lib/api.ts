@@ -547,7 +547,7 @@ export interface Resource {
   courseId?: Course | string | null;
   title: string;
   description?: string;
-  type: "video" | "pdf" | "link" | "doc" | "meet";
+  type: "video" | "pdf" | "link" | "doc" | "meet" | "excel";
   url: string;
   section: string;
   sortOrder: number;

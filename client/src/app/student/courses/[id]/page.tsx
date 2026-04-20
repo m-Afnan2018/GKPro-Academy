@@ -21,7 +21,7 @@ function authedUrl(url: string): string {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  video: "Video", pdf: "PDF", link: "Link", doc: "Document", meet: "Live Class",
+  video: "Video", pdf: "PDF", link: "Link", doc: "Document", meet: "Live Class", excel: "Excel Spreadsheet",
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -48,6 +48,12 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   meet: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+    </svg>
+  ),
+  excel: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="14" y2="9"/>
     </svg>
   ),
 };
@@ -192,6 +198,65 @@ export default function LearnPage() {
       );
     }
 
+    if (r.type === "excel") {
+      // Google Drive Excel preview
+      const driveMatch = r.url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+      if (driveMatch) {
+        return (
+          <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+            <iframe
+              src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`}
+              style={{ width: "100%", height: 600, border: "none" }}
+              title={r.title}
+            />
+            <div style={{ padding: "10px 16px", background: "#F9FAFB", borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "flex-end" }}>
+              <a href={r.url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: "#16A34A", fontWeight: 600, textDecoration: "none" }}>
+                Open in Google Drive ↗
+              </a>
+            </div>
+          </div>
+        );
+      }
+      // OneDrive / SharePoint
+      const oneDriveMatch = r.url.match(/onedrive\.live\.com|sharepoint\.com/i);
+      if (oneDriveMatch) {
+        const embedSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(r.url)}`;
+        return (
+          <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+            <iframe
+              src={embedSrc}
+              style={{ width: "100%", height: 600, border: "none" }}
+              title={r.title}
+            />
+          </div>
+        );
+      }
+      // Local uploaded Excel — download card
+      return (
+        <div style={{ background: "#F0FDF4", borderRadius: 12, border: "1.5px solid #BBF7D0", padding: "40px 32px", textAlign: "center" }}>
+          <div style={{ width: 68, height: 68, borderRadius: 14, background: "#DCFCE7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="14" y2="9"/>
+            </svg>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "#14532D", marginBottom: 6 }}>{r.title}</div>
+          {r.description && <div style={{ fontSize: 13, color: "#166534", marginBottom: 4 }}>{r.description}</div>}
+          {r.duration && <div style={{ fontSize: 12, color: "#4ADE80", marginBottom: 20 }}>Duration: {r.duration}</div>}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href={resourceUrl} download target="_blank" rel="noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#16A34A", color: "#fff", padding: "12px 28px", borderRadius: 50, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download Excel
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     if (r.type === "meet") {
       return (
         <div style={{ background: "linear-gradient(135deg,#1a1a2e,#3a3a5c)", borderRadius: 12, padding: "40px 32px", textAlign: "center" }}>
@@ -305,7 +370,7 @@ export default function LearnPage() {
                             className={`${styles.resItem} ${activeResource?._id === r._id ? styles.resActive : ""}`}
                             onClick={() => setActiveResource(r)}
                           >
-                            <span className={`${styles.resIcon} ${r.type === "meet" ? styles.resIconMeet : ""}`}>
+                            <span className={`${styles.resIcon} ${r.type === "meet" ? styles.resIconMeet : ""} ${r.type === "excel" ? styles.resIconExcel : ""}`}>
                               {TYPE_ICONS[r.type]}
                             </span>
                             <div className={styles.resInfo}>

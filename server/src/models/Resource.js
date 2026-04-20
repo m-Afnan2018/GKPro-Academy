@@ -5,7 +5,7 @@ const resourceSchema = new mongoose.Schema({
   batchId:     { type: mongoose.Schema.Types.ObjectId, ref: "Batch",  default: null },
   title:       { type: String, required: true, trim: true },
   description: { type: String, trim: true },
-  type:        { type: String, enum: ["video", "pdf", "link", "doc", "meet"], required: true },
+  type:        { type: String, enum: ["video", "pdf", "link", "doc", "meet", "excel"], required: true },
   url:         { type: String, required: true },
   section:     { type: String, trim: true, default: "General" },
   sortOrder:   { type: Number, default: 0 },

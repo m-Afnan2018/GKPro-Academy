@@ -3,7 +3,7 @@ const fs   = require("fs");
 const jwt  = require("jsonwebtoken");
 
 const IMAGE_EXTS    = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif"]);
-const MATERIAL_EXTS = new Set([".mp4", ".mov", ".webm", ".mkv", ".avi", ".pdf", ".doc", ".docx"]);
+const MATERIAL_EXTS = new Set([".mp4", ".mov", ".webm", ".mkv", ".avi", ".pdf", ".doc", ".docx", ".xls", ".xlsx"]);
 
 /**
  * Smart file-serving middleware for /uploads.

@@ -18,8 +18,12 @@ const blank = (): Partial<Resource> => ({
   section: "General", sortOrder: 0, duration: "", isPublic: false, targetMode: "both",
 });
 
+const TYPE_LABELS: Record<string, string> = {
+  video: "Video", pdf: "PDF", link: "Link / URL", doc: "Document", meet: "Google Meet / Zoom", excel: "Excel Spreadsheet",
+};
+
 const TYPE_COLORS: Record<string, string> = {
-  video: "#2563EB", pdf: "#DC2626", link: "#059669", doc: "#7C3AED", meet: "#D97706",
+  video: "#2563EB", pdf: "#DC2626", link: "#059669", doc: "#7C3AED", meet: "#D97706", excel: "#16A34A",
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -28,6 +32,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   link:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   doc:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
   meet:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>,
+  excel: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="14" y2="9"/></svg>,
 };
 
 const DragHandle = () => (
@@ -63,6 +68,7 @@ function ResourceForm({ f, setF, err }: FormProps) {
           >
             <option value="video">Video</option>
             <option value="pdf">PDF</option>
+            <option value="excel">Excel Spreadsheet</option>
             <option value="doc">Document</option>
             <option value="link">Link / URL</option>
             <option value="meet">Google Meet / Zoom</option>
@@ -102,7 +108,7 @@ function ResourceForm({ f, setF, err }: FormProps) {
       {/* File upload or URL input depending on type */}
       <div className={styles.formGroup}>
         <MaterialUpload
-          type={f.type as "video" | "pdf" | "link" | "doc" | "meet"}
+          type={f.type as "video" | "pdf" | "link" | "doc" | "meet" | "excel"}
           value={f.url ?? ""}
           onChange={url => setF({ ...f, url })}
         />

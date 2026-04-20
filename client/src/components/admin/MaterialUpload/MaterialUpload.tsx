@@ -3,17 +3,19 @@ import { useRef, useState, useCallback } from "react";
 
 const SERVER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api").replace(/\/api$/, "");
 
-type UploadableType = "video" | "pdf" | "doc";
+type UploadableType = "video" | "pdf" | "doc" | "excel";
 
 const TYPE_CONFIG: Record<UploadableType, { accept: string; label: string; hint: string; color: string }> = {
   video: { accept: "video/mp4,video/quicktime,video/webm,video/x-matroska", label: "Video File", hint: "MP4, MOV, WebM · max 500 MB", color: "#2563EB" },
   pdf:   { accept: "application/pdf",                                        label: "PDF File",   hint: "PDF · max 500 MB",          color: "#DC2626" },
   doc:   { accept: ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
            label: "Document",  hint: "DOC, DOCX · max 500 MB",   color: "#7C3AED" },
+  excel: { accept: ".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+           label: "Excel File", hint: "XLS, XLSX · max 500 MB",  color: "#16A34A" },
 };
 
 interface Props {
-  type: "video" | "pdf" | "link" | "doc" | "meet";
+  type: "video" | "pdf" | "link" | "doc" | "meet" | "excel";
   value: string;
   onChange: (url: string) => void;
 }
@@ -26,7 +28,7 @@ export default function MaterialUpload({ type, value, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isLink = type === "link" || type === "meet";
-  const cfg    = !isLink ? TYPE_CONFIG[type as UploadableType] : null;
+  const cfg    = !isLink ? TYPE_CONFIG[type as UploadableType] ?? null : null;
 
   const fileName = value && !value.startsWith("http") ? value.split("/").pop() : null;
   const isUploadedFile = value && (value.includes("/uploads/") || (!value.startsWith("http") && value));
@@ -109,6 +111,8 @@ export default function MaterialUpload({ type, value, onChange }: Props) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             ) : type === "pdf" ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            ) : type === "excel" ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="14" y2="9"/></svg>
             ) : (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             )}
