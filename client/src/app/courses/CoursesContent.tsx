@@ -321,9 +321,10 @@ export default function CoursesPage() {
             ) : (
               <div className={styles.grid}>
                 {courses.map((c, i) => {
+                  const isComingSoon = c.status === "coming-soon";
                   const pd = cardPrice(c);
-                  return (
-                    <Link href={`/courses/${c.slug}`} key={c._id} className={styles.card}>
+                  const cardInner = (
+                    <div className={`${styles.card} ${isComingSoon ? styles.cardComingSoon : ""}`}>
                       <div
                         className={styles.cardImg}
                         style={c.thumbnailUrl ? undefined : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
@@ -331,31 +332,45 @@ export default function CoursesPage() {
                         {c.thumbnailUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={c.thumbnailUrl} alt={c.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                            onError={(e) => {
-                              e.currentTarget.src = PLACEHOLDER_IMG;
-                            }} />
+                            onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG; }} />
                         )}
                         <div className={styles.cardImgOverlay} />
-                        <div className={styles.badgeRow}>
-                          {c.onlinePrice && <span className={`${styles.flagBadge} ${styles.flagOnline}`}>Online</span>}
-                          {c.recordedPrice && <span className={`${styles.flagBadge} ${styles.flagRecorded}`}>Recorded</span>}
-                        </div>
+                        {!isComingSoon && (
+                          <div className={styles.badgeRow}>
+                            {c.onlinePrice && <span className={`${styles.flagBadge} ${styles.flagOnline}`}>Online</span>}
+                            {c.recordedPrice && <span className={`${styles.flagBadge} ${styles.flagRecorded}`}>Recorded</span>}
+                          </div>
+                        )}
                       </div>
+                      {isComingSoon && (
+                        <div className={styles.comingSoon}>
+                          <span>Coming Soon</span>
+                        </div>
+                      )}
                       <div className={styles.cardBody}>
                         <h3 className={styles.cardTitle}>{c.title}</h3>
                         {c.description && <p className={styles.cardDesc}>{c.description}</p>}
-                        <div className={styles.cardPrice}>
-                          {pd ? (
-                            <>
-                              <span className={styles.priceOld}>₹{pd.original.toLocaleString("en-IN")}</span>
-                              <span className={styles.priceNew}>₹{pd.price.toLocaleString("en-IN")}</span>
-                              {pd.discount > 0 && <span className={styles.discountBadge}>{pd.discount}% Off</span>}
-                            </>
-                          ) : (
-                            <span className={styles.priceFree}>Free</span>
-                          )}
-                        </div>
+                        {!isComingSoon && (
+                          <div className={styles.cardPrice}>
+                            {pd ? (
+                              <>
+                                <span className={styles.priceOld}>₹{pd.original.toLocaleString("en-IN")}</span>
+                                <span className={styles.priceNew}>₹{pd.price.toLocaleString("en-IN")}</span>
+                                {pd.discount > 0 && <span className={styles.discountBadge}>{pd.discount}% Off</span>}
+                              </>
+                            ) : (
+                              <span className={styles.priceFree}>Free</span>
+                            )}
+                          </div>
+                        )}
                       </div>
+                    </div>
+                  );
+                  return isComingSoon ? (
+                    <div key={c._id}>{cardInner}</div>
+                  ) : (
+                    <Link href={`/courses/${c.slug}`} key={c._id} style={{ textDecoration: "none" }}>
+                      {cardInner}
                     </Link>
                   );
                 })}

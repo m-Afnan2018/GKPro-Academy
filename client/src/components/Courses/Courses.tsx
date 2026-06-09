@@ -15,7 +15,7 @@ const CARD_GRADIENTS = [
   "linear-gradient(135deg,#2e1a1a 0%,#5a2d2d 100%)",
 ];
 
-interface Course { _id: string; title: string; shortDescription?: string; description?: string; thumbnailUrl?: string; slug: string; categoryId?: { _id: string; name: string } | string; }
+interface Course { _id: string; title: string; shortDescription?: string; description?: string; thumbnailUrl?: string; slug: string; status?: string; categoryId?: { _id: string; name: string } | string; }
 interface Batch { _id: string; courseId: string; mode: string; }
 interface Plan { _id: string; batchId: string; price: number; }
 
@@ -29,12 +29,15 @@ export default function Courses() {
   useEffect(() => {
     Promise.all([
       fetch(`${BASE}/courses?status=published&limit=6`).then((r) => r.json()),
+      fetch(`${BASE}/courses?status=coming-soon&limit=6`).then((r) => r.json()),
       fetch(`${BASE}/batches?limit=100`).then((r) => r.json()),
       fetch(`${BASE}/plans?limit=100`).then((r) => r.json()),
       fetch(`${BASE}/categories?limit=20`).then((r) => r.json()),
     ])
-      .then(([c, b, p, cat]) => {
-        setCourses(c?.data?.courses ?? []);
+      .then(([c, cs, b, p, cat]) => {
+        const published = (c?.data?.courses ?? []) as Course[];
+        const comingSoon = (cs?.data?.courses ?? []) as Course[];
+        setCourses([...published, ...comingSoon]);
         setBatches(b?.data?.batches ?? []);
         setPlans(p?.data?.plans ?? []);
         setCategories(cat?.data?.categories ?? []);
@@ -87,6 +90,7 @@ export default function Courses() {
 
         <div className={styles.grid}>
           {display.map((course, i) => {
+            const isComingSoon = course.status === "coming-soon";
             const mode = getBatchMode(course._id);
             const price = getPrice(course._id);
             const originalPrice = price ? Math.round(price / 0.85 / 100) * 100 : null;
@@ -94,37 +98,48 @@ export default function Courses() {
             const badgeClass = mode === "recorded" ? styles.badgeRed : styles.badgeGreen;
             const desc = course.shortDescription || course.description?.slice(0, 120) || "";
 
-            return (
-              <Link key={course._id} href={`/courses/${course.slug}`} style={{ textDecoration: "none" }}>
-                <div className={styles.card}>
-                  <div
-                    className={styles.imgWrap}
-                    style={course.thumbnailUrl ? undefined : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
-                  >
-                    {course.thumbnailUrl ? (
-                      <img src={course.thumbnailUrl} alt={course.title} className={styles.img} />
-                    ) : (
-                      <h3 style={{color: 'white', position: 'absolute', top: '45%', bottom: 0, left: '10%', right: '10%', textAlign: 'center'}}>{course.title}</h3>
-                    )}
-                    <span className={`${styles.badge} ${badgeClass}`}>{badgeLabel}</span>
-                  </div>
-
-                  <div className={styles.body}>
-                    <h3 className={styles.title}>{course.title}</h3>
-                    {desc && <p className={styles.desc}>{desc.slice(0, 100)}{desc.length > 100 ? "…" : ""}</p>}
-                    {price && (
-                      <div className={styles.priceRow}>
-                        {originalPrice && <span className={styles.originalPrice}>₹{originalPrice.toLocaleString()}</span>}
-                        <span className={styles.price}>₹{price.toLocaleString()}</span>
-                        {originalPrice && originalPrice > price && (
-                          <span className={styles.discountBadge}>
-                            {Math.round((1 - price / originalPrice) * 100)}% Off
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+            const cardInner = (
+              <div className={`${styles.card} ${isComingSoon ? styles.cardComingSoon : ""}`}>
+                <div
+                  className={styles.imgWrap}
+                  style={course.thumbnailUrl ? undefined : { background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}
+                >
+                  {course.thumbnailUrl ? (
+                    <img src={course.thumbnailUrl} alt={course.title} className={styles.img} />
+                  ) : (
+                    <h3 style={{color: 'white', position: 'absolute', top: '45%', bottom: 0, left: '10%', right: '10%', textAlign: 'center'}}>{course.title}</h3>
+                  )}
+                  {!isComingSoon && <span className={`${styles.badge} ${badgeClass}`}>{badgeLabel}</span>}
                 </div>
+                {isComingSoon && (
+                  <div className={styles.comingSoon}>
+                    <span>Coming Soon</span>
+                  </div>
+                )}
+
+                <div className={styles.body}>
+                  <h3 className={styles.title}>{course.title}</h3>
+                  {desc && <p className={styles.desc}>{desc.slice(0, 100)}{desc.length > 100 ? "…" : ""}</p>}
+                  {!isComingSoon && price && (
+                    <div className={styles.priceRow}>
+                      {originalPrice && <span className={styles.originalPrice}>₹{originalPrice.toLocaleString()}</span>}
+                      <span className={styles.price}>₹{price.toLocaleString()}</span>
+                      {originalPrice && originalPrice > price && (
+                        <span className={styles.discountBadge}>
+                          {Math.round((1 - price / originalPrice) * 100)}% Off
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+
+            return isComingSoon ? (
+              <div key={course._id}>{cardInner}</div>
+            ) : (
+              <Link key={course._id} href={`/courses/${course.slug}`} style={{ textDecoration: "none" }}>
+                {cardInner}
               </Link>
             );
           })}

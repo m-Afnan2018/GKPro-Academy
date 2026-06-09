@@ -331,6 +331,7 @@ export default function CourseForm({ f, setF, categories, subcatsFor, allFaculty
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
                 <option value="archived">Archived</option>
+                <option value="coming-soon">Coming Soon</option>
               </select>
             </div>
             <div className={styles.formGroup}>

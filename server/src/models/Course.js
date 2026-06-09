@@ -30,7 +30,7 @@ const courseSchema = new mongoose.Schema({
   // Faculty (multiple)
   faculty: [{ type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }],
   availableModes: { type: String, enum: ["both", "online", "recorded"], default: "both" },
-  status: { type: String, enum: ["draft", "published", "archived"], default: "draft" },
+  status: { type: String, enum: ["draft", "published", "archived", "coming-soon"], default: "draft" },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   approvalStatus: { type: String, enum: ["draft", "pending", "approved", "rejected"], default: "draft" },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

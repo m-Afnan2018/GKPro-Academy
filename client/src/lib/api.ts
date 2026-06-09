@@ -404,7 +404,7 @@ export interface Course {
   // Faculty (multiple)
   faculty?: Faculty[];
   availableModes?: "both" | "online" | "recorded";
-  status: "draft" | "published" | "archived";
+  status: "draft" | "published" | "archived" | "coming-soon";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
   createdBy?: Partial<User>;
   createdAt: string;

@@ -12,7 +12,14 @@ const getCourses = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const filter = { status: "published", approvalStatus: "approved" };
+  const allowedStatuses = ["published", "coming-soon"];
+  const requestedStatus = req.query.status;
+  const filter = {
+    status: allowedStatuses.includes(requestedStatus)
+      ? requestedStatus
+      : { $in: allowedStatuses },
+    approvalStatus: "approved",
+  };
 
   if (req.query.categoryIds) {
     const ids = req.query.categoryIds.split(",").filter(Boolean);

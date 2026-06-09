@@ -102,7 +102,7 @@ export default function CoursesPage() {
   };
 
   const totalPages    = Math.ceil(total / LIMIT);
-  const statusBadge   = (s: string) => s === "published" ? "green" : s === "archived" ? "red" : "gray";
+  const statusBadge   = (s: string) => s === "published" ? "green" : s === "archived" ? "red" : s === "coming-soon" ? "yellow" : "gray";
   const approvalBadge = (s: string) => s === "approved" ? "green" : s === "rejected" ? "red" : s === "pending" ? "yellow" : "gray";
 
   return (
@@ -130,6 +130,7 @@ export default function CoursesPage() {
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
+                    <option value="coming-soon">Coming Soon</option>
                   </select>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

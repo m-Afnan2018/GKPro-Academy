@@ -1,0 +1,73 @@
+# GKPro Academy
+
+> GKPro Academy is a professional learning platform based in Ludhiana, Punjab, India. We offer expert-led courses in Chartered Accountancy (CA), CS, CMA, ACCA, CFA, CPA, IELTS, PTE, Spoken English, Business Communication, Public Speaking, Soft Skills, and Interview Preparation. With 15,000+ enrolled students, 50+ expert faculty members, and a 98% satisfaction rate, GKPro Academy combines live interactive classes with flexible recorded sessions to help students achieve their academic and professional goals.
+
+## About
+
+GKPro Academy specialises in Chartered Accountancy preparation and industry-focused skill programs. Courses follow an ICAI-based curriculum with concept-first, exam-oriented teaching delivered by CA-qualified faculty. Both online (live) and recorded (self-paced) modes are available for all major programs.
+
+- Address: Vishwa Karma Road, Doraha, Ludhiana, Punjab, India – 141421
+- Email: info@gkproacademy.com
+- Phone: +8427075296
+- Students enrolled: 15,000+
+- Expert faculty: 50+
+- Satisfaction rate: 98%
+
+## Pages
+
+- [Home](https://gkproacademy.com/): Hero banner, featured courses, about section, how-it-works, testimonials, faculty, and blog highlights.
+- [About Us](https://gkproacademy.com/about): Mission, vision, faculty credentials, student stats, and why-choose-us details.
+- [All Courses](https://gkproacademy.com/courses): Filterable course catalogue with category, subcategory, search, sort, and pagination.
+- [Blog](https://gkproacademy.com/blogs): Articles on CA exam strategy, IELTS preparation, PTE tips, career guidance, and finance education.
+- [Contact Us](https://gkproacademy.com/contact): Address, email, phone, and enquiry form.
+- [Book a Free Demo](https://gkproacademy.com/demo-booking): Schedule a free live demo session with expert faculty before enrolling.
+- [Search](https://gkproacademy.com/search): Search across courses, blogs, and categories.
+
+## Course Categories
+
+### Professional Exams
+
+Courses preparing students for globally recognised professional qualifications.
+
+- [CA Courses](https://gkproacademy.com/category/ca): CA Foundation, CA Intermediate, CA Final — ICAI-aligned curriculum with live and recorded options.
+- [CS Courses](https://gkproacademy.com/category/cs): CS Foundation, CS Executive, CS Professional — company secretary exam preparation.
+- [CMA Courses](https://gkproacademy.com/category/cma): CMA Foundation, CMA Intermediate, CMA Final — cost and management accountancy.
+- [ACCA](https://gkproacademy.com/category/acca): Association of Chartered Certified Accountants — global finance qualification.
+- [CFA](https://gkproacademy.com/category/cfa): Chartered Financial Analyst — investment and portfolio management.
+- [CPA](https://gkproacademy.com/category/cpa): Certified Public Accountant — US accounting qualification.
+
+### Language & Study Abroad
+
+English language programs for academic advancement and international study.
+
+- [IELTS](https://gkproacademy.com/category/ielts): Full IELTS preparation covering all four bands — Listening, Reading, Writing, Speaking.
+- [PTE](https://gkproacademy.com/category/pte): Pearson Test of English — computer-based English proficiency exam coaching.
+- [Pre-IELTS](https://gkproacademy.com/category/pre-ielts): Foundation English course for students not yet ready for IELTS.
+- [English Foundation](https://gkproacademy.com/category/english-foundation): Basic and Advanced English Foundation — grammar, vocabulary, and comprehension.
+
+### Communication & Soft Skills
+
+Professional development programs for workplace and career readiness.
+
+- [Spoken English](https://gkproacademy.com/category/spoken-english): Fluency, pronunciation, and everyday conversational English.
+- [Business Communication](https://gkproacademy.com/category/business-communication): Professional writing, emails, presentations, and workplace communication.
+- [Managerial Skills](https://gkproacademy.com/category/managerial-skills): Leadership, team management, and decision-making skills for managers.
+- [Soft Skills](https://gkproacademy.com/category/soft-skills): Interpersonal skills, emotional intelligence, and professional etiquette.
+- [Public Speaking](https://gkproacademy.com/category/public-speaking): Confidence building, speech delivery, and presentation techniques.
+- [Interview Preparation](https://gkproacademy.com/category/interview-preparation): Resume building, mock interviews, and job readiness training.
+
+## Learning Modes
+
+- **Live Interactive Classes**: Scheduled online sessions with real-time Q&A, group discussions, and expert mentorship.
+- **Recorded Classes**: Unlimited-access self-paced video lectures with structured study material and guided support.
+- **Free Demo Class**: A no-commitment live demo session available before enrolment for any course.
+
+## Student Portal
+
+Enrolled students access course content, track progress, and manage their learning through the student portal at `/student`.
+
+- Student Dashboard: `/student/dashboard`
+- My Courses: `/student/courses`
+- Course Player: `/student/learn/[slug]`
+- Purchase History: `/student/purchases`
+- Profile: `/student/profile`

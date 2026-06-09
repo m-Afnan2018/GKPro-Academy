@@ -314,17 +314,14 @@ export default function CategoryPage() {
                 ) : (
                     <div className={styles.grid}>
                         {courses.map((c) => {
+                            const isComingSoon = c.status === "coming-soon";
                             const { sale, original } = getPrice(c);
                             const pct =
                                 sale && original && original > sale
                                     ? discount(sale, original)
                                     : 0;
-                            return (
-                                <Link
-                                    href={`/courses/${c.slug}`}
-                                    key={c._id}
-                                    className={styles.card}
-                                >
+                            const cardInner = (
+                                <div className={`${styles.card} ${isComingSoon ? styles.cardComingSoon : ""}`}>
                                     <div className={styles.cardImg}>
                                         {c.thumbnailUrl && (
                                             // eslint-disable-next-line @next/next/no-img-element
@@ -334,61 +331,46 @@ export default function CategoryPage() {
                                                 className={styles.cardImgEl}
                                             />
                                         )}
-                                        <div
-                                            className={styles.cardImgOverlay}
-                                        />
-                                        <ModeBadge course={c} />
+                                        <div className={styles.cardImgOverlay} />
+                                        {!isComingSoon && <ModeBadge course={c} />}
                                     </div>
+                                    {isComingSoon && (
+                                        <div className={styles.comingSoon}>
+                                            <span>Coming Soon</span>
+                                        </div>
+                                    )}
                                     <div className={styles.cardBody}>
-                                        <h3 className={styles.cardTitle}>
-                                            {c.title}
-                                        </h3>
+                                        <h3 className={styles.cardTitle}>{c.title}</h3>
                                         {c.description && (
-                                            <p className={styles.cardDesc}>
-                                                {c.description}
-                                            </p>
+                                            <p className={styles.cardDesc}>{c.description}</p>
                                         )}
-                                        <div className={styles.cardPrice}>
-                                            {original &&
-                                                original > (sale ?? 0) && (
-                                                    <span
-                                                        className={
-                                                            styles.priceOld
-                                                        }
-                                                    >
-                                                        ₹
-                                                        {original.toLocaleString(
-                                                            "en-IN",
-                                                        )}
+                                        {!isComingSoon && (
+                                            <div className={styles.cardPrice}>
+                                                {original && original > (sale ?? 0) && (
+                                                    <span className={styles.priceOld}>
+                                                        ₹{original.toLocaleString("en-IN")}
                                                     </span>
                                                 )}
-                                            {sale ? (
-                                                <span
-                                                    className={styles.priceNew}
-                                                >
-                                                    ₹
-                                                    {sale.toLocaleString(
-                                                        "en-IN",
-                                                    )}
-                                                </span>
-                                            ) : (
-                                                <span
-                                                    className={styles.priceFree}
-                                                >
-                                                    Free
-                                                </span>
-                                            )}
-                                            {pct > 0 && (
-                                                <span
-                                                    className={
-                                                        styles.discountBadge
-                                                    }
-                                                >
-                                                    {pct}% Off
-                                                </span>
-                                            )}
-                                        </div>
+                                                {sale ? (
+                                                    <span className={styles.priceNew}>
+                                                        ₹{sale.toLocaleString("en-IN")}
+                                                    </span>
+                                                ) : (
+                                                    <span className={styles.priceFree}>Free</span>
+                                                )}
+                                                {pct > 0 && (
+                                                    <span className={styles.discountBadge}>{pct}% Off</span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
+                            );
+                            return isComingSoon ? (
+                                <div key={c._id}>{cardInner}</div>
+                            ) : (
+                                <Link href={`/courses/${c.slug}`} key={c._id} style={{ textDecoration: "none" }}>
+                                    {cardInner}
                                 </Link>
                             );
                         })}
