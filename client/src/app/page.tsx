@@ -14,13 +14,13 @@ import Blog from "@/components/Blog/Blog";
 import Footer from "@/components/Footer/Footer";
 
 export const metadata: Metadata = {
-  title: "GKPro Academy — CA, IELTS, PTE & Professional Skill Courses",
+  title: "GKPro Academy — Online CA Coaching",
   description:
-    "GKPro Academy offers CA, CS, CMA, ACCA, CFA, CPA, IELTS, PTE, Spoken English, Business Communication, Public Speaking, and Soft Skills courses. Learn from expert faculty in Ludhiana, Punjab.",
+    "GKPro Academy offers expert-led online CA (Chartered Accountancy) coaching. Learn from experienced faculty and join thousands of successful students, from anywhere.",
   openGraph: {
-    title: "GKPro Academy — Expert-Led CA, IELTS & Skill Courses",
+    title: "GKPro Academy — Expert-Led Online CA Coaching",
     description:
-      "Join 15,000+ students at GKPro Academy. CA coaching, IELTS, PTE, Spoken English, Business Communication, and professional exam courses in Ludhiana, Punjab.",
+      "Join 15,000+ students at GKPro Academy. Expert online CA coaching from anywhere in India.",
     url: "https://gkproacademy.com",
   },
 };

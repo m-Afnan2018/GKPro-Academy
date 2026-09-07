@@ -60,6 +60,7 @@ export const authApi = {
   me: () => get<{ data: User }>("/auth/me"),
   updateMe: (body: Partial<User & { password?: string }>) =>
     patch<{ data: User }>("/auth/me", body),
+  logout: () => post<{ data: null }>("/auth/logout", {}),
 };
 
 /* ── users ───────────────────────────────────────── */

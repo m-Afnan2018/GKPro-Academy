@@ -31,7 +31,7 @@ export default function PaymentsPage() {
   useEffect(() => { load(); }, [load]);
 
   const filtered = payments.filter((p) => {
-    const name = typeof p.studentId === "object" ? (p.studentId as User).name : "";
+    const name = typeof p.studentId === "object" ? (p.studentId as User)?.name : "";
     const q = search.toLowerCase();
     const matchSearch = !q || name.toLowerCase().includes(q);
     const matchStatus = !statusFilter || p.status === statusFilter;

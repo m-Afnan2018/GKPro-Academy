@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getStudentUser, clearStudentSession } from "@/lib/studentAuth";
+import { authApi } from "@/lib/api";
 import styles from "./StudentNav.module.css";
 import Image from "next/image";
 import commonImages from "@/constants/commonImages";
@@ -14,6 +15,7 @@ export default function StudentNav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
+    authApi.logout().catch(() => {});
     clearStudentSession();
     router.push("/login");
   };

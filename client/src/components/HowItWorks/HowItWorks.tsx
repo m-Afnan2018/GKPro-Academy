@@ -26,7 +26,7 @@ export default function HowItWorks() {
                 </div>
 
                 <iframe
-                    src="https://www.youtube.com/embed/rBytI-rDIXM"
+                    src="https://www.youtube.com/embed/QltUznFvt6k"
                     width="100%"
                     height="450"
                     allowFullScreen

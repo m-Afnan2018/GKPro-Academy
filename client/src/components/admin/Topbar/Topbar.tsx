@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clearSession, getUser } from "@/lib/auth";
+import { authApi } from "@/lib/api";
 import styles from "./Topbar.module.css";
 
 interface Props { title: string; }
@@ -11,6 +12,7 @@ export default function Topbar({ title }: Props) {
   const user = typeof window !== "undefined" ? getUser() : null;
 
   const logout = () => {
+    authApi.logout().catch(() => {});
     clearSession();
     router.push("/admin/login");
   };

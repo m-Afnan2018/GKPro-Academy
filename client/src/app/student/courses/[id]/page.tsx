@@ -5,6 +5,7 @@ import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
 import { type Resource, type Course } from "@/lib/api";
+import VideoPlayer from "@/components/student/VideoPlayer/VideoPlayer";
 import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -166,16 +167,9 @@ export default function LearnPage() {
           </div>
         );
       }
-      // Local uploaded video — embed directly with token
+      // Local uploaded video — embed with a no-download-affordance player
       if (r.url.includes("/uploads/")) {
-        return (
-          <div style={{ borderRadius: 12, overflow: "hidden", background: "#000" }}>
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video controls style={{ width: "100%", maxHeight: 480 }} src={resourceUrl}>
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        );
+        return <VideoPlayer src={resourceUrl} title={r.title} />;
       }
     }
 

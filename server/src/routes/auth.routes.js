@@ -3,7 +3,7 @@ const multer   = require("multer");
 const path     = require("path");
 const fs       = require("fs");
 const router   = express.Router();
-const { register, login, getMe, updateMe, updateAvatar, forgotPassword, resetPassword, verifySignup } = require("../controllers/auth.controller");
+const { register, login, logout, getMe, updateMe, updateAvatar, forgotPassword, resetPassword, verifySignup } = require("../controllers/auth.controller");
 const { protect } = require("../middleware/auth");
 const ApiError    = require("../utils/ApiError");
 
@@ -30,6 +30,7 @@ router.post("/verify-signup",  verifySignup);
 router.post("/login",          login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password",  resetPassword);
+router.post("/logout", protect, logout);
 router.get("/me", protect, getMe);
 router.patch("/me", protect, updateMe);
 

@@ -1,0 +1,16 @@
+.wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.wrap :global(.plyr) {
+  border-radius: 12px;
+}
+
+/* Brand accent color for Plyr's controls */
+.wrap :global(.plyr--video .plyr__control--overlaid),
+.wrap :global(.plyr__control.plyr__tab-focus),
+.wrap :global(.plyr__control[aria-expanded=true]) {
+  background: #D42B3A;
+}

@@ -7,8 +7,16 @@ const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendOtpEmail, sendSignupOtpEmail } = require("../services/email.service");
 
-const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "7d" });
+const signToken = (id, jti) =>
+  jwt.sign({ id, jti }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "7d" });
+
+/** Registers a session for this login (evicting the oldest device past the 2-device cap) and returns a signed token. */
+const issueSession = async (user, req) => {
+  const jti = crypto.randomUUID();
+  user.addSession(jti, { userAgent: req.headers["user-agent"] || "", ip: req.ip });
+  await user.save({ validateBeforeSave: false });
+  return signToken(user._id, jti);
+};
 
 /* ── Register: create unverified user + send OTP ─────── */
 const register = asyncHandler(async (req, res) => {
@@ -72,7 +80,7 @@ const verifySignup = asyncHandler(async (req, res) => {
   user.signupOtpExpiry = undefined;
   await user.save({ validateBeforeSave: false });
 
-  const token = signToken(user._id);
+  const token = await issueSession(user, req);
   const userObj = user.toObject();
   delete userObj.passwordHash;
   delete userObj.signupOtp;
@@ -93,11 +101,17 @@ const login = asyncHandler(async (req, res) => {
   if (!user.isActive) throw new ApiError(403, "Account is deactivated. Please contact support.");
   if (user.isVerified === false) throw new ApiError(403, "Please verify your email before signing in.");
 
-  const token = signToken(user._id);
+  const token = await issueSession(user, req);
   const userObj = user.toObject();
   delete userObj.passwordHash;
 
   res.json(new ApiResponse(200, { token, user: userObj }, "Logged in successfully."));
+});
+
+/* ── Logout: frees this device's slot immediately ────── */
+const logout = asyncHandler(async (req, res) => {
+  await User.updateOne({ _id: req.user._id }, { $pull: { sessions: { jti: req.tokenJti } } });
+  res.json(new ApiResponse(200, null, "Logged out successfully."));
 });
 
 /* ── Get / Update current user ───────────────────────── */
@@ -176,7 +190,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetOtpExpiry = undefined;
   await user.save();
 
-  const token = signToken(user._id);
+  const token = await issueSession(user, req);
   const userObj = user.toObject();
   delete userObj.passwordHash;
   delete userObj.resetOtp;
@@ -185,4 +199,4 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.json(new ApiResponse(200, { token, user: userObj }, "Password reset successfully."));
 });
 
-module.exports = { register, login, getMe, updateMe, updateAvatar, forgotPassword, resetPassword, verifySignup };
+module.exports = { register, login, logout, getMe, updateMe, updateAvatar, forgotPassword, resetPassword, verifySignup };

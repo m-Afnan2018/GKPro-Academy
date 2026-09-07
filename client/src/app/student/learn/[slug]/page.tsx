@@ -5,6 +5,8 @@ import Link from "next/link";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
 import { resourcesApi, type Resource, type Course, type Category } from "@/lib/api";
+import { getStudentToken } from "@/lib/studentAuth";
+import VideoPlayer from "@/components/student/VideoPlayer/VideoPlayer";
 import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -262,6 +264,14 @@ function VideoEmbed({ url, title }: { url: string; title: string }) {
         allowFullScreen
       />
     );
+  }
+  // Self-hosted upload — browsers can't send an Authorization header to a
+  // <video> element, so the student's session JWT is passed as ?token=
+  // (serveUploads.js accepts either form for material files).
+  if (url.includes("/uploads/")) {
+    const tk = getStudentToken();
+    const authedSrc = tk ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(tk)}` : url;
+    return <VideoPlayer src={authedSrc} title={title} />;
   }
   return (
     <div className={styles.docView}>

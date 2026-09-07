@@ -17,7 +17,12 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "User not found or inactive.");
   }
 
+  if (!decoded.jti || !user.hasSession(decoded.jti)) {
+    throw new ApiError(401, "You have been logged out because your account signed in on another device.");
+  }
+
   req.user = user;
+  req.tokenJti = decoded.jti;
   next();
 });
 

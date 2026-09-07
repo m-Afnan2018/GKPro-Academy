@@ -704,12 +704,12 @@ export default function Navbar() {
 
                     {user ? (
                         <div className={styles.avatarWrap}>
-                            <Link
+                            {/*<Link
                                 href="/demo-booking"
                                 className={styles.btnExpert}
                             >
                                 Demo Booking
-                            </Link>
+                            </Link>*/}
                             <button
                                 className={styles.avatarBtn}
                                 onClick={() => setMenuOpen((v) => !v)}
@@ -771,12 +771,12 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <>
-                            <Link
+                            {/*<Link
                                 href="/demo-booking"
                                 className={styles.btnExpert}
                             >
                                 Demo Booking
-                            </Link>
+                            </Link>*/}
                             <Link href="/login" className={styles.btnLogin}>
                                 Log In
                             </Link>
