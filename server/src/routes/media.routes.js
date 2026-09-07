@@ -111,7 +111,7 @@ const upload = multer({
     if (ALLOWED_MIMES.has(file.mimetype)) cb(null, true);
     else cb(new ApiError(400, "File type not allowed."));
   },
-  limits: { fileSize: 500 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 },
 });
 
 router.post("/upload", protect, requireRole("admin", "manager"), upload.single("file"), (req, res) => {

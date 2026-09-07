@@ -81,7 +81,7 @@ const materialFilter = (_req, file, cb) => {
   if (allowed.includes(file.mimetype)) cb(null, true);
   else cb(new ApiError(400, "Allowed types: MP4, MOV, WebM, PDF, DOC, DOCX, XLS, XLSX."));
 };
-const uploadMaterial = multer({ storage, fileFilter: materialFilter, limits: { fileSize: 500 * 1024 * 1024 } });
+const uploadMaterial = multer({ storage, fileFilter: materialFilter, limits: { fileSize: 2 * 1024 * 1024 * 1024 } });
 
 router.post(
   "/material",

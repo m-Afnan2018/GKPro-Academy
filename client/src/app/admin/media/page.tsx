@@ -302,7 +302,7 @@ export default function MediaLibraryPage() {
         <p className={styles.dropzoneText}>
           {uploadProgress !== null ? `Uploading… ${uploadProgress}%` : "Drop a file here, or click to browse"}
         </p>
-        <p className={styles.dropzoneSub}>Images, Videos, PDFs, Documents — up to 500 MB</p>
+        <p className={styles.dropzoneSub}>Images, Videos, PDFs, Documents — up to 2GB</p>
         {uploadProgress !== null && (
           <div className={styles.uploadProgress}>
             <div className={styles.uploadProgressBar} style={{ width: `${uploadProgress}%` }} />

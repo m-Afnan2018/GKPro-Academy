@@ -6,12 +6,12 @@ const SERVER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/a
 type UploadableType = "video" | "pdf" | "doc" | "excel";
 
 const TYPE_CONFIG: Record<UploadableType, { accept: string; label: string; hint: string; color: string }> = {
-  video: { accept: "video/mp4,video/quicktime,video/webm,video/x-matroska", label: "Video File", hint: "MP4, MOV, WebM · max 500 MB", color: "#2563EB" },
-  pdf:   { accept: "application/pdf",                                        label: "PDF File",   hint: "PDF · max 500 MB",          color: "#DC2626" },
+  video: { accept: "video/mp4,video/quicktime,video/webm,video/x-matroska", label: "Video File", hint: "MP4, MOV, WebM · max 2GB", color: "#2563EB" },
+  pdf:   { accept: "application/pdf",                                        label: "PDF File",   hint: "PDF · max 2GB",          color: "#DC2626" },
   doc:   { accept: ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-           label: "Document",  hint: "DOC, DOCX · max 500 MB",   color: "#7C3AED" },
+           label: "Document",  hint: "DOC, DOCX · max 2GB",   color: "#7C3AED" },
   excel: { accept: ".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-           label: "Excel File", hint: "XLS, XLSX · max 500 MB",  color: "#16A34A" },
+           label: "Excel File", hint: "XLS, XLSX · max 2GB",  color: "#16A34A" },
 };
 
 interface Props {
