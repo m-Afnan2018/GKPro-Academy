@@ -81,6 +81,14 @@ const createEnrollment = asyncHandler(async (req, res) => {
   if (existing) throw new ApiError(409, "You are already enrolled in this course.");
 
   const coursePrice = mode === "online" ? (course.onlinePrice ?? 0) : (course.recordedPrice ?? 0);
+  if (coursePrice > 0) {
+    throw new ApiError(400, "This course requires payment. Please use the payment flow.");
+  }
+  if (bookType !== "none") {
+    const bookPrice = bookType === "ebook" ? course.eBookPrice : course.handbookPrice;
+    if (bookPrice == null) throw new ApiError(400, `${bookType} is not available for this course.`);
+    if (bookPrice > 0) throw new ApiError(400, "This add-on requires payment. Please use the payment flow.");
+  }
 
   const expiresAt = course.expiryDate ? new Date(course.expiryDate) : null;
 

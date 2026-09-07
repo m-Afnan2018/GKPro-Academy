@@ -495,18 +495,23 @@ export default function Navbar() {
                                                                                 c.title
                                                                             }
                                                                         </span>
-                                                                        {(c.onlinePrice ||
-                                                                            c.recordedPrice) && (
+                                                                        {(c.onlinePrice !=
+                                                                            null ||
+                                                                            c.recordedPrice !=
+                                                                                null) && (
                                                                             <span
                                                                                 className={
                                                                                     styles.quickItemSub
                                                                                 }
                                                                             >
-                                                                                ₹
-                                                                                {(c.onlinePrice ||
-                                                                                    c.recordedPrice)!.toLocaleString(
-                                                                                    "en-IN",
-                                                                                )}
+                                                                                {(() => {
+                                                                                    const p =
+                                                                                        c.onlinePrice ??
+                                                                                        c.recordedPrice!;
+                                                                                    return p > 0
+                                                                                        ? `₹${p.toLocaleString("en-IN")}`
+                                                                                        : "Free";
+                                                                                })()}
                                                                             </span>
                                                                         )}
                                                                     </div>

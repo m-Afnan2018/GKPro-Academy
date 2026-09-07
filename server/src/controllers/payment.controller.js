@@ -31,11 +31,11 @@ function resolveBookPrice(course, bookType) {
   if (!course.bookEnabled) throw new ApiError(400, "This course does not have a book add-on.");
 
   if (bookType === "ebook") {
-    if (!course.eBookPrice) throw new ApiError(400, "eBook is not available for this course.");
+    if (course.eBookPrice == null) throw new ApiError(400, "eBook is not available for this course.");
     return course.eBookPrice;
   }
   if (bookType === "handbook") {
-    if (!course.handbookPrice) throw new ApiError(400, "Handbook is not available for this course.");
+    if (course.handbookPrice == null) throw new ApiError(400, "Handbook is not available for this course.");
     return course.handbookPrice;
   }
   throw new ApiError(400, "Invalid book type. Must be none, ebook, or handbook.");

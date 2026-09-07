@@ -176,9 +176,9 @@ export default function CoursesPage() {
                           {(c as any).teacherName ?? <span style={{ color: "#9CA3AF" }}>—</span>}
                         </td>*/}
                         <td>
-                          {c.onlinePrice   && <div className={styles.nameSecondary}>Online: ₹{c.onlinePrice.toLocaleString("en-IN")}</div>}
-                          {c.recordedPrice && <div className={styles.nameSecondary}>Recorded: ₹{c.recordedPrice.toLocaleString("en-IN")}</div>}
-                          {!c.onlinePrice && !c.recordedPrice && <span style={{ color: "#9CA3AF", fontSize: 12 }}>—</span>}
+                          {c.onlinePrice   != null && <div className={styles.nameSecondary}>Online: {c.onlinePrice > 0 ? `₹${c.onlinePrice.toLocaleString("en-IN")}` : "Free"}</div>}
+                          {c.recordedPrice != null && <div className={styles.nameSecondary}>Recorded: {c.recordedPrice > 0 ? `₹${c.recordedPrice.toLocaleString("en-IN")}` : "Free"}</div>}
+                          {c.onlinePrice == null && c.recordedPrice == null && <span style={{ color: "#9CA3AF", fontSize: 12 }}>—</span>}
                         </td>
                         <td><Badge variant={statusBadge(c.status) as any}>{c.status}</Badge></td>
                         {/*<td><Badge variant={approvalBadge(c.approvalStatus) as any}>{c.approvalStatus}</Badge></td>*/}

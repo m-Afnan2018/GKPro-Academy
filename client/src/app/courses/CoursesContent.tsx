@@ -337,8 +337,8 @@ export default function CoursesPage() {
                         <div className={styles.cardImgOverlay} />
                         {!isComingSoon && (
                           <div className={styles.badgeRow}>
-                            {c.onlinePrice && <span className={`${styles.flagBadge} ${styles.flagOnline}`}>Online</span>}
-                            {c.recordedPrice && <span className={`${styles.flagBadge} ${styles.flagRecorded}`}>Recorded</span>}
+                            {c.onlinePrice   != null && <span className={`${styles.flagBadge} ${styles.flagOnline}`}>Online</span>}
+                            {c.recordedPrice != null && <span className={`${styles.flagBadge} ${styles.flagRecorded}`}>Recorded</span>}
                           </div>
                         )}
                       </div>

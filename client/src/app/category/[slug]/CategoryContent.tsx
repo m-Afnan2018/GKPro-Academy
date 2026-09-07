@@ -18,11 +18,11 @@ function getPrice(course: Course): {
     // Use the lower price to display as the lead price
     const online = course.onlinePrice ?? null;
     const recorded = course.recordedPrice ?? null;
-    if (online && recorded)
+    if (online != null && recorded != null)
         return { sale: Math.min(online, recorded), original: null };
-    if (online)
+    if (online != null)
         return { sale: online, original: course.onlineOriginalPrice ?? null };
-    if (recorded)
+    if (recorded != null)
         return {
             sale: recorded,
             original: course.recordedOriginalPrice ?? null,
@@ -37,9 +37,9 @@ function discount(sale: number, original: number): number {
 function ModeBadge({ course }: { course: Course }) {
     const modes =
         course.availableModes ??
-        (course.onlinePrice && course.recordedPrice
+        (course.onlinePrice != null && course.recordedPrice != null
             ? "both"
-            : course.onlinePrice
+            : course.onlinePrice != null
                 ? "online"
                 : "recorded");
     if (modes === "both")

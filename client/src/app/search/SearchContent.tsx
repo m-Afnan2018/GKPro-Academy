@@ -78,7 +78,10 @@ function SearchInner() {
 
   const allTotal = coursesTotal + blogsTotal + categoriesTotal;
 
-  const minPrice = (c: Course) => Math.min(...[c.onlinePrice, c.recordedPrice].filter((p): p is number => !!p && p > 0));
+  const minPrice = (c: Course) => {
+    const prices = [c.onlinePrice, c.recordedPrice].filter((p): p is number => p != null);
+    return prices.length ? Math.min(...prices) : null;
+  };
 
   return (
     <>
@@ -162,8 +165,8 @@ function SearchInner() {
                       <Link href={`/courses/${c.slug}`} key={c._id} className={styles.courseCard}>
                         <div className={styles.courseCardImg} style={c.thumbnailUrl ? undefined : { background: "linear-gradient(135deg,#1a1a2e 0%,#3a3a5c 100%)" }}>
                           {c.thumbnailUrl && <img src={c.thumbnailUrl} alt={c.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-                          {c.onlinePrice   && <span className={`${styles.modeBadge} ${styles.badgeOnline}`}>Online</span>}
-                          {c.recordedPrice && <span className={`${styles.modeBadge} ${styles.badgeRecorded}`}>Recorded</span>}
+                          {c.onlinePrice   != null && <span className={`${styles.modeBadge} ${styles.badgeOnline}`}>Online</span>}
+                          {c.recordedPrice != null && <span className={`${styles.modeBadge} ${styles.badgeRecorded}`}>Recorded</span>}
                         </div>
                         <div className={styles.courseCardBody}>
                           {catName && <span className={styles.courseCardCat}>{catName}</span>}

@@ -69,12 +69,12 @@ export default function CourseDetailPage() {
         const modes = d.course.availableModes ?? "both";
         if (modes === "online") setSelectedMode("online");
         else if (modes === "recorded") setSelectedMode("recorded");
-        else if (d.course.onlinePrice) setSelectedMode("online");
-        else if (d.course.recordedPrice) setSelectedMode("recorded");
+        else if (d.course.onlinePrice != null) setSelectedMode("online");
+        else if (d.course.recordedPrice != null) setSelectedMode("recorded");
 
         if (d.course.bookEnabled) {
-          if (d.course.handbookPrice) setSelectedBook("handbook");
-          else if (d.course.eBookPrice) setSelectedBook("ebook");
+          if (d.course.handbookPrice != null) setSelectedBook("handbook");
+          else if (d.course.eBookPrice != null) setSelectedBook("ebook");
         }
 
         const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
@@ -162,12 +162,11 @@ export default function CourseDetailPage() {
   const handleConfirmEnroll = async () => {
     if (!data) return;
     setEnrolling(true); setEnrollError("");
-    const price = selectedMode === "online" ? data.course.onlinePrice : data.course.recordedPrice;
 
     try {
       const tk = getStudentToken();
 
-      if (price && price > 0) {
+      if (totalPrice && totalPrice > 0) {
         const orderRes = await fetch(`${BASE}/payments/razorpay/create-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
@@ -270,9 +269,11 @@ export default function CourseDetailPage() {
     : 0;
 
   const availableModes = data?.course.availableModes ?? "both";
-  const hasBoth = availableModes === "both" && !!(data?.course.onlinePrice && data?.course.recordedPrice);
-  const hasOnlineOnly = availableModes === "online" || (!hasBoth && !!data?.course.onlinePrice && !data?.course.recordedPrice);
-  const hasRecordedOnly = availableModes === "recorded" || (!hasBoth && !!data?.course.recordedPrice && !data?.course.onlinePrice);
+  const hasOnlinePrice = data?.course.onlinePrice != null;
+  const hasRecordedPrice = data?.course.recordedPrice != null;
+  const hasBoth = availableModes === "both" && hasOnlinePrice && hasRecordedPrice;
+  const hasOnlineOnly = availableModes === "online" || (!hasBoth && hasOnlinePrice && !hasRecordedPrice);
+  const hasRecordedOnly = availableModes === "recorded" || (!hasBoth && hasRecordedPrice && !hasOnlinePrice);
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "about", label: "About" },
@@ -647,12 +648,14 @@ export default function CourseDetailPage() {
                       "linear-gradient(135deg,#0f3460 0%,#16213e 100%)",
                       "linear-gradient(135deg,#1c3a4a 0%,#0f4c75 100%)",
                     ];
+                    const hasOnlineP = c.onlinePrice != null;
+                    const hasRecordedP = c.recordedPrice != null;
                     const onlineP = c.onlinePrice ?? 0;
                     const recordedP = c.recordedPrice ?? 0;
-                    const leadPrice = onlineP && recordedP ? Math.min(onlineP, recordedP) : onlineP || recordedP;
-                    const origP = onlineP && recordedP
+                    const leadPrice = hasOnlineP && hasRecordedP ? Math.min(onlineP, recordedP) : (hasOnlineP ? onlineP : recordedP);
+                    const origP = hasOnlineP && hasRecordedP
                       ? null
-                      : (onlineP ? (c.onlineOriginalPrice ?? null) : (c.recordedOriginalPrice ?? null));
+                      : (hasOnlineP ? (c.onlineOriginalPrice ?? null) : (c.recordedOriginalPrice ?? null));
                     const relPct = leadPrice && origP && origP > leadPrice
                       ? Math.round((1 - leadPrice / origP) * 100) : 0;
                     return (
@@ -663,8 +666,8 @@ export default function CourseDetailPage() {
                             <img src={c.thumbnailUrl} alt={c.title}
                               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                           )}
-                          <span className={`${styles.relBadge} ${c.onlinePrice ? styles.badgeOnline : styles.badgeRecorded}`}>
-                            {c.onlinePrice ? "Online" : "Recorded"}
+                          <span className={`${styles.relBadge} ${hasOnlineP ? styles.badgeOnline : styles.badgeRecorded}`}>
+                            {hasOnlineP ? "Online" : "Recorded"}
                           </span>
                         </div>
                         <div className={styles.relCardBody}>
@@ -744,7 +747,7 @@ export default function CourseDetailPage() {
                     <div className={styles.modeTabs}>
                       {(["online", "recorded"] as Mode[]).map(m => {
                         const mPrice = m === "online" ? course.onlinePrice : course.recordedPrice;
-                        if (!mPrice) return null;
+                        if (mPrice == null) return null;
                         return (
                           <button
                             key={m}
@@ -769,18 +772,18 @@ export default function CourseDetailPage() {
                 )}
 
                 {/* Book add-on */}
-                {data?.course.bookEnabled && (data.course.eBookPrice || data.course.handbookPrice) && (
+                {data?.course.bookEnabled && (data.course.eBookPrice != null || data.course.handbookPrice != null) && (
                   <div className={styles.bookSection}>
                     <p className={styles.modeSectionLabel}>Choose Your Mode:</p>
                     <div className={styles.bookOptions}>
-                      {data.course.eBookPrice ? (
+                      {data.course.eBookPrice != null ? (
                         <label className={`${styles.bookOption} ${selectedBook === "ebook" ? styles.bookOptionActive : ""}`}>
                           <input type="radio" name="bookType" value="ebook" checked={selectedBook === "ebook"}
                             onChange={() => { setSelectedBook("ebook"); setAddressError(""); }} />
                           <span>eBook (PDF) <em>+₹{data.course.eBookPrice.toLocaleString("en-IN")}</em></span>
                         </label>
                       ) : null}
-                      {data.course.handbookPrice ? (
+                      {data.course.handbookPrice != null ? (
                         <label className={`${styles.bookOption} ${selectedBook === "handbook" ? styles.bookOptionActive : ""}`}>
                           <input type="radio" name="bookType" value="handbook" checked={selectedBook === "handbook"}
                             onChange={() => { setSelectedBook("handbook"); setAddressError(""); }} />
@@ -856,7 +859,7 @@ export default function CourseDetailPage() {
                   );
                 })() : (
                   <>
-                    <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!coursePrice}>
+                    <button className={styles.buyBtn} onClick={handleBuyNow} disabled={coursePrice == null}>
                       {getStudentToken() ? "Enroll Now" : "Buy Now"}
                     </button>
                     {!getStudentToken() && (
@@ -934,7 +937,7 @@ export default function CourseDetailPage() {
                 <div className={styles.modalFoot}>
                   <button className={styles.modalCancel} onClick={closeModal}>Cancel</button>
                   <button className={styles.modalConfirm} onClick={handleConfirmEnroll} disabled={enrolling}>
-                    {enrolling ? "Processing…" : coursePrice && coursePrice > 0 ? "Pay Now" : "Enroll Free"}
+                    {enrolling ? "Processing…" : totalPrice && totalPrice > 0 ? "Pay Now" : "Enroll Free"}
                   </button>
                 </div>
               </>
