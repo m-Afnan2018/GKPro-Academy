@@ -8,6 +8,17 @@
   border-radius: 12px;
 }
 
+.video {
+  width: 100%;
+  max-height: 480px;
+}
+
+.wrap :global(.plyr--fullscreen-active) .video,
+.wrap :global(.plyr:fullscreen) .video {
+  max-height: none;
+  height: 100%;
+}
+
 /* Brand accent color for Plyr's controls */
 .wrap :global(.plyr--video .plyr__control--overlaid),
 .wrap :global(.plyr__control.plyr__tab-focus),

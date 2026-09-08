@@ -51,6 +51,7 @@ export default function LearnPage() {
   const [error, setError]           = useState("");
   const [active, setActive]         = useState<Resource | null>(null);
   const [accessUrl, setAccessUrl]   = useState<string | null>(null);
+  const [accessHlsUrl, setAccessHlsUrl] = useState<string | null>(null);
   const [accessLoading, setAccessLoading] = useState(false);
   const [accessError, setAccessError]     = useState("");
 
@@ -81,11 +82,13 @@ export default function LearnPage() {
     }
     setActive(r);
     setAccessUrl(null);
+    setAccessHlsUrl(null);
     setAccessError("");
     setAccessLoading(true);
     try {
       const res = await resourcesApi.access(r._id);
       setAccessUrl(res.data.url);
+      setAccessHlsUrl(res.data.hlsStatus === "ready" ? res.data.hlsUrl ?? null : null);
     } catch (e: any) {
       setAccessError(e.message);
     } finally {
@@ -204,7 +207,7 @@ export default function LearnPage() {
                   {accessUrl && !accessLoading && (
                     <div className={styles.viewerFrame}>
                       {active.type === "video" && (
-                        <VideoEmbed url={accessUrl} title={active.title} />
+                        <VideoEmbed url={accessUrl} hlsUrl={accessHlsUrl} title={active.title} />
                       )}
                       {(active.type === "pdf" || active.type === "doc") && (
                         <div className={styles.docView}>
@@ -239,7 +242,7 @@ export default function LearnPage() {
 }
 
 // Smart video embed: YouTube, Google Drive, or generic
-function VideoEmbed({ url, title }: { url: string; title: string }) {
+function VideoEmbed({ url, hlsUrl, title }: { url: string; hlsUrl?: string | null; title: string }) {
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
 
@@ -271,7 +274,7 @@ function VideoEmbed({ url, title }: { url: string; title: string }) {
   if (url.includes("/uploads/")) {
     const tk = getStudentToken();
     const authedSrc = tk ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(tk)}` : url;
-    return <VideoPlayer src={authedSrc} title={title} />;
+    return <VideoPlayer src={authedSrc} hlsSrc={hlsUrl ?? null} token={tk} title={title} />;
   }
   return (
     <div className={styles.docView}>

@@ -20,6 +20,12 @@ const resourceSchema = new mongoose.Schema({
     default: "approved",        // admin uploads are auto-approved
   },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+  // Adaptive-bitrate (HLS) transcode of self-hosted videos. `url` (the original
+  // upload) always stays valid and is used as a fallback until/unless this is "ready".
+  hlsStatus: { type: String, enum: ["none", "queued", "processing", "ready", "failed"], default: "none" },
+  hlsUrl:    { type: String, default: null },
+  hlsError:  { type: String, default: null },
 });
 
 module.exports = mongoose.model("Resource", resourceSchema);

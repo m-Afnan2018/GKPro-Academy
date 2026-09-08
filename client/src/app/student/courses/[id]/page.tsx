@@ -169,7 +169,9 @@ export default function LearnPage() {
       }
       // Local uploaded video — embed with a no-download-affordance player
       if (r.url.includes("/uploads/")) {
-        return <VideoPlayer src={resourceUrl} title={r.title} />;
+        const hlsSrc = r.hlsStatus === "ready" && r.hlsUrl ? r.hlsUrl : null;
+        const tk = typeof window !== "undefined" ? localStorage.getItem("gkpro_student_token") : null;
+        return <VideoPlayer src={resourceUrl} hlsSrc={hlsSrc} token={tk} title={r.title} />;
       }
     }
 

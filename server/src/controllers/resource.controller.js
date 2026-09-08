@@ -1,3 +1,5 @@
+const path       = require("path");
+const fs         = require("fs");
 const Resource   = require("../models/Resource");
 const Enrollment = require("../models/Enrollment");
 const Course     = require("../models/Course");
@@ -5,6 +7,13 @@ const ApiError   = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 const { submitForApproval } = require("../services/approval.service");
+const { queueTranscode } = require("../services/hlsTranscoder.service");
+
+function maybeQueueTranscode(resource) {
+  if (resource.type === "video" && resource.url.includes("/uploads/")) {
+    queueTranscode(resource._id).catch((err) => console.error("[hls] queue error:", err.message));
+  }
+}
 
 /* ── helpers ─────────────────────────────────────────── */
 async function isEnrolledInCourse(userId, courseId) {
@@ -85,35 +94,50 @@ const createResource = asyncHandler(async (req, res) => {
   if (!req.isDraft) req.body.approvedBy = req.user._id;
   const resource = await Resource.create(req.body);
   if (req.isDraft) await submitForApproval("Resource", resource._id, req.user._id);
+  maybeQueueTranscode(resource);
   res.status(201).json(new ApiResponse(201, resource, "Resource created."));
 });
 
 const updateResource = asyncHandler(async (req, res) => {
   if (req.isDraft) req.body.approvalStatus = "pending";
+  const existing = await Resource.findById(req.params.id).select("url");
+  if (!existing) throw new ApiError(404, "Resource not found.");
+  const urlChanged = typeof req.body.url === "string" && req.body.url !== existing.url;
+  if (urlChanged) {
+    req.body.hlsStatus = "none";
+    req.body.hlsUrl = null;
+    req.body.hlsError = null;
+  }
   const resource = await Resource.findByIdAndUpdate(req.params.id, req.body, { new: true });
   if (!resource) throw new ApiError(404, "Resource not found.");
   if (req.isDraft) await submitForApproval("Resource", resource._id, req.user._id);
+  if (urlChanged) maybeQueueTranscode(resource);
   res.json(new ApiResponse(200, resource, "Resource updated."));
 });
 
 const deleteResource = asyncHandler(async (req, res) => {
   const resource = await Resource.findByIdAndDelete(req.params.id);
   if (!resource) throw new ApiError(404, "Resource not found.");
+  if (resource.hlsUrl) {
+    const hlsDir = path.join(__dirname, "../../uploads/hls", String(resource._id));
+    fs.rm(hlsDir, { recursive: true, force: true }, () => {});
+  }
   res.json(new ApiResponse(200, null, "Resource deleted."));
 });
 
 const accessResource = asyncHandler(async (req, res) => {
   const resource = await Resource.findById(req.params.id);
   if (!resource) throw new ApiError(404, "Resource not found.");
+  const payload = { url: resource.url, type: resource.type, hlsUrl: resource.hlsUrl, hlsStatus: resource.hlsStatus };
 
   if (resource.isPublic && resource.approvalStatus === "approved") {
-    return res.json(new ApiResponse(200, { url: resource.url, type: resource.type }, "Access granted."));
+    return res.json(new ApiResponse(200, payload, "Access granted."));
   }
 
   if (!req.user) throw new ApiError(401, "Please log in to access this content.");
 
   if (req.user.role === "admin" || req.user.role === "manager") {
-    return res.json(new ApiResponse(200, { url: resource.url, type: resource.type }, "Access granted."));
+    return res.json(new ApiResponse(200, payload, "Access granted."));
   }
 
   if (resource.batchId) {
@@ -124,7 +148,7 @@ const accessResource = asyncHandler(async (req, res) => {
     if (!enrolled) throw new ApiError(403, "You are not enrolled in this course.");
   }
 
-  res.json(new ApiResponse(200, { url: resource.url, type: resource.type }, "Access granted."));
+  res.json(new ApiResponse(200, payload, "Access granted."));
 });
 
 const reorderResources = asyncHandler(async (req, res) => {

@@ -3,7 +3,7 @@ const fs   = require("fs");
 const jwt  = require("jsonwebtoken");
 
 const IMAGE_EXTS    = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif"]);
-const MATERIAL_EXTS = new Set([".mp4", ".mov", ".webm", ".mkv", ".avi", ".pdf", ".doc", ".docx", ".xls", ".xlsx"]);
+const MATERIAL_EXTS = new Set([".mp4", ".mov", ".webm", ".mkv", ".avi", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".m3u8", ".ts"]);
 
 /**
  * Smart file-serving middleware for /uploads.
@@ -11,12 +11,18 @@ const MATERIAL_EXTS = new Set([".mp4", ".mov", ".webm", ".mkv", ".avi", ".pdf", 
  *   that prevents the Next.js client on port 3000 from loading files from port 5000).
  * - Image files are served publicly (needed on the public-facing website).
  * - Material files require a valid JWT in the Authorization header.
+ * - Supports nested paths (e.g. /uploads/hls/<id>/master.m3u8) for HLS output,
+ *   resolved safely against uploadsDir to prevent path traversal.
  */
 function serveUploads(uploadsDir) {
   return async (req, res, next) => {
-    const filename = path.basename(req.path);
-    const filePath = path.join(uploadsDir, filename);
-    const ext      = path.extname(filename).toLowerCase();
+    const requested = path.normalize(req.path).replace(/^[/\\]+/, "");
+    const filePath  = path.resolve(uploadsDir, requested);
+    const ext       = path.extname(filePath).toLowerCase();
+
+    if (filePath !== uploadsDir && !filePath.startsWith(uploadsDir + path.sep)) {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
 
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
 

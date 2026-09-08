@@ -60,6 +60,7 @@ connectDB()
     const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     // Node 20 defaults requestTimeout to 5 min, which would kill a large (up to 2GB) material upload mid-transfer.
     server.requestTimeout = 0;
+    require("./src/services/hlsTranscoder.service").requeueStuckJobs();
   })
   .catch((err) => {
     console.error("DB connection failed:", err);

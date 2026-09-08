@@ -289,7 +289,7 @@ export const resourcesApi = {
   reorder: (items: { _id: string; sortOrder: number }[]) =>
     patch<{ data: null }>("/resources/reorder", { items }),
   access: (id: string) =>
-    post<{ data: { url: string; type: string } }>(`/resources/${id}/access`, {}),
+    post<{ data: { url: string; type: string; hlsUrl?: string | null; hlsStatus?: string } }>(`/resources/${id}/access`, {}),
 };
 
 /* ── approvals ───────────────────────────────────── */
@@ -556,4 +556,6 @@ export interface Resource {
   isPublic: boolean;
   targetMode: "both" | "online" | "recorded";
   approvalStatus: "draft" | "pending" | "approved" | "rejected";
+  hlsUrl?: string | null;
+  hlsStatus?: "none" | "queued" | "processing" | "ready" | "failed";
 }
