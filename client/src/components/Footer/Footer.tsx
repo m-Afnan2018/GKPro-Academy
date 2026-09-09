@@ -157,10 +157,10 @@ export default function Footer() {
                                         Phone:
                                     </span>
                                     <a
-                                        href="tel:+8427075296"
+                                        href="tel:+918427075296"
                                         className={styles.link}
                                     >
-                                        +8427075296
+                                        +918427075296
                                     </a>
                                 </li>
                                 <li>

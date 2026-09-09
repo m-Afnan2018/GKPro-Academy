@@ -58,9 +58,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Measured by ResizeObserver — deliberately NOT the scrolling element, so a
+   scrollbar toggling on/off (as zoom changes content height) never feeds
+   back into a width change here. */
+.areaMeasure {
+  width: 100%;
+}
+
 .area {
   max-height: 640px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
   padding: 16px;
   display: flex;
   justify-content: center;
@@ -68,6 +77,9 @@
 
 .doc {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .page :global(canvas) {

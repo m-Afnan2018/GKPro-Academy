@@ -10,17 +10,26 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.2;
+const ZOOM_STEP = 0.15;
+// Rapid +/- clicks each force pdf.js to re-rasterize every page's canvas —
+// that's what caused the lag. Only commit the width change once clicks settle.
+const ZOOM_COMMIT_DELAY = 200;
 
 export default function PdfViewer({ url, title }: { url: string; title: string }) {
   const [numPages, setNumPages] = useState(0);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [zoom, setZoom] = useState(1);
+  const [zoomInput, setZoomInput] = useState(1); // updates instantly (drives the % label)
+  const [zoom, setZoom] = useState(1); // debounced — this is what actually re-renders pages
   const [containerWidth, setContainerWidth] = useState(0);
   const [loadError, setLoadError] = useState("");
-  const areaRef = useRef<HTMLDivElement>(null);
+  // Measuring this (non-scrolling) wrapper, rather than the scrollable area
+  // itself, avoids a resize feedback loop: growing page content toggles the
+  // scrollbar, which changes the scrollable element's own content-box width,
+  // which re-triggers the observer — compounding into visible jank on zoom.
+  const measureRef = useRef<HTMLDivElement>(null);
+  const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const el = areaRef.current;
+    const el = measureRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width;
@@ -30,60 +39,50 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
     return () => ro.disconnect();
   }, []);
 
-  // Reset to page 1 whenever the source document changes
+  // Reset whenever the source document changes
   useEffect(() => {
-    setPageNumber(1);
+    setZoomInput(1);
     setZoom(1);
+    setNumPages(0);
     setLoadError("");
   }, [url]);
+
+  useEffect(() => {
+    if (commitTimer.current) clearTimeout(commitTimer.current);
+    commitTimer.current = setTimeout(() => setZoom(zoomInput), ZOOM_COMMIT_DELAY);
+    return () => {
+      if (commitTimer.current) clearTimeout(commitTimer.current);
+    };
+  }, [zoomInput]);
 
   const onLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
   }, []);
 
-  const canPrev = pageNumber > 1;
-  const canNext = numPages > 0 && pageNumber < numPages;
+  const zoomOut = () => setZoomInput((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)));
+  const zoomIn = () => setZoomInput((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)));
+  const pageWidth = containerWidth ? containerWidth * zoom : undefined;
 
   return (
     <div className={styles.wrap} role="group" aria-label={title}>
       <div className={styles.toolbar}>
+        <span className={styles.pageInfo}>{numPages ? `${numPages} page${numPages !== 1 ? "s" : ""}` : "…"}</span>
         <div className={styles.group}>
           <button
             type="button"
             className={styles.btn}
-            onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-            disabled={!canPrev}
-            aria-label="Previous page"
-          >
-            ‹
-          </button>
-          <span className={styles.pageInfo}>{numPages ? `${pageNumber} / ${numPages}` : "…"}</span>
-          <button
-            type="button"
-            className={styles.btn}
-            onClick={() => setPageNumber((p) => Math.min(numPages, p + 1))}
-            disabled={!canNext}
-            aria-label="Next page"
-          >
-            ›
-          </button>
-        </div>
-        <div className={styles.group}>
-          <button
-            type="button"
-            className={styles.btn}
-            onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - 0.15).toFixed(2)))}
-            disabled={zoom <= MIN_ZOOM}
+            onClick={zoomOut}
+            disabled={zoomInput <= MIN_ZOOM}
             aria-label="Zoom out"
           >
             −
           </button>
-          <span className={styles.pageInfo}>{Math.round(zoom * 100)}%</span>
+          <span className={styles.pageInfo}>{Math.round(zoomInput * 100)}%</span>
           <button
             type="button"
             className={styles.btn}
-            onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + 0.15).toFixed(2)))}
-            disabled={zoom >= MAX_ZOOM}
+            onClick={zoomIn}
+            disabled={zoomInput >= MAX_ZOOM}
             aria-label="Zoom in"
           >
             +
@@ -91,28 +90,33 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
         </div>
       </div>
 
-      <div className={styles.area} ref={areaRef}>
-        {loadError ? (
-          <div className={styles.status}>{loadError}</div>
-        ) : (
-          <Document
-            file={url}
-            onLoadSuccess={onLoadSuccess}
-            onLoadError={() => setLoadError("Couldn't load this PDF.")}
-            loading={<div className={styles.status}>Loading PDF…</div>}
-            error={<div className={styles.status}>Couldn't load this PDF.</div>}
-            className={styles.doc}
-          >
-            <Page
-              pageNumber={pageNumber}
-              width={containerWidth ? containerWidth * zoom : undefined}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className={styles.page}
-              loading={null}
-            />
-          </Document>
-        )}
+      <div className={styles.areaMeasure} ref={measureRef}>
+        <div className={styles.area}>
+          {loadError ? (
+            <div className={styles.status}>{loadError}</div>
+          ) : (
+            <Document
+              file={url}
+              onLoadSuccess={onLoadSuccess}
+              onLoadError={() => setLoadError("Couldn't load this PDF.")}
+              loading={<div className={styles.status}>Loading PDF…</div>}
+              error={<div className={styles.status}>Couldn't load this PDF.</div>}
+              className={styles.doc}
+            >
+              {Array.from({ length: numPages }, (_, i) => (
+                <Page
+                  key={i + 1}
+                  pageNumber={i + 1}
+                  width={pageWidth}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  className={styles.page}
+                  loading={null}
+                />
+              ))}
+            </Document>
+          )}
+        </div>
       </div>
     </div>
   );

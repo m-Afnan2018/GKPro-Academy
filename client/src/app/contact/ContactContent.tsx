@@ -33,7 +33,7 @@ const CONTACT_INFO = [
       </svg>
     ),
     title: "Phone Number",
-    lines: ["+8427075296"],
+    lines: ["+918427075296"],
   },
 ];
 
