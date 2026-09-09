@@ -33,7 +33,9 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width;
-      if (w) setContainerWidth(w);
+      // Ignore sub-pixel jitter so a near-identical reading never triggers
+      // another render cycle.
+      if (w) setContainerWidth((prev) => (Math.abs(prev - w) < 1 ? prev : w));
     });
     ro.observe(el);
     return () => ro.disconnect();

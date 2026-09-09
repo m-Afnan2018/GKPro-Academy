@@ -5,6 +5,13 @@
   overflow: hidden;
   border: 1px solid #E5E7EB;
   background: #F3F4F6;
+  /* The pages that embed this component nest it inside their own
+     flex-column containers (sidebar/viewer/content wrappers), each
+     defaulting to min-width: auto. Without capping it here too, the
+     oversized canvas several levels in can force every ancestor in that
+     chain progressively wider — the growth loop reported by the user. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .toolbar {
@@ -60,19 +67,27 @@
 
 /* Measured by ResizeObserver — deliberately NOT the scrolling element, so a
    scrollbar toggling on/off (as zoom changes content height) never feeds
-   back into a width change here. */
+   back into a width change here.
+   min-width: 0 overrides the flex item's default `min-width: auto`, which
+   otherwise lets its natural (min-content) size — driven by the oversized
+   canvas several levels down, even though that canvas is visually clipped —
+   win out over the stretched width. Without it, each render nudges this box
+   a little wider, which renders the canvas a little wider, which nudges it
+   wider again: a runaway resize loop. */
 .areaMeasure {
   width: 100%;
+  min-width: 0;
 }
 
 .area {
   max-height: 640px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   scrollbar-gutter: stable;
   padding: 16px;
   display: flex;
   justify-content: center;
+  min-width: 0;
 }
 
 .doc {
@@ -80,6 +95,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .page :global(canvas) {
