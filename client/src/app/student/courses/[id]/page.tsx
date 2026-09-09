@@ -2,10 +2,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
 import { type Resource, type Course } from "@/lib/api";
 import VideoPlayer from "@/components/student/VideoPlayer/VideoPlayer";
+// pdf.js touches browser-only globals (DOMMatrix) at module load time,
+// so it must never be evaluated during Next's server-render pass.
+const PdfViewer = dynamic(() => import("@/components/student/PdfViewer/PdfViewer"), { ssr: false });
 import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -176,15 +180,12 @@ export default function LearnPage() {
     }
 
     if (r.type === "pdf" && r.url.includes("/uploads/")) {
-      // Embedded PDF viewer for local files
+      // Embedded PDF viewer for local files — custom canvas renderer (no native
+      // browser toolbar: page nav / zoom / rotate / print / download / search)
       return (
-        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #E5E7EB" }}>
-          <iframe
-            src={resourceUrl}
-            style={{ width: "100%", height: 600, border: "none" }}
-            title={r.title}
-          />
-          <div style={{ padding: "10px 16px", background: "#F9FAFB", borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ borderRadius: 12, overflow: "hidden" }}>
+          <PdfViewer url={resourceUrl} title={r.title} />
+          <div style={{ padding: "10px 16px", background: "#F9FAFB", border: "1px solid #E5E7EB", borderTop: "none", borderRadius: "0 0 12px 12px", display: "flex", justifyContent: "flex-end" }}>
             <a href={resourceUrl} target="_blank" rel="noreferrer" download
               style={{ fontSize: 13, color: "#D42B3A", fontWeight: 600, textDecoration: "none" }}>
               Download PDF ↗

@@ -2,11 +2,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import StudentGuard from "@/components/student/StudentGuard/StudentGuard";
 import StudentNav from "@/components/student/StudentNav/StudentNav";
 import { resourcesApi, type Resource, type Course, type Category } from "@/lib/api";
 import { getStudentToken } from "@/lib/studentAuth";
 import VideoPlayer from "@/components/student/VideoPlayer/VideoPlayer";
+// pdf.js touches browser-only globals (DOMMatrix) at module load time,
+// so it must never be evaluated during Next's server-render pass.
+const PdfViewer = dynamic(() => import("@/components/student/PdfViewer/PdfViewer"), { ssr: false });
 import styles from "./learn.module.css";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
@@ -209,7 +213,15 @@ export default function LearnPage() {
                       {active.type === "video" && (
                         <VideoEmbed url={accessUrl} hlsUrl={accessHlsUrl} title={active.title} />
                       )}
-                      {(active.type === "pdf" || active.type === "doc") && (
+                      {active.type === "pdf" && (
+                        <div className={styles.docView}>
+                          <PdfViewer url={accessUrl} title={active.title} />
+                          <a href={accessUrl} target="_blank" rel="noreferrer" className={styles.openExternal}>
+                            Open in new tab ↗
+                          </a>
+                        </div>
+                      )}
+                      {active.type === "doc" && (
                         <div className={styles.docView}>
                           <iframe src={accessUrl} className={styles.pdfFrame} title={active.title} />
                           <a href={accessUrl} target="_blank" rel="noreferrer" className={styles.openExternal}>
