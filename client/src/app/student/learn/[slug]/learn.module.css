@@ -27,7 +27,9 @@
 /* Layout */
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  /* minmax(0, 1fr), not bare 1fr — see student/courses/[id]/learn.module.css
+     for the full explanation of the grid "blowout" this prevents. */
+  grid-template-columns: 300px minmax(0, 1fr);
   height: 100%;
 }
 
@@ -158,6 +160,7 @@
 .viewer {
   background: #F4F5FA;
   overflow-y: auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -290,7 +293,7 @@
 
 @media (max-width: 768px) {
   .page { height: auto; overflow: auto; }
-  .layout { grid-template-columns: 1fr; height: auto; }
+  .layout { grid-template-columns: minmax(0, 1fr); height: auto; }
   .sidebar { height: auto; max-height: 50vh; overflow-y: auto; }
   .viewer { min-height: 60vh; }
   .viewerContent { padding: 20px; }

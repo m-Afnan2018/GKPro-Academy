@@ -90,7 +90,12 @@
 /* Layout */
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  /* minmax(0, 1fr), not bare 1fr — a bare 1fr track's implicit minimum is
+     "auto" (its content's natural size), so wide content anywhere inside
+     (e.g. a PDF page briefly rendering at full natural width while loading)
+     can force this whole column wider than the available space, growing
+     with each such render. minmax(0, 1fr) removes that implicit floor. */
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -184,6 +189,8 @@
   border: 1px solid #E5E7EB;
   padding: 28px;
   min-height: 500px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .viewerTitle {
@@ -209,7 +216,7 @@
 }
 
 @media (max-width: 768px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
   .sidebar { position: static; max-height: none; }
   .header { flex-direction: column; }
 }

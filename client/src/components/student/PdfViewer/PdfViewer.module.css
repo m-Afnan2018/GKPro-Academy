@@ -6,12 +6,16 @@
   border: 1px solid #E5E7EB;
   background: #F3F4F6;
   /* The pages that embed this component nest it inside their own
-     flex-column containers (sidebar/viewer/content wrappers), each
-     defaulting to min-width: auto. Without capping it here too, the
-     oversized canvas several levels in can force every ancestor in that
-     chain progressively wider — the growth loop reported by the user. */
+     flex/grid containers, each of which can (depending on browser and CSS
+     context) let an oversized descendant's natural content size force
+     every ancestor progressively wider — the growth loop reported by the
+     user. min-width/max-width guard the common flex/grid cases; `contain:
+     layout` is the unconditional, spec-guaranteed backstop: it makes it
+     structurally impossible for anything inside this box to affect its
+     own size, regardless of which specific mechanism is at play upstream. */
   min-width: 0;
   max-width: 100%;
+  contain: layout;
 }
 
 .toolbar {
